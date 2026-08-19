@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { QUESTIONS } from '@/lib/questions'
+import { getSupabase, APPLICATIONS_TABLE, INTAKE_BUCKET } from '@/lib/supabase'
 
 const MIN_PHOTOS = 3
 const MAX_PHOTOS = 10
@@ -67,17 +68,56 @@ export default function IntakeFlow() {
     setSubmitting(true)
     setError(null)
     try {
-      const form = new FormData()
-      form.set('basics', JSON.stringify(basics))
-      form.set('answers', JSON.stringify(answers))
-      if (venue) form.set('venue', venue)
-      photos.forEach((p, i) => form.append('photos', p, p.name || `photo-${i}.jpg`))
-      if (voiceBlob) form.set('voice', voiceBlob, 'voice-note.webm')
+      const supabase = getSupabase()
+      if (!supabase) throw new Error('Submissions are not configured yet.')
 
-      const res = await fetch('/api/apply', { method: 'POST', body: form })
-      if (!res.ok) {
-        const body = await res.json().catch(() => null)
-        throw new Error(body?.error ?? `Submission failed (${res.status})`)
+      const id = crypto.randomUUID()
+
+      const photoKeys: string[] = []
+      for (let i = 0; i < photos.length; i++) {
+        const p = photos[i]
+        const ext = (p.name.split('.').pop() || 'jpg').toLowerCase()
+        const key = `${id}/photo-${i}.${ext}`
+        const { error: upErr } = await supabase.storage
+          .from(INTAKE_BUCKET)
+          .upload(key, p, { contentType: p.type || 'image/jpeg' })
+        if (upErr) throw new Error('Photo upload failed. Try again.')
+        photoKeys.push(key)
+      }
+
+      let voiceKey: string | null = null
+      if (voiceBlob) {
+        const ext = voiceBlob.type.includes('mp4') ? 'mp4' : 'webm'
+        voiceKey = `${id}/voice-note.${ext}`
+        const { error: vErr } = await supabase.storage
+          .from(INTAKE_BUCKET)
+          .upload(voiceKey, voiceBlob, { contentType: voiceBlob.type || 'audio/webm' })
+        if (vErr) throw new Error('Voice upload failed. Try again.')
+      }
+
+      const { error: insErr } = await supabase.from(APPLICATIONS_TABLE).insert({
+        id,
+        venue_slug: venue ?? null,
+        name: basics.name.trim(),
+        age: Number(basics.age),
+        email: basics.email.trim().toLowerCase(),
+        phone: basics.phone.trim() || null,
+        neighborhood: basics.neighborhood.trim() || null,
+        identity: basics.identity,
+        seeking: basics.seeking,
+        answers,
+        photo_keys: photoKeys,
+        photo_count: photoKeys.length,
+        voice_key: voiceKey,
+        has_voice_note: Boolean(voiceKey),
+        status: 'pending_review',
+      })
+      if (insErr) {
+        throw new Error(
+          insErr.code === '23505'
+            ? 'This email has already applied.'
+            : 'Could not save your application. Try again.'
+        )
       }
       setSubmitted(true)
     } catch (e) {

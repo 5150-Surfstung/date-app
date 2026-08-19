@@ -5,15 +5,14 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 export const APPLICATIONS_TABLE = 'date_applications'
 export const INTAKE_BUCKET = 'date-intake'
 
-// Server-side client. Prefers the service role key; falls back to the anon
-// key, which RLS restricts to insert-only on applications and uploads into
-// the intake bucket. Returns null when Supabase isn't configured so the API
-// falls back to local-file storage during development.
+// Browser client on the anon key. RLS makes this write-only: it can submit
+// applications and upload intake media, and can never read either back.
+let client: SupabaseClient | null = null
+
 export function getSupabase(): SupabaseClient | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !key) return null
-  return createClient(url, key, { auth: { persistSession: false } })
+  if (!client) client = createClient(url, key, { auth: { persistSession: false } })
+  return client
 }
