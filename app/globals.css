@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background: #0c0b09;
+  color: #ede7da;
+}
+
+::selection {
+  background: rgba(200, 162, 74, 0.3);
+}
+
+:focus-visible {
+  outline: 1px solid #c8a24a;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
