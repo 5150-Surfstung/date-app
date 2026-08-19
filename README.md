@@ -2,6 +2,8 @@
 
 Your vibe is your profile. Three matches. No games. Real people.
 
+**Live:** https://5150-surfstung.github.io/date-app/
+
 Read `SPEC.md` for the full product spec, strategy, and build order.
 
 ## Current state — Week 1
