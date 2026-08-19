@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { mkdir, writeFile } from 'fs/promises'
 import path from 'path'
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase, APPLICATIONS_TABLE, INTAKE_BUCKET } from '@/lib/supabase'
 
 export const runtime = 'nodejs'
 
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       const ext = (p.name.split('.').pop() || 'jpg').toLowerCase()
       const key = `${id}/photo-${i}.${ext}`
       const { error } = await supabase.storage
-        .from('intake')
+        .from(INTAKE_BUCKET)
         .upload(key, await p.arrayBuffer(), { contentType: p.type })
       if (error) {
         return NextResponse.json({ error: 'Photo upload failed' }, { status: 502 })
@@ -92,14 +92,14 @@ export async function POST(req: NextRequest) {
     if (voiceFile) {
       voiceKey = `${id}/voice-note.webm`
       const { error } = await supabase.storage
-        .from('intake')
+        .from(INTAKE_BUCKET)
         .upload(voiceKey, await voiceFile.arrayBuffer(), { contentType: voiceFile.type })
       if (error) {
         return NextResponse.json({ error: 'Voice upload failed' }, { status: 502 })
       }
     }
 
-    const { error } = await supabase.from('applications').insert({
+    const { error } = await supabase.from(APPLICATIONS_TABLE).insert({
       ...record,
       photo_keys: uploads,
       voice_key: voiceKey,
