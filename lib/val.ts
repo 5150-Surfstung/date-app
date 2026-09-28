@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
+
 // Val's voice in the app. See VAL.md for the operating manual; every
 // string here follows it. First person, short, signed.
 
@@ -21,4 +23,12 @@ export const VAL = {
   applied: `I read every /vibe myself. When your Season is ready to begin, you'll hear from me — and not before. No noise in between.`,
 
   valWall: `I'm the matchmaker. Send me a /hey for help, an intro, or to tell me something didn't work. I always answer.`,
+}
+
+// Val's brain, server-side. Returns '' when the key isn't configured, so
+// callers fall back to templates.
+export async function askVal(client: SupabaseClient, body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const { data, error } = await client.functions.invoke('val', { body })
+  if (error) return {}
+  return (data as Record<string, unknown>) ?? {}
 }

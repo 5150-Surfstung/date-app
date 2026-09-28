@@ -6,6 +6,7 @@ import { AppShell, NeedLogin, Pill } from '../ui'
 import { authClient, useSession } from '@/lib/auth'
 import { tagLine } from '@/lib/handles'
 import { QUESTIONS } from '@/lib/questions'
+import { askVal } from '@/lib/val'
 
 type Item = {
   kind: 'hey' | 'wing'; winger?: string
@@ -17,6 +18,8 @@ export default function InboxPage() {
   const { email, loading } = useSession()
   const [items, setItems] = useState<Item[] | null>(null)
   const [opened, setOpened] = useState<string | null>(null)
+  const [takes, setTakes] = useState<Record<string, string>>({})
+  const [asking, setAsking] = useState<string | null>(null)
 
   async function load() {
     const { data } = await authClient()!.rpc('my_inbox')
@@ -32,6 +35,13 @@ export default function InboxPage() {
     const { data } = await authClient()!.rpc('answer_hey', { p_hey: it.id, p_yes: yes })
     if (yes && data) location.assign(`/chat/?c=${data}`)
     else load()
+  }
+
+  async function take(it: Item) {
+    setAsking(it.id)
+    const r = await askVal(authClient()!, { kind: 'preview', from: it.from, winger: it.winger, note: it.note })
+    setTakes({ ...takes, [it.id]: typeof r.text === 'string' && r.text ? r.text : '' })
+    setAsking(null)
   }
 
   if (loading) return <AppShell title="Inbox"><p>One sec…</p></AppShell>
@@ -64,6 +74,13 @@ export default function InboxPage() {
               <div className="mt-1 text-sm font-semibold">{f.name}{f.age ? `, ${f.age}` : ''}{f.hood ? ` · ${f.hood}` : ''}</div>
               {f.tag && <div className="text-sm text-[#141414]/60">{tagLine(f.tag)}</div>}
               {it.note && <p className="mt-3 text-base italic">&ldquo;{it.note}&rdquo;</p>}
+              {takes[it.id] ? (
+                <p className="mt-3 text-base bg-[#FFF3EA] rounded-xl px-4 py-3">{takes[it.id]} <span className="text-[#141414]/50">&mdash; Val</span></p>
+              ) : takes[it.id] === '' ? null : (
+                <button onClick={() => take(it)} disabled={asking === it.id} className="mt-3 text-xs font-extrabold text-ob underline underline-offset-4">
+                  {asking === it.id ? 'Val\u2019s thinking\u2026' : 'Val\u2019s take'}
+                </button>
+              )}
 
               {open && f.answers && (
                 <div className="mt-4 grid gap-3 border-t border-[#141414]/10 pt-4">

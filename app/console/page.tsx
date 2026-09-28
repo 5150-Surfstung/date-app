@@ -6,6 +6,7 @@ import { authClient, useSession } from '@/lib/auth'
 import { suggestPairs, draftIntro, type Person, type Pair } from '@/lib/match'
 import { VENUES } from '@/lib/venues'
 import { QUESTIONS } from '@/lib/questions'
+import { askVal } from '@/lib/val'
 
 type Console = {
   handles: (Person & { founding: number | null; created_at: string; app_id: string | null; photo_keys: string[] | null; voice_key: string | null })[]
@@ -20,6 +21,8 @@ export default function ConsolePage() {
   const [tab, setTab] = useState<(typeof TABS)[number]>('Pairs')
   const [note, setNote] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState<string | null>(null)
+  const [reads, setReads] = useState<Record<string, string>>({})
+  const [thinking, setThinking] = useState<string | null>(null)
 
   async function load() {
     const { data } = await authClient()!.rpc('val_console')
@@ -40,6 +43,22 @@ export default function ConsolePage() {
     const text = note[key] || draftIntro(p, VENUES[0].name)
     await authClient()!.rpc('val_pair', { p_a: p.a.handle, p_b: p.b.handle, p_note: text })
     setBusy(null); load()
+  }
+
+  async function valIntro(p: Pair) {
+    const key = p.a.handle + '|' + p.b.handle
+    setThinking(key)
+    const r = await askVal(authClient()!, { kind: 'intro', a: p.a, b: p.b, reasons: p.reasons, flags: p.flags, spot: VENUES[0].name })
+    if (typeof r.text === 'string' && r.text) setNote({ ...note, [key]: r.text })
+    else setNote({ ...note, [key]: draftIntro(p, VENUES[0].name) + '\n\n(Val\u2019s AI voice needs ANTHROPIC_API_KEY set on the edge function; this is her template.)' })
+    setThinking(null)
+  }
+
+  async function valRead(h: Person) {
+    setThinking(h.handle)
+    const r = await askVal(authClient()!, { kind: 'read', person: h })
+    setReads({ ...reads, [h.handle]: typeof r.text === 'string' && r.text ? r.text : 'Val needs her key for this. (ANTHROPIC_API_KEY on the edge function.)' })
+    setThinking(null)
   }
 
   async function setStatus(id: string, status: string) {
@@ -133,6 +152,13 @@ export default function ConsolePage() {
               </summary>
               <div className="mt-4 text-sm grid gap-2">
                 <div className="text-[#141414]/60">{h.email} &middot; {h.identity ?? '?'} seeking {h.seeking ?? '?'}</div>
+                {reads[h.handle] ? (
+                  <div className="bg-[#FFF3EA] rounded-xl p-3 text-base">{reads[h.handle]}</div>
+                ) : (
+                  <button onClick={() => valRead(h)} disabled={thinking === h.handle} className="self-start text-xs font-extrabold text-ob underline underline-offset-4">
+                    {thinking === h.handle ? 'Val\u2019s reading\u2026' : 'Val\u2019s read'}
+                  </button>
+                )}
                 {h.answers && QUESTIONS.filter((q) => h.answers?.[q.id]).map((q) => (
                   <div key={q.id}><span className="text-[#141414]/50">{q.prompt}</span> &mdash; {h.answers![q.id]}</div>
                 ))}

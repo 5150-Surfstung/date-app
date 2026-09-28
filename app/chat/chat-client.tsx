@@ -9,10 +9,12 @@ import { VENUES } from '@/lib/venues'
 import { getDemo, demoPhoto } from '@/lib/demo'
 import { dareFor } from '@/lib/dares'
 import { INTAKE_BUCKET } from '@/lib/supabase'
+import { askVal } from '@/lib/val'
 
 type Chat = {
   id: string; created_at: string; closes_at: string; status: 'open' | 'date_set' | 'closed'
   spot_slug: string | null; date_at: string | null; val_note: string | null; me: string
+  brief: { for: string; sections: Record<string, string>; text: string } | null
   them: { handle: string; name: string; tag: string | null; email: string; age: number | null; hood: string | null; photo_key: string | null }
   my_count: number; their_count: number; debriefed: boolean
 }
@@ -116,6 +118,8 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
   const [spot, setSpot] = useState(chat.spot_slug ?? VENUES[0].slug)
   const [when, setWhen] = useState('')
   const [debrief, setDebrief] = useState<string | null>(null)
+  const [brief, setBrief] = useState(chat.brief)
+  const [briefBusy, setBriefBusy] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
 
   const mine = msgs.filter((m) => m.from_email === me).length
@@ -156,6 +160,13 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
     onChange(); onBack()
   }
 
+  async function getBrief() {
+    setBriefBusy(true)
+    const r = await askVal(authClient()!, { kind: 'brief', chat_id: chat.id })
+    setBrief((r.brief as typeof brief) ?? null)
+    setBriefBusy(false)
+  }
+
   async function sendDebrief(outcome: string) {
     setDebrief(outcome)
     await authClient()!.rpc('submit_debrief', { p_chat: chat.id, p_outcome: outcome })
@@ -191,6 +202,27 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
             <div className="font-display font-extrabold text-xl mt-1">{venue.name}</div>
             <div className="text-sm">{chat.date_at ? new Date(chat.date_at).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : ''}</div>
             <div className="text-sm text-[#141414]/70 mt-2">{venue.perk}</div>
+          </div>
+        )}
+        {chat.status === 'date_set' && (
+          <div className="border-2 border-[#141414] rounded-2xl p-4">
+            <div className="text-xs tracking-[0.15em] uppercase font-semibold text-ob">Your /brief</div>
+            {brief ? (
+              <div className="mt-2 grid gap-3">
+                {Object.entries(brief.sections).map(([k, v]) => (
+                  <div key={k}>
+                    <div className="text-[10px] tracking-[0.18em] uppercase text-[#141414]/50">{k}</div>
+                    <div className="text-sm leading-snug">{v}</div>
+                  </div>
+                ))}
+                <div className="text-xs text-[#141414]/50">&mdash; Val</div>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-[#141414]/70 mt-1">Where to go, what to talk about, what matters to them, what not to do, why this pairing.</p>
+                <button onClick={getBrief} disabled={briefBusy} className="mt-3 text-sm font-extrabold text-ob underline underline-offset-4">{briefBusy ? 'Val\u2019s writing\u2026' : 'Read it'}</button>
+              </>
+            )}
           </div>
         )}
         <div className="bg-[#FFF3EA] rounded-2xl p-4">
