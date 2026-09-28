@@ -42,12 +42,15 @@ jobs:
               ]
               for url in variants:
                   r = subprocess.run(["curl", "-fsSL", "-o", out + ".tmp", url])
-                  if r.returncode == 0 and os.path.getsize(out + ".tmp") > 0:
+                  # Only keep a download that is actually full size; never
+                  # churn thumbnails.
+                  if r.returncode == 0 and os.path.getsize(out + ".tmp") > 60000:
                       os.replace(out + ".tmp", out)
                       print(handle, subprocess.run(["file", out], capture_output=True, text=True).stdout.strip()[:120])
                       break
               else:
-                  print(handle, "FAILED all variants")
+                  if os.path.exists(out + ".tmp"): os.remove(out + ".tmp")
+                  print(handle, "no full-size source yet")
           PY
       - name: Commit
         run: |

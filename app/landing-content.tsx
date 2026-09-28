@@ -119,11 +119,11 @@ export default function LandingContent() {
               {vibe.cta}
             </Link>
             <Link
-              href="/claim"
+              href={ctaHref === '/claim' ? applyHref : '/claim'}
               className="border-2 text-lg font-extrabold rounded-full px-10 py-5 text-center hover:opacity-80 transition-opacity"
               style={{ borderColor: vibe.fg }}
             >
-              Claim your /name
+              {ctaHref === '/claim' ? 'Get your /vibe' : 'Claim your /name'}
             </Link>
             <button
               onClick={reroll}
