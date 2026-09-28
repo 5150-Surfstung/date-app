@@ -131,7 +131,7 @@ export default function IntakeFlow() {
     return (
       <Shell progress={100}>
         <div className="flex-1 flex flex-col justify-center max-w-md">
-          <h1 className="font-display italic font-bold text-5xl leading-tight [text-wrap:balance]">
+          <h1 className="font-display font-extrabold text-5xl tracking-[-0.03em] leading-tight [text-wrap:balance]">
             You&rsquo;re in the pool.
           </h1>
           <p className="mt-6 font-display text-2xl font-medium text-chalk-2 leading-relaxed">
@@ -262,7 +262,7 @@ function Shell({
   return (
     <main className="min-h-screen flex flex-col px-6 sm:px-10 pb-10">
       <header className="flex items-center justify-between pt-8 pb-6">
-        <Link href="/" className="font-display font-bold italic text-gold text-3xl">
+        <Link href="/" className="font-display font-extrabold text-gold text-3xl tracking-tight">
           /date
         </Link>
         <span className="text-sm tracking-[0.22em] uppercase text-chalk-3">
@@ -300,7 +300,7 @@ function StepFrame({
       <div className="text-xs tracking-[0.2em] uppercase text-chalk-3 mb-3">
         {eyebrow}
       </div>
-      <h1 className="font-display font-bold text-4xl sm:text-5xl leading-tight [text-wrap:balance] mb-8">
+      <h1 className="font-display font-extrabold text-4xl sm:text-5xl leading-[1.05] tracking-[-0.03em] [text-wrap:balance] mb-8">
         {title}
       </h1>
       <div className="flex-1">{children}</div>
@@ -316,7 +316,7 @@ function StepFrame({
         <button
           onClick={onNext}
           disabled={!onNext}
-          className="bg-gold text-ob text-base font-medium tracking-[0.12em] uppercase px-9 py-4 hover:brightness-110 transition disabled:opacity-30 disabled:cursor-not-allowed"
+          className="bg-white text-ob text-base font-extrabold rounded-full px-10 py-4 hover:scale-[1.02] transition-transform disabled:opacity-30 disabled:cursor-not-allowed"
         >
           {nextLabel}
         </button>
@@ -356,7 +356,7 @@ function QuestionStep({
               <button
                 key={opt}
                 onClick={() => onChange(opt)}
-                className={`flex items-start gap-3 text-left px-4 py-3.5 border transition-colors ${
+                className={`flex items-start gap-3 text-left px-5 py-4 border-2 rounded-2xl transition-colors ${
                   selected
                     ? 'border-gold bg-gold-faint'
                     : 'border-ob-3 hover:border-ob-4 hover:bg-ob-2'
@@ -380,7 +380,7 @@ function QuestionStep({
           onChange={(e) => onChange(e.target.value)}
           placeholder={q.placeholder}
           rows={4}
-          className="w-full max-w-md bg-ob-1 border border-ob-3 focus:border-gold px-4 py-3.5 text-base text-chalk leading-relaxed placeholder:text-chalk-3/60 resize-none"
+          className="w-full max-w-md bg-ob-1 border-2 border-ob-3 rounded-xl focus:border-gold outline-none px-4 py-3.5 text-base text-chalk leading-relaxed placeholder:text-chalk-3/60 resize-none"
         />
       )}
     </StepFrame>
@@ -432,7 +432,7 @@ function PhotoStep({
       />
       <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 max-w-md">
         {previews.map((src, i) => (
-          <div key={i} className="relative aspect-square border border-ob-3">
+          <div key={i} className="relative aspect-square border-2 border-ob-3 rounded-xl overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={src} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
             <button
@@ -447,7 +447,7 @@ function PhotoStep({
         {photos.length < MAX_PHOTOS && (
           <button
             onClick={() => inputRef.current?.click()}
-            className="aspect-square border border-dashed border-ob-4 text-chalk-3 text-2xl font-light hover:border-gold hover:text-gold transition-colors"
+            className="aspect-square border-2 border-dashed border-ob-4 rounded-xl text-chalk-3 text-2xl font-light hover:border-gold hover:text-gold transition-colors"
             aria-label="Add photos"
           >
             +
@@ -602,7 +602,7 @@ function Field({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-ob-1 border border-ob-3 focus:border-gold px-4 py-3 text-base text-chalk"
+        className="bg-ob-1 border-2 border-ob-3 rounded-xl focus:border-gold outline-none px-4 py-3 text-base text-chalk"
       />
     </label>
   )
@@ -629,7 +629,7 @@ function ChoiceRow({
           <button
             key={opt}
             onClick={() => onChange(opt)}
-            className={`px-4 py-2.5 border text-sm transition-colors ${
+            className={`px-5 py-2.5 border-2 rounded-full text-sm transition-colors ${
               value === opt
                 ? 'border-gold bg-gold-faint text-chalk'
                 : 'border-ob-3 text-chalk-2 hover:border-ob-4'

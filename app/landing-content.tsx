@@ -35,7 +35,7 @@ export default function LandingContent() {
   return (
     <main className="min-h-screen flex flex-col">
       <header className="flex items-center justify-between px-6 sm:px-12 pt-8">
-        <span className="font-display font-bold italic text-gold text-3xl">/date</span>
+        <span className="font-display font-extrabold text-gold text-3xl tracking-tight">/date</span>
         <span className="text-xs sm:text-sm tracking-[0.2em] uppercase text-chalk-2 font-medium">
           Season I
         </span>
@@ -43,24 +43,24 @@ export default function LandingContent() {
 
       <section className="flex-1 flex flex-col justify-center px-6 sm:px-12 py-16 max-w-4xl">
         {venue && (
-          <div className="border-2 border-gold bg-gold-faint px-6 py-5 mb-12 max-w-lg">
+          <div className="border-2 border-white bg-gold-faint rounded-2xl px-6 py-5 mb-12 max-w-lg">
             <div className="text-xs tracking-[0.2em] uppercase text-gold font-medium mb-2">
               You scanned in at
             </div>
-            <div className="font-display font-bold text-3xl text-chalk">{venue.name}</div>
+            <div className="font-display font-extrabold text-3xl text-chalk tracking-tight">{venue.name}</div>
             <div className="text-sm text-chalk-2 leading-relaxed mt-2">
               {venue.area} · {venue.perk}
             </div>
           </div>
         )}
 
-        <h1 className="font-display font-bold text-6xl sm:text-8xl leading-[0.95] tracking-tight [text-wrap:balance]">
-          Your vibe is <span className="italic text-gold">your profile.</span>
+        <h1 className="font-display font-extrabold text-6xl sm:text-8xl leading-[0.95] tracking-[-0.035em] [text-wrap:balance]">
+          Your vibe is your profile.
         </h1>
         <p className="mt-8 text-lg sm:text-xl text-chalk font-medium">
           Three matches. No games. Real people.
         </p>
-        <p className="mt-6 max-w-xl font-display text-2xl sm:text-3xl text-chalk-2 leading-snug font-medium">
+        <p className="mt-6 max-w-xl text-xl sm:text-2xl text-chalk-2 leading-snug font-medium">
           Stop swiping. We pick your people, tell you why, and set up the date.
           You just show up.
         </p>
@@ -68,7 +68,7 @@ export default function LandingContent() {
         <div className="mt-12 flex flex-col sm:flex-row sm:items-center gap-5">
           <Link
             href={applyHref}
-            className="bg-gold text-ob text-base sm:text-lg font-medium tracking-[0.12em] uppercase px-10 py-5 text-center hover:brightness-110 transition"
+            className="bg-white text-ob text-lg font-extrabold rounded-full px-12 py-5 text-center hover:scale-[1.02] transition-transform"
           >
             Get matched
           </Link>
@@ -83,7 +83,7 @@ export default function LandingContent() {
         <div className="grid sm:grid-cols-3 gap-10">
           {PROMISES.map((p) => (
             <div key={p.title}>
-              <div className="font-display font-bold text-2xl text-gold mb-2">{p.title}</div>
+              <div className="font-display font-extrabold text-2xl text-gold mb-2 tracking-tight">{p.title}</div>
               <p className="text-base text-chalk-2 leading-relaxed">{p.body}</p>
             </div>
           ))}

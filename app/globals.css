@@ -2,22 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: dark;
-}
-
 body {
-  background: #0c0b09;
-  color: #ede7da;
+  background: #ff3b2f;
+  color: #ffffff;
 }
 
 ::selection {
-  background: rgba(200, 162, 74, 0.3);
+  background: #ffffff;
+  color: #ff3b2f;
 }
 
 :focus-visible {
-  outline: 1px solid #c8a24a;
-  outline-offset: 2px;
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
 }
 
 @media (prefers-reduced-motion: reduce) {

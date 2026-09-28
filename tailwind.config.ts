@@ -1,30 +1,32 @@
 import type { Config } from 'tailwindcss'
 
+// Token names are historical (ob/gold/chalk); values are the "Heat" palette:
+// tomato-red ground, white type and accents.
 const config: Config = {
   content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
         ob: {
-          DEFAULT: '#0C0B09',
-          1: '#141210',
-          2: '#1C1A16',
-          3: '#28251E',
-          4: '#333028',
+          DEFAULT: '#FF3B2F',
+          1: '#E8342A',
+          2: '#F2463A',
+          3: 'rgba(255,255,255,0.38)',
+          4: 'rgba(255,255,255,0.65)',
         },
         gold: {
-          DEFAULT: '#C8A24A',
-          faint: 'rgba(200,162,74,0.11)',
+          DEFAULT: '#FFFFFF',
+          faint: 'rgba(255,255,255,0.16)',
         },
         chalk: {
-          DEFAULT: '#EDE7DA',
-          2: '#C4BEAF',
-          3: '#766F63',
+          DEFAULT: '#FFFFFF',
+          2: 'rgba(255,255,255,0.9)',
+          3: 'rgba(255,255,255,0.72)',
         },
       },
       fontFamily: {
-        display: ['var(--font-display)', 'Palatino', 'Georgia', 'serif'],
-        mono: ['var(--font-mono)', 'Courier New', 'monospace'],
+        display: ['var(--font-sora)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-sora)', 'system-ui', 'sans-serif'],
       },
     },
   },

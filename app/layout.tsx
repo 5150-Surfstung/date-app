@@ -1,33 +1,26 @@
 import type { Metadata, Viewport } from 'next'
-import { Cormorant_Garamond, DM_Mono } from 'next/font/google'
+import { Sora } from 'next/font/google'
 import './globals.css'
 
-const display = Cormorant_Garamond({
+const sora = Sora({
   subsets: ['latin'],
-  weight: ['500', '600', '700'],
-  style: ['normal', 'italic'],
-  variable: '--font-display',
-})
-
-const mono = DM_Mono({
-  subsets: ['latin'],
-  weight: ['300', '400', '500'],
-  variable: '--font-mono',
+  weight: ['400', '500', '600', '800'],
+  variable: '--font-sora',
 })
 
 export const metadata: Metadata = {
   title: '/date — Your vibe is your profile.',
   description:
-    'Three matches. No games. Real people. AI-native matchmaking, one city at a time.',
+    'Three matches. No games. Real people. We pick your people and set up the date.',
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0C0B09',
+  themeColor: '#FF3B2F',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${mono.variable}`}>
+    <html lang="en" className={sora.variable}>
       <body className="font-mono antialiased min-h-screen">{children}</body>
     </html>
   )
