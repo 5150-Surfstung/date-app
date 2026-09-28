@@ -62,6 +62,7 @@ export default function LandingContent() {
   }
 
   const faces = facesFor(vibe.tag)
+  const accent = ['#141414', '#FFF3EA', '#140A20', '#1F3D2B', '#0E7C7B'].includes(vibe.bg) ? '#FF3B2F' : vibe.bg
   const ctaHref =
     vibe.tag === 'fun' ? `/spot/${VENUES[0].slug}` :
     vibe.tag === 'tonight' || vibe.tag === 'open' || vibe.tag === 'casual' ? '/claim' : applyHref
@@ -141,39 +142,18 @@ export default function LandingContent() {
         </div>
       </section>
 
-      {/* Profiles — cream */}
-      <section className="bg-[#FFF3EA] text-[#141414] px-6 sm:px-12 py-16">
-        <div className="max-w-6xl">
-          <div className="flex items-baseline justify-between gap-4 mb-6">
-            <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob">
-              People on /date &middot; /{vibe.tag} first
-            </div>
-            <Link href="/demo" className="text-sm font-semibold underline underline-offset-4">All {DEMO_CREW.length}</Link>
+      {/* The wall — the profiles, moving */}
+      <section className="bg-[#141414] text-white py-12 overflow-hidden">
+        <div className="px-6 sm:px-12 flex items-baseline justify-between gap-4 mb-6">
+          <div className="text-xs tracking-[0.2em] uppercase font-semibold" style={{ color: vibe.bg === '#141414' ? '#FF3B2F' : vibe.bg === '#FFF3EA' ? '#FF3B2F' : vibe.bg }}>
+            On /date right now &middot; /{vibe.tag} first &middot; tap a face to send a /hey
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {faces.map((d) => (
-              <Link key={d.handle} href={`/${d.handle}`} className="group bg-white rounded-2xl overflow-hidden border border-[#141414]/10 hover:border-ob transition-colors">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={demoPhoto(d.handle)}
-                  alt={`${d.name}, ${d.age}`}
-                  className="w-full aspect-[4/5] object-cover"
-                />
-                <div className="p-4">
-                  <div className="font-display font-extrabold text-xl tracking-tight leading-tight">
-                    /{d.handle} <span className="text-ob">/{d.tag}</span>
-                  </div>
-                  <div className="text-sm font-semibold mt-1">{d.name}, {d.age} &middot; {d.hood}</div>
-                  <p className="text-sm text-[#141414]/70 leading-snug mt-2 line-clamp-3">{d.vibe}</p>
-                  <div className="text-xs font-extrabold text-ob mt-3">Send a /hey &rarr;</div>
-                </div>
-              </Link>
-            ))}
-          </div>
-          <p className="mt-6 text-sm text-[#141414]/60">
-            Demo crew. Not real people &mdash; yet. Photos are generated.
-          </p>
+          <Link href="/demo" className="text-sm font-semibold underline underline-offset-4 text-white/60 hover:text-white">All {DEMO_CREW.length}</Link>
         </div>
+        <Wall people={faces} direction="left" accent={accent} />
+        <div className="h-3" />
+        <Wall people={[...faces.slice(Math.ceil(faces.length / 2)), ...faces.slice(0, Math.ceil(faces.length / 2))]} direction="right" accent={accent} />
+        <p className="px-6 sm:px-12 mt-6 text-xs text-white/40">Demo crew. Not real people &mdash; yet. Photos are generated.</p>
       </section>
 
       {/* Pick a word — white */}
@@ -232,5 +212,25 @@ export default function LandingContent() {
         </div>
       </section>
     </main>
+  )
+}
+
+function Wall({ people, direction, accent }: { people: typeof DEMO_CREW; direction: 'left' | 'right'; accent: string }) {
+  const row = [...people, ...people]
+  return (
+    <div className="wall-track" style={{ animationDirection: direction === 'left' ? 'normal' : 'reverse' }}>
+      {row.map((d, i) => (
+        <Link key={d.handle + i} href={`/${d.handle}`} className="wall-card group">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={demoPhoto(d.handle)} alt={`${d.name}, ${d.age}`} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 p-5">
+            <div className="font-display font-extrabold text-3xl leading-none tracking-[-0.03em]">/{d.handle}</div>
+            <div className="font-display font-extrabold text-2xl leading-none tracking-[-0.03em] mt-1" style={{ color: accent }}>/{d.tag}</div>
+            <div className="text-sm font-semibold mt-2 text-white/85">{d.name}, {d.age} &middot; {d.hood}</div>
+          </div>
+        </Link>
+      ))}
+    </div>
   )
 }
