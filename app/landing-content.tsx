@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { VENUES, getVenue } from '@/lib/venues'
+import { TAGS } from '@/lib/handles'
 
 const PROMISES = [
   {
@@ -82,7 +83,23 @@ export default function LandingContent() {
         </div>
       </section>
 
-      <section className="px-6 sm:px-12 pb-12 pt-4 max-w-5xl">
+      <section className="px-6 sm:px-12 pb-6 max-w-5xl">
+        <div className="h-px bg-ob-4 mb-10" />
+        <div className="text-xs tracking-[0.2em] uppercase font-medium mb-4">Pick a word. That&rsquo;s your /tag.</div>
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          {TAGS.map((t) => (
+            <Link key={t.value} href="/claim" title={t.line}
+              className="font-display font-extrabold text-4xl sm:text-6xl tracking-[-0.03em] hover:text-white/70 transition-colors">
+              /{t.value}
+            </Link>
+          ))}
+        </div>
+        <p className="mt-5 text-base text-chalk-2 max-w-xl">
+          It goes on your badge and your /hey page. Everyone knows what you&rsquo;re here for before a word is said. Change it any time.
+        </p>
+      </section>
+
+      <section className="px-6 sm:px-12 pb-12 pt-6 max-w-5xl">
         <div className="h-px bg-ob-4 mb-10" />
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {PROMISES.map((p) => (

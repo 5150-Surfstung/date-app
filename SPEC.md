@@ -119,6 +119,26 @@ This is the half the original spec missed — and the half women decide on. Ever
   **/brief**.
 - Copy voice examples: "Your /vibe is your profile." / "Someone in this room might already be on /date." / "That wasn't your person. Already looking."
 
+## 10b. /names, /tags, and the ladder (v3, 2026-09-28)
+
+- **/name**: your unique handle (/maya). Give it out instead of your number.
+  The lookup wall shows only name, tag, and "on /date" — never a photo,
+  never anything else. Private handles show nothing.
+- **/tag**: what you're here for right now. **Curated vocabulary, never
+  freeform** — the list is the brand: /looking /casual /fun /tonight /intown
+  /slow /open /curious. Shown on the badge and the wall. /tonight also makes
+  the /name go dark at midnight.
+- **The ladder: /hey → /preview → /chat → /date.** A /hey is tiny and
+  one-way. The recipient gets a /preview of the sender's /vibe and decides.
+  The yes is an invitation to /chat, which has a 48-hour clock: pick a /spot
+  and a time or it closes (zero-ghost, enforced). /chat needs login; not
+  built yet.
+- One /hey per person per handle, ever. /heys require a claimed /name.
+- Badge: print-ready card ("Hi, I'm /maya /looking") with a QR to the /hey
+  page. /nights print name tags from the RSVP list.
+- Data: `date_handles`, `date_heys`; locked tables, RPC-only access.
+- Demo crew (7 seeded /names) at /demo — not real people.
+
 ## 10a. /spots and /nights (v3, 2026-09-28)
 
 Open to everyone in Charleston — no newcomer gate (transplants are a

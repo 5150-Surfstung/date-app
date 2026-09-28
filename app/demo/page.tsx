@@ -27,7 +27,7 @@ export default function DemoPage() {
         {DEMO_CREW.map((d) => (
           <div key={d.handle} className="border-2 border-white rounded-2xl p-6 flex flex-col gap-3">
             <div className="flex items-baseline justify-between gap-3">
-              <div className="font-display font-extrabold text-4xl tracking-tight">/{d.handle}</div>
+              <div className="font-display font-extrabold text-4xl tracking-tight">/{d.handle} <span className="text-chalk-2 text-2xl">/{d.tag}</span></div>
               <span className="text-xs tracking-[0.18em] uppercase font-semibold">{VIS_LABEL[d.visibility]}</span>
             </div>
             <div className="text-base font-semibold">{d.name}, {d.age} · {d.hood}</div>

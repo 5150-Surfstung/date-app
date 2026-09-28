@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase'
-import { EMAIL_KEY, normalizeHandle } from '@/lib/handles'
+import { EMAIL_KEY, normalizeHandle, tagLine } from '@/lib/handles'
 
-type Wall = { taken: boolean; open?: boolean; name?: string }
+type Wall = { taken: boolean; open?: boolean; name?: string; tag?: string | null }
 
 export default function AtClient() {
   const params = useSearchParams()
@@ -103,8 +103,10 @@ export default function AtClient() {
           <>
             <div>
               <div className="text-xs tracking-[0.2em] uppercase font-medium mb-3">On /date</div>
-              <h1 className="font-display font-extrabold text-5xl sm:text-7xl leading-[0.95] tracking-[-0.03em] break-all">/{handle}</h1>
-              <p className="mt-3 text-lg text-chalk-2 font-medium">{wall.name}</p>
+              <h1 className="font-display font-extrabold text-5xl sm:text-7xl leading-[0.95] tracking-[-0.03em] break-all">
+                /{handle}{wall.tag && <span className="block text-3xl sm:text-5xl mt-2 text-chalk-2">/{wall.tag}</span>}
+              </h1>
+              <p className="mt-3 text-lg text-chalk-2 font-medium">{wall.name}{wall.tag ? ` · ${tagLine(wall.tag)}` : ''}</p>
             </div>
 
             {result === 'sent' ? (

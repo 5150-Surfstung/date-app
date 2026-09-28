@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getSupabase } from '@/lib/supabase'
 import {
-  HANDLE_RE, RESERVED, VISIBILITY, EMAIL_KEY, HANDLE_KEY,
-  normalizeHandle, type Visibility,
+  HANDLE_RE, RESERVED, TAGS, EMAIL_KEY, HANDLE_KEY,
+  normalizeHandle, type Tag,
 } from '@/lib/handles'
 import { DEMO_CREW } from '@/lib/demo'
 
@@ -15,7 +15,8 @@ export default function ClaimClient() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [handle, setHandle] = useState('')
-  const [vis, setVis] = useState<Visibility>('public')
+  const [tag, setTag] = useState<Tag | null>(null)
+  const [priv, setPriv] = useState(false)
   const [avail, setAvail] = useState<Avail>('idle')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -53,7 +54,7 @@ export default function ClaimClient() {
       const supabase = getSupabase()
       if (!supabase) throw new Error('Not configured yet.')
       const { data, error } = await supabase.rpc('claim_handle', {
-        p_handle: handle, p_email: email, p_name: name, p_vis: vis,
+        p_handle: handle, p_email: email, p_name: name, p_tag: tag, p_private: priv,
       })
       if (error) throw new Error('Something went wrong. Try again.')
       const msgs: Record<string, string> = {
@@ -88,7 +89,7 @@ export default function ClaimClient() {
     return (
       <Shell>
         <h1 className="font-display font-extrabold text-6xl sm:text-7xl leading-[0.95] tracking-[-0.03em] break-all">
-          /{handle}
+          /{handle}{tag && <span className="block text-4xl sm:text-5xl mt-2 text-chalk-2">/{tag}</span>}
         </h1>
         <p className="mt-6 text-xl sm:text-2xl font-medium leading-snug max-w-lg">
           That&rsquo;s you now. Give it out instead of your number. Anyone with it can
@@ -117,7 +118,7 @@ export default function ClaimClient() {
         Give out your /name, not your number.
       </h1>
       <p className="mt-6 text-xl text-chalk-2 font-medium leading-snug max-w-lg">
-        Like {DEMO_CREW.slice(0, 3).map((d) => `/${d.handle}`).join(', ')}. Short ones go first.
+        Like {DEMO_CREW.slice(0, 3).map((d) => `/${d.handle} /${d.tag}`).join(', ')}. Short ones go first.
       </p>
 
       <div className="mt-10 grid gap-5 max-w-md">
@@ -152,15 +153,26 @@ export default function ClaimClient() {
         </label>
 
         <div className="grid gap-2">
-          <span className="text-xs tracking-[0.18em] uppercase text-chalk-2">Who can /hey you</span>
-          {VISIBILITY.map((v) => (
-            <button key={v.value} onClick={() => setVis(v.value)}
-              className={`text-left px-5 py-4 border-2 rounded-2xl transition-colors ${vis === v.value ? 'border-white bg-gold-faint' : 'border-ob-3 hover:border-ob-4'}`}>
-              <div className="font-extrabold text-base">{v.label}</div>
-              <div className="text-sm text-chalk-2 mt-0.5">{v.body}</div>
-            </button>
-          ))}
+          <span className="text-xs tracking-[0.18em] uppercase text-chalk-2">Your /tag &mdash; what you&rsquo;re here for</span>
+          <div className="flex flex-wrap gap-2">
+            {TAGS.map((t) => (
+              <button key={t.value} onClick={() => setTag(tag === t.value ? null : t.value)}
+                title={t.line}
+                className={`px-4 py-2.5 border-2 rounded-full text-base font-extrabold transition-colors ${tag === t.value ? 'bg-white text-ob border-white' : 'border-ob-3 hover:border-white'}`}>
+                /{t.value}
+              </button>
+            ))}
+          </div>
+          <span className="text-sm text-chalk-2 min-h-5">
+            {tag ? TAGS.find((t) => t.value === tag)!.line : 'Optional. Change it any time.'}
+          </span>
         </div>
+
+        <button onClick={() => setPriv(!priv)}
+          className={`text-left px-5 py-4 border-2 rounded-2xl transition-colors ${priv ? 'border-white bg-gold-faint' : 'border-ob-3 hover:border-ob-4'}`}>
+          <div className="font-extrabold text-base">{priv ? 'Private — on' : 'Private'}</div>
+          <div className="text-sm text-chalk-2 mt-0.5">Your /name shows nothing. Only matchmaker intros reach you.</div>
+        </button>
 
         <button disabled={!canClaim} onClick={claim}
           className="bg-white text-ob text-base font-extrabold rounded-full px-10 py-4 hover:scale-[1.02] transition-transform disabled:opacity-30 mt-2">

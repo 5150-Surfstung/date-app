@@ -68,11 +68,11 @@ check('signals unreadable (anon)', !sigRead.error && sigRead.data.length === 0)
 
 // 7. /name: wall lookup, claim, /hey — all through the RPCs
 const wall = await supabase.rpc('handle_wall', { p_handle: 'maya' })
-check('wall lookup (demo /maya open)', !wall.error && wall.data?.open === true, wall.error?.message)
+check('wall lookup (demo /maya open, tagged)', !wall.error && wall.data?.open === true && wall.data?.tag === 'looking', wall.error?.message)
 const wallPriv = await supabase.rpc('handle_wall', { p_handle: 'marcus' })
 check('wall hides private (/marcus)', wallPriv.data?.taken === true && wallPriv.data?.open === false && !wallPriv.data?.name)
 const h = `e2e${runId}`.slice(0, 20)
-const claim = await supabase.rpc('claim_handle', { p_handle: h, p_email: `e2e-${runId}@test.invalid`, p_name: 'E2E', p_vis: 'public' })
+const claim = await supabase.rpc('claim_handle', { p_handle: h, p_email: `e2e-${runId}@test.invalid`, p_name: 'E2E', p_tag: 'curious', p_private: false })
 check('claim handle', !claim.error && claim.data === 'ok', claim.error?.message ?? claim.data)
 const hey = await supabase.rpc('send_hey', { p_to: 'maya', p_from_email: `e2e-${runId}@test.invalid`, p_note: 'e2e' })
 check('send /hey', !hey.error && hey.data === 'ok', hey.error?.message ?? hey.data)

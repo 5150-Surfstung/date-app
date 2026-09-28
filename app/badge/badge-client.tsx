@@ -5,14 +5,17 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import QRCode from 'qrcode'
 import { heyUrl, normalizeHandle } from '@/lib/handles'
+import { getSupabase } from '@/lib/supabase'
 
 export default function BadgeClient() {
   const params = useSearchParams()
   const handle = normalizeHandle(params.get('h') ?? '')
   const [qr, setQr] = useState<string>('')
+  const [tag, setTag] = useState<string | null>(null)
 
   useEffect(() => {
     if (!handle) return
+    getSupabase()?.rpc('handle_wall', { p_handle: handle }).then(({ data }) => setTag(data?.tag ?? null))
     QRCode.toDataURL(heyUrl(handle), {
       margin: 0, width: 512, color: { dark: '#FF3B2F', light: '#FFFFFF' },
     }).then(setQr)
@@ -32,6 +35,7 @@ export default function BadgeClient() {
             style={{ fontSize: handle.length > 8 ? 48 : 64 }}>
             /{handle || 'name'}
           </div>
+          {tag && <div className="font-display font-extrabold text-3xl tracking-tight mt-2 opacity-70">/{tag}</div>}
           <div className="mt-auto flex items-end justify-between gap-4">
             <div>
               <div className="font-extrabold text-lg leading-tight">Send me a /hey.</div>
