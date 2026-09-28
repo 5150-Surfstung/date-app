@@ -142,10 +142,10 @@ export default function IntakeFlow() {
             Profiles under 80% don&rsquo;t receive matches. Yours is complete.
           </p>
           <Link
-            href="/"
-            className="mt-10 self-start text-sm tracking-[0.18em] uppercase text-gold border-b border-gold pb-0.5"
+            href="/claim"
+            className="mt-10 self-start bg-white text-ob text-base font-extrabold rounded-full px-9 py-4 hover:scale-[1.02] transition-transform"
           >
-            Back to /date
+            Now claim your /name
           </Link>
         </div>
       </Shell>

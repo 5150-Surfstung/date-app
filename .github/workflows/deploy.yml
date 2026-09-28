@@ -6,6 +6,8 @@ on:
   workflow_dispatch:
 
 env:
+  NEXT_PUBLIC_SITE_URL: https://5150-surfstung.github.io/date-app
+  NEXT_PUBLIC_BASE_PATH: /date-app
   NEXT_PUBLIC_SUPABASE_URL: https://iwotispqqcnkrbcnvozq.supabase.co
   # Anon key is public by design; RLS makes it write-only.
   NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3b3Rpc3BxcWNua3JiY252b3pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5ODk5MTQsImV4cCI6MjA5NzU2NTkxNH0.cnvrHhZkrygCNuxMQitqsS9TBqC_1Uy0h6ymh9jmppY

@@ -14,6 +14,10 @@ const PROMISES = [
     body: 'Scan in at a participating spot. Someone in the room might be on /date too. If it’s mutual, we introduce you. Nobody has to walk over.',
   },
   {
+    title: 'Your /name',
+    body: 'Give it out instead of your number. Anyone with it can send you a /hey. You see their /vibe first; they see nothing until you say yes.',
+  },
+  {
     title: '/nights',
     body: 'One night a month at every /spot. A room full of verified singles, first hour comped, introductions made live.',
   },
@@ -58,7 +62,8 @@ export default function LandingContent() {
         </p>
         <p className="mt-6 max-w-xl text-xl sm:text-2xl text-chalk-2 leading-snug font-medium">
           Stop swiping. We pick your people, tell you why, and hold the table.
-          You just show up.
+          You just show up. And out in the world, give out your /name instead of
+          your number.
         </p>
 
         <div className="mt-12 flex flex-col sm:flex-row sm:items-center gap-5">
@@ -68,15 +73,18 @@ export default function LandingContent() {
           >
             Get your /vibe
           </Link>
-          <span className="text-sm text-chalk-2">
-            Free to join the pool. Takes about 5 minutes.
-          </span>
+          <Link
+            href="/claim"
+            className="border-2 border-white text-lg font-extrabold rounded-full px-10 py-5 text-center hover:bg-gold-faint transition-colors"
+          >
+            Claim your /name
+          </Link>
         </div>
       </section>
 
       <section className="px-6 sm:px-12 pb-12 pt-4 max-w-5xl">
         <div className="h-px bg-ob-4 mb-10" />
-        <div className="grid sm:grid-cols-3 gap-10">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {PROMISES.map((p) => (
             <div key={p.title}>
               <div className="font-display font-extrabold text-2xl mb-2 tracking-tight">{p.title}</div>
