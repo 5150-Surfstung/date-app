@@ -2,7 +2,10 @@
 
 Your vibe is your profile. Three matches. No games. Real people.
 
-**Live:** https://5150-surfstung.github.io/date-app/
+**Live:** https://date-surfstung-systems.vercel.app (Vercel, production)
+Mirror: https://5150-surfstung.github.io/date-app/ (GitHub Pages, auto-deployed by CI)
+
+Short links: `/maya` → the /hey page for that /name. Demo crew at `/demo`.
 
 Read `SPEC.md` for the full product spec, strategy, and build order.
 

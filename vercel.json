@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/:handle([a-z0-9_]{3,20})", "destination": "/at/?h=:handle" }
+  ]
+}
