@@ -131,19 +131,19 @@ export default function IntakeFlow() {
     return (
       <Shell progress={100}>
         <div className="flex-1 flex flex-col justify-center max-w-md">
-          <h1 className="font-display italic font-light text-4xl leading-tight [text-wrap:balance]">
+          <h1 className="font-display italic font-bold text-5xl leading-tight [text-wrap:balance]">
             You&rsquo;re in the pool.
           </h1>
-          <p className="mt-6 font-display text-lg text-chalk-2 leading-relaxed">
+          <p className="mt-6 font-display text-2xl font-medium text-chalk-2 leading-relaxed">
             We review every profile by hand. When your Season is ready to begin,
             you&rsquo;ll hear from us — and not before. No noise in between.
           </p>
-          <p className="mt-6 text-[0.62rem] text-chalk-3 tracking-wide leading-relaxed">
+          <p className="mt-6 text-sm text-chalk-3 tracking-wide leading-relaxed">
             Profiles under 80% don&rsquo;t receive matches. Yours is complete.
           </p>
           <Link
             href="/"
-            className="mt-10 self-start text-[0.65rem] tracking-[0.18em] uppercase text-gold border-b border-gold pb-0.5"
+            className="mt-10 self-start text-sm tracking-[0.18em] uppercase text-gold border-b border-gold pb-0.5"
           >
             Back to /date
           </Link>
@@ -205,7 +205,7 @@ export default function IntakeFlow() {
               onChange={(v) => setBasics({ ...basics, seeking: v })}
             />
             {Number(basics.age) > 0 && Number(basics.age) < 18 && (
-              <p className="text-[0.62rem] text-gold">
+              <p className="text-sm text-gold">
                 /date is for adults — 18 and over.
               </p>
             )}
@@ -262,10 +262,10 @@ function Shell({
   return (
     <main className="min-h-screen flex flex-col px-6 sm:px-10 pb-10">
       <header className="flex items-center justify-between pt-8 pb-6">
-        <Link href="/" className="font-display italic text-gold text-xl tracking-wide">
+        <Link href="/" className="font-display font-bold italic text-gold text-3xl">
           /date
         </Link>
-        <span className="text-[0.6rem] tracking-[0.22em] uppercase text-chalk-3">
+        <span className="text-sm tracking-[0.22em] uppercase text-chalk-3">
           Application
         </span>
       </header>
@@ -297,10 +297,10 @@ function StepFrame({
 }) {
   return (
     <div className="flex-1 flex flex-col max-w-xl">
-      <div className="text-[0.58rem] tracking-[0.2em] uppercase text-chalk-3 mb-3">
+      <div className="text-xs tracking-[0.2em] uppercase text-chalk-3 mb-3">
         {eyebrow}
       </div>
-      <h1 className="font-display font-light text-3xl leading-snug [text-wrap:balance] mb-8">
+      <h1 className="font-display font-bold text-4xl sm:text-5xl leading-tight [text-wrap:balance] mb-8">
         {title}
       </h1>
       <div className="flex-1">{children}</div>
@@ -308,7 +308,7 @@ function StepFrame({
         {onBack && (
           <button
             onClick={onBack}
-            className="text-[0.62rem] tracking-[0.16em] uppercase text-chalk-3 hover:text-chalk-2"
+            className="text-sm tracking-[0.16em] uppercase text-chalk-3 hover:text-chalk-2"
           >
             Back
           </button>
@@ -316,7 +316,7 @@ function StepFrame({
         <button
           onClick={onNext}
           disabled={!onNext}
-          className="border border-gold text-gold text-[0.65rem] tracking-[0.18em] uppercase px-7 py-3.5 hover:bg-gold-faint transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="bg-gold text-ob text-base font-medium tracking-[0.12em] uppercase px-9 py-4 hover:brightness-110 transition disabled:opacity-30 disabled:cursor-not-allowed"
         >
           {nextLabel}
         </button>
@@ -367,7 +367,7 @@ function QuestionStep({
                     selected ? 'border-gold bg-gold' : 'border-chalk-3'
                   }`}
                 />
-                <span className="text-[0.72rem] text-chalk-2 leading-relaxed">
+                <span className="text-base text-chalk-2 leading-relaxed">
                   {opt}
                 </span>
               </button>
@@ -380,7 +380,7 @@ function QuestionStep({
           onChange={(e) => onChange(e.target.value)}
           placeholder={q.placeholder}
           rows={4}
-          className="w-full max-w-md bg-ob-1 border border-ob-3 focus:border-gold px-4 py-3.5 text-[0.78rem] text-chalk leading-relaxed placeholder:text-chalk-3/60 resize-none"
+          className="w-full max-w-md bg-ob-1 border border-ob-3 focus:border-gold px-4 py-3.5 text-base text-chalk leading-relaxed placeholder:text-chalk-3/60 resize-none"
         />
       )}
     </StepFrame>
@@ -417,7 +417,7 @@ function PhotoStep({
       onBack={onBack}
       onNext={onNext}
     >
-      <p className="text-[0.7rem] text-chalk-3 leading-relaxed max-w-md mb-6">
+      <p className="text-base text-chalk-3 leading-relaxed max-w-md mb-6">
         {MIN_PHOTOS} to {MAX_PHOTOS} photos. Doing things you actually do, in
         places you actually go. They stay locked until your match is ready — the
         story comes first.
@@ -438,7 +438,7 @@ function PhotoStep({
             <button
               onClick={() => setPhotos(photos.filter((_, j) => j !== i))}
               aria-label={`Remove photo ${i + 1}`}
-              className="absolute top-1 right-1 h-5 w-5 bg-ob/80 text-chalk-2 text-[0.6rem] leading-5"
+              className="absolute top-1 right-1 h-5 w-5 bg-ob/80 text-chalk-2 text-sm leading-5"
             >
               ×
             </button>
@@ -454,7 +454,7 @@ function PhotoStep({
           </button>
         )}
       </div>
-      <p className="mt-4 text-[0.6rem] text-chalk-3 tracking-wide">
+      <p className="mt-4 text-sm text-chalk-3 tracking-wide">
         {photos.length} of {MIN_PHOTOS} minimum
       </p>
     </StepFrame>
@@ -526,7 +526,7 @@ function VoiceStep({
       onNext={onSubmit}
       nextLabel={submitting ? 'Submitting…' : 'Submit application'}
     >
-      <p className="text-[0.7rem] text-chalk-3 leading-relaxed max-w-md mb-8">
+      <p className="text-base text-chalk-3 leading-relaxed max-w-md mb-8">
         Talk about anything — your week, the thing you can&rsquo;t stop thinking
         about, what a good Sunday sounds like. Your match hears this before they
         see a single photo. It&rsquo;s the most honest thing in your profile, and
@@ -534,7 +534,7 @@ function VoiceStep({
       </p>
 
       {unsupported ? (
-        <p className="text-[0.7rem] text-gold max-w-md">
+        <p className="text-base text-gold max-w-md">
           We couldn&rsquo;t reach your microphone. Allow mic access, or finish
           this step later from the link in your email.
         </p>
@@ -543,7 +543,7 @@ function VoiceStep({
           {!recording && !voiceBlob && (
             <button
               onClick={start}
-              className="h-20 w-20 rounded-full border border-gold text-gold text-[0.55rem] tracking-[0.14em] uppercase hover:bg-gold-faint transition-colors"
+              className="h-20 w-20 rounded-full border border-gold text-gold text-xs tracking-[0.14em] uppercase hover:bg-gold-faint transition-colors"
             >
               Record
             </button>
@@ -552,11 +552,11 @@ function VoiceStep({
             <>
               <button
                 onClick={stop}
-                className="h-20 w-20 rounded-full border border-gold bg-gold-faint text-gold text-[0.55rem] tracking-[0.14em] uppercase"
+                className="h-20 w-20 rounded-full border border-gold bg-gold-faint text-gold text-xs tracking-[0.14em] uppercase"
               >
                 Stop
               </button>
-              <span className="text-[0.8rem] text-chalk tabular-nums">
+              <span className="text-lg text-chalk tabular-nums">
                 0:{String(seconds).padStart(2, '0')} / 1:00
               </span>
             </>
@@ -566,7 +566,7 @@ function VoiceStep({
               <audio controls src={audioUrl ?? undefined} className="max-w-xs" />
               <button
                 onClick={() => setVoiceBlob(null)}
-                className="self-start text-[0.6rem] tracking-[0.16em] uppercase text-chalk-3 hover:text-chalk-2"
+                className="self-start text-sm tracking-[0.16em] uppercase text-chalk-3 hover:text-chalk-2"
               >
                 Re-record
               </button>
@@ -575,7 +575,7 @@ function VoiceStep({
         </div>
       )}
 
-      {error && <p className="mt-6 text-[0.68rem] text-gold max-w-md">{error}</p>}
+      {error && <p className="mt-6 text-base text-gold max-w-md">{error}</p>}
     </StepFrame>
   )
 }
@@ -595,14 +595,14 @@ function Field({
 }) {
   return (
     <label className="grid gap-1.5">
-      <span className="text-[0.58rem] tracking-[0.18em] uppercase text-chalk-3">
+      <span className="text-xs tracking-[0.18em] uppercase text-chalk-3">
         {label}
       </span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-ob-1 border border-ob-3 focus:border-gold px-4 py-3 text-[0.78rem] text-chalk"
+        className="bg-ob-1 border border-ob-3 focus:border-gold px-4 py-3 text-base text-chalk"
       />
     </label>
   )
@@ -621,7 +621,7 @@ function ChoiceRow({
 }) {
   return (
     <div className="grid gap-1.5">
-      <span className="text-[0.58rem] tracking-[0.18em] uppercase text-chalk-3">
+      <span className="text-xs tracking-[0.18em] uppercase text-chalk-3">
         {label}
       </span>
       <div className="flex gap-2">
@@ -629,7 +629,7 @@ function ChoiceRow({
           <button
             key={opt}
             onClick={() => onChange(opt)}
-            className={`px-4 py-2.5 border text-[0.66rem] transition-colors ${
+            className={`px-4 py-2.5 border text-sm transition-colors ${
               value === opt
                 ? 'border-gold bg-gold-faint text-chalk'
                 : 'border-ob-3 text-chalk-2 hover:border-ob-4'

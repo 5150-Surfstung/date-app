@@ -11,6 +11,21 @@ const VENUES: Record<string, { name: string; area: string; perk: string }> = {
   },
 }
 
+const PROMISES = [
+  {
+    title: 'Real people only',
+    body: 'Every profile is voice and photo verified. No bots, no tourists, no games.',
+  },
+  {
+    title: 'Three matches a season',
+    body: 'Hand-picked for you, each with a reason. You meet the person before the photos.',
+  },
+  {
+    title: 'The date is handled',
+    body: 'A great spot, a table held, and a brief on what matters to them. You just show up.',
+  },
+]
+
 export default function LandingContent() {
   const params = useSearchParams()
   const slug = params.get('v') ?? undefined
@@ -19,83 +34,61 @@ export default function LandingContent() {
 
   return (
     <main className="min-h-screen flex flex-col">
-      <header className="flex items-center justify-between px-6 sm:px-10 pt-8">
-        <span className="font-display italic text-gold text-xl tracking-wide">/date</span>
-        <span className="text-[0.6rem] tracking-[0.22em] uppercase text-chalk-3">
-          Season I · 2026
+      <header className="flex items-center justify-between px-6 sm:px-12 pt-8">
+        <span className="font-display font-bold italic text-gold text-3xl">/date</span>
+        <span className="text-xs sm:text-sm tracking-[0.2em] uppercase text-chalk-2 font-medium">
+          Season I
         </span>
       </header>
 
-      <section className="flex-1 flex flex-col justify-center px-6 sm:px-10 max-w-2xl">
+      <section className="flex-1 flex flex-col justify-center px-6 sm:px-12 py-16 max-w-4xl">
         {venue && (
-          <div className="border border-gold bg-gold-faint px-5 py-4 mb-10 max-w-md">
-            <div className="text-[0.55rem] tracking-[0.2em] uppercase text-gold mb-1.5">
-              You scanned in · Venue partner
+          <div className="border-2 border-gold bg-gold-faint px-6 py-5 mb-12 max-w-lg">
+            <div className="text-xs tracking-[0.2em] uppercase text-gold font-medium mb-2">
+              You scanned in at
             </div>
-            <div className="font-display text-lg text-chalk">{venue.name}</div>
-            <div className="text-[0.62rem] text-chalk-2 leading-relaxed mt-1">
+            <div className="font-display font-bold text-3xl text-chalk">{venue.name}</div>
+            <div className="text-sm text-chalk-2 leading-relaxed mt-2">
               {venue.area} · {venue.perk}
             </div>
           </div>
         )}
 
-        <h1 className="font-display italic font-light text-5xl sm:text-6xl leading-[1.15] [text-wrap:balance]">
-          Your vibe is your profile.
+        <h1 className="font-display font-bold text-6xl sm:text-8xl leading-[0.95] tracking-tight [text-wrap:balance]">
+          Your vibe is <span className="italic text-gold">your profile.</span>
         </h1>
-        <p className="mt-5 text-sm text-chalk-3 leading-relaxed">
+        <p className="mt-8 text-lg sm:text-xl text-chalk font-medium">
           Three matches. No games. Real people.
         </p>
-        <p className="mt-8 max-w-md font-display text-lg text-chalk-2 leading-relaxed">
-          We match the way the best human matchmakers do — slowly, deliberately, and
-          on who you actually are. You hear a person before you see them. Every
-          profile is verified. Every match comes with a reason.
+        <p className="mt-6 max-w-xl font-display text-2xl sm:text-3xl text-chalk-2 leading-snug font-medium">
+          Stop swiping. We pick your people, tell you why, and set up the date.
+          You just show up.
         </p>
 
-        <div className="mt-10 flex items-center gap-6">
+        <div className="mt-12 flex flex-col sm:flex-row sm:items-center gap-5">
           <Link
             href={applyHref}
-            className="border border-gold text-gold text-[0.7rem] tracking-[0.18em] uppercase px-8 py-4 hover:bg-gold-faint transition-colors"
+            className="bg-gold text-ob text-base sm:text-lg font-medium tracking-[0.12em] uppercase px-10 py-5 text-center hover:brightness-110 transition"
           >
-            Apply to join
+            Get matched
           </Link>
-          <span className="text-[0.62rem] text-chalk-3 tracking-wide">
-            Free to be in the pool.
+          <span className="text-sm text-chalk-2">
+            Free to join the pool. Takes about 5 minutes.
           </span>
         </div>
       </section>
 
-      <section className="px-6 sm:px-10 pb-10 pt-16 max-w-2xl">
-        <div className="h-px bg-ob-3 mb-8" />
-        <div className="grid sm:grid-cols-3 gap-8">
-          <div>
-            <div className="text-[0.58rem] tracking-[0.2em] uppercase text-gold mb-2">
-              Verified only
+      <section className="px-6 sm:px-12 pb-12 pt-4 max-w-5xl">
+        <div className="h-px bg-ob-4 mb-10" />
+        <div className="grid sm:grid-cols-3 gap-10">
+          {PROMISES.map((p) => (
+            <div key={p.title}>
+              <div className="font-display font-bold text-2xl text-gold mb-2">{p.title}</div>
+              <p className="text-base text-chalk-2 leading-relaxed">{p.body}</p>
             </div>
-            <p className="text-[0.7rem] text-chalk-3 leading-relaxed">
-              Voice and photo verified, every profile. No bots, no tourists, no games.
-            </p>
-          </div>
-          <div>
-            <div className="text-[0.58rem] tracking-[0.2em] uppercase text-gold mb-2">
-              Three matches
-            </div>
-            <p className="text-[0.7rem] text-chalk-3 leading-relaxed">
-              Per season, chosen for you. The story before the photos. A reason with
-              every pairing.
-            </p>
-          </div>
-          <div>
-            <div className="text-[0.58rem] tracking-[0.2em] uppercase text-gold mb-2">
-              No ghosts
-            </div>
-            <p className="text-[0.7rem] text-chalk-3 leading-relaxed">
-              Windows close gracefully. Intent is required. No-shows lose their place.
-            </p>
-          </div>
+          ))}
         </div>
-        <p className="mt-10 text-[0.58rem] text-chalk-3/60 tracking-wide">
-          /date · Matchmaking for humans
-        </p>
+        <p className="mt-12 text-sm text-chalk-3">/date · Matchmaking for humans</p>
       </section>
     </main>
   )
