@@ -9,6 +9,7 @@ import { DEMO_CREW, demoPhoto } from '@/lib/demo'
 import { VIBES, pickVibe, vibeFor, type VibeTheme } from '@/lib/vibes'
 import { getSupabase } from '@/lib/supabase'
 
+
 const PROMISES = [
   {
     title: 'Your /vibe is your profile',
@@ -44,6 +45,8 @@ export default function LandingContent() {
   const [vibe, setVibe] = useState<VibeTheme>(VIBES[0])
   const [mine, setMine] = useState<string | null>(null)
   const [spin, setSpin] = useState(0)
+  const [receipts, setReceipts] = useState<{ pool: number; founding: number; intros: number; second_rate: number | null } | null>(null)
+  useEffect(() => { getSupabase()?.rpc('date_receipts').then(({ data }) => setReceipts(data)) }, [])
 
   // First paint: your own /tag if you have a /name, otherwise the moment's.
   useEffect(() => {
@@ -156,6 +159,25 @@ export default function LandingContent() {
         <p className="px-6 sm:px-12 mt-6 text-xs text-white/40">Demo crew. Not real people &mdash; yet. Photos are generated.</p>
       </section>
 
+      {/* /receipts — white */}
+      <section className="bg-white text-[#141414] px-6 sm:px-12 py-12 border-b border-[#141414]/10">
+        <div className="max-w-5xl flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob mb-2">/receipts &middot; live</div>
+            <div className="flex flex-wrap gap-x-10 gap-y-4">
+              <div><div className="font-display font-extrabold text-5xl tabular-nums leading-none">{receipts ? receipts.pool : '\u2014'}</div><div className="text-xs tracking-[0.15em] uppercase text-[#141414]/50 mt-1">in the pool</div></div>
+              <div><div className="font-display font-extrabold text-5xl tabular-nums leading-none">{receipts ? `${receipts.founding}` : '\u2014'}<span className="text-2xl text-[#141414]/40">/500</span></div><div className="text-xs tracking-[0.15em] uppercase text-[#141414]/50 mt-1">founding</div></div>
+              <div><div className="font-display font-extrabold text-5xl tabular-nums leading-none">{receipts ? receipts.intros : '\u2014'}</div><div className="text-xs tracking-[0.15em] uppercase text-[#141414]/50 mt-1">introductions</div></div>
+              <div><div className="font-display font-extrabold text-5xl tabular-nums leading-none text-ob">{receipts?.second_rate == null ? '\u2014' : `${receipts.second_rate}%`}</div><div className="text-xs tracking-[0.15em] uppercase text-[#141414]/50 mt-1">went to a /second</div></div>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Link href="/receipts" className="border-2 border-[#141414] rounded-full px-5 py-2.5 text-sm font-extrabold hover:bg-[#141414] hover:text-white transition-colors">All the numbers</Link>
+            <Link href="/founding" className="bg-ob text-white rounded-full px-5 py-2.5 text-sm font-extrabold">The first 500</Link>
+          </div>
+        </div>
+      </section>
+
       {/* Pick a word — white */}
       <section className="bg-white text-[#141414] px-6 sm:px-12 py-16">
         <div className="max-w-5xl">
@@ -194,13 +216,16 @@ export default function LandingContent() {
             </div>
             <div className="flex flex-wrap gap-3">
               {VENUES.map((v) => (
-                <Link
-                  key={v.slug}
-                  href={`/spot/${v.slug}`}
-                  className="border-2 border-white rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-white hover:text-[#141414] transition-colors"
-                >
-                  {v.name} · {v.area}
-                </Link>
+                <span key={v.slug} className="flex gap-2">
+                  <Link href={`/spot/${v.slug}`} className="border-2 border-white rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-white hover:text-[#141414] transition-colors">
+                    {v.name} · {v.area}
+                  </Link>
+                  {v.night && (
+                    <Link href={`/night/${v.slug}`} className="bg-[#FF5CA8] text-[#140A20] rounded-full px-5 py-2.5 text-sm font-extrabold">
+                      /night · {v.night.when.split(' · ')[0]}
+                    </Link>
+                  )}
+                </span>
               ))}
               <span className="border-2 border-dashed border-white/40 rounded-full px-5 py-2.5 text-sm text-white/60">
                 Your place? hello@surfstung.com

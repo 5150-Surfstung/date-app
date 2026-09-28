@@ -13,7 +13,7 @@ type Console = {
   applications: any[]; heys: any[]; wings: any[]; chats: any[]; signals: any[]; debriefs: any[]; weights: any[]; reports: any[]
 }
 
-const TABS = ['Pairs', 'Inbox', 'People', 'Chats', 'Signals', 'Debriefs', 'Reports'] as const
+const TABS = ['Pairs', 'Tonight', 'Inbox', 'People', 'Chats', 'Signals', 'Debriefs', 'Reports'] as const
 
 export default function ConsolePage() {
   const { email, loading } = useSession()
@@ -71,6 +71,15 @@ export default function ConsolePage() {
   if (data === null) return <AppShell title="Val's console"><h1 className="font-display font-extrabold text-4xl">Val only.</h1><p className="mt-2 text-[#141414]/60">This email isn&rsquo;t on the list.</p></AppShell>
 
   const pending = data.heys.filter((h: any) => h.status === 'sent' || h.status === 'previewed')
+  // Tonight: who scanned in during the last six hours, by /spot, and Val's picks among them.
+  const sixHoursAgo = Date.now() - 6 * 3600 * 1000
+  const tonight = data.signals.filter((s: any) => s.kind === 'checkin' && new Date(s.created_at).getTime() > sixHoursAgo)
+  const rooms: Record<string, Set<string>> = {}
+  for (const s of tonight) { (rooms[s.venue_slug] ??= new Set()).add(s.email) }
+  const existingPairs = new Set<string>(data.chats.map((c: any) => [c.a_handle, c.b_handle].sort().join('|')))
+  const roomPairs = Object.fromEntries(Object.entries(rooms).map(([slug, emails]) => [
+    slug, suggestPairs(data.handles.filter((h) => emails.has(h.email)), data.signals, data.heys, existingPairs, 10, data.wings ?? []),
+  ]))
   const byHandle = Object.fromEntries(data.handles.map((h) => [h.handle, h]))
   const counts = { people: data.handles.length, vibes: data.applications.length, heys: pending.length, chats: data.chats.filter((c: any) => c.status === 'open').length }
 
@@ -120,6 +129,37 @@ export default function ConsolePage() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {tab === 'Tonight' && (
+        <div className="mt-6 grid gap-6">
+          {Object.keys(rooms).length === 0 && <p className="text-sm">Nobody scanned in anywhere in the last six hours.</p>}
+          {Object.entries(rooms).map(([slug, emails]) => (
+            <div key={slug} className="border-2 border-[#141414] rounded-2xl p-5">
+              <div className="flex items-baseline justify-between gap-4">
+                <div className="font-display font-extrabold text-2xl">{VENUES.find((v) => v.slug === slug)?.name ?? slug}</div>
+                <div className="font-display font-extrabold text-4xl tabular-nums text-ob">{emails.size}</div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {Array.from(emails).map((e) => { const h = data.handles.find((x) => x.email === e); return <span key={e} className="text-sm font-semibold border border-[#141414]/15 rounded-full px-3 py-1">/{h?.handle ?? e} {h?.tag && <span className="text-ob">/{h.tag}</span>}</span> })}
+              </div>
+              <div className="mt-4 text-xs tracking-[0.15em] uppercase text-[#141414]/50">Val&rsquo;s picks in this room</div>
+              {(roomPairs[slug] ?? []).length === 0 && <p className="text-sm mt-1">Nothing yet. Needs two people who fit.</p>}
+              {(roomPairs[slug] ?? []).map((p) => {
+                const key = p.a.handle + '|' + p.b.handle
+                return (
+                  <div key={key} className="mt-3 flex flex-wrap items-center gap-3 border-t border-[#141414]/10 pt-3">
+                    <span className="font-display font-extrabold text-lg">/{p.a.handle} + /{p.b.handle}</span>
+                    <span className="text-sm text-[#141414]/60">{p.reasons.slice(0, 2).join(' ')}</span>
+                    <span className="ml-auto font-display font-extrabold text-2xl tabular-nums">{p.score}</span>
+                    <Pill primary onClick={() => pair(p)} disabled={busy === key}>{busy === key ? 'Pairing\u2026' : 'Introduce'}</Pill>
+                  </div>
+                )
+              })}
+              <div className="mt-4 text-xs text-[#141414]/50">&ldquo;I noticed someone&rdquo; notes from tonight are under Signals.</div>
+            </div>
+          ))}
         </div>
       )}
 

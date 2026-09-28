@@ -139,6 +139,19 @@ This is the half the original spec missed — and the half women decide on. Ever
 - Data: `date_handles`, `date_heys`; locked tables, RPC-only access.
 - Demo crew (7 seeded /names) at /demo — not real people.
 
+## 10f. /receipts, /founding, /night mode (v7, 2026-09-28)
+
+- **/receipts** (`/receipts`, strip on the homepage): live public numbers —
+  pool, founding claimed, verified, introductions, dates set/done, went to
+  a /second (the headline rate), passes, ghosts (always 0, by design).
+  Zeros are shown honestly before release.
+- **/founding** (`/founding`): the numbered wall, #001–#500, public /names
+  only. Demo crew holds the first numbers until enrollment opens.
+- **/night mode** (`/night/[spot]`): plum-and-pink night theme; live count
+  of people in the room (never who); scan in flips your /name to /tonight;
+  "I noticed someone." Console gets a **Tonight** tab: each room, who's
+  in it, and Val's picks among those present, one tap to introduce.
+
 ## 10e. /check, /pass, /second (v6, 2026-09-28)
 
 - **/check**: on a set /date, pick a time; Val's clock (pg_cron → notify
