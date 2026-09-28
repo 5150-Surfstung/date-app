@@ -70,5 +70,45 @@ Deno.serve(async (req) => {
     return json({ sent: results });
   }
 
+  if (kind === "help") {
+    // Someone answered "get me out". Val's people move first.
+    const { data: c } = await db.from("date_chats").select("*").eq("id", body.id).maybeSingle();
+    if (!c) return json({ skipped: "none" });
+    const { data: admins } = await db.from("date_admins").select("email");
+    const who = body.email as string;
+    const other = c.a_email === who ? c.b_handle : c.a_handle;
+    await Promise.all((admins ?? []).map((a: { email: string }) =>
+      send(a.email, `CHECK-IN: ${who} needs help`, `${who} answered "get me out" on their /date with /${other}.\nChat: ${SITE}/chat/?c=${c.id}\nSpot: ${c.spot_slug ?? "?"} at ${c.date_at ?? "?"}\n\nRule 6. Move first.`)));
+    return json({ ok: true });
+  }
+
+  if (kind === "clock") {
+    // Called every minute by pg_cron. Two jobs, both idempotent.
+    const nowIso = new Date().toISOString();
+    const results: Record<string, number> = { checks: 0, debriefs: 0 };
+
+    // 1. Check-ins that are due: "All good?"
+    const { data: due } = await db.from("date_chats").select("*").eq("check_status", "pending").lte("check_at", nowIso).limit(50);
+    for (const c of due ?? []) {
+      await db.from("date_chats").update({ check_status: "asked" }).eq("id", c.id);
+      for (const [email, other] of [[c.a_email, c.b_handle], [c.b_email, c.a_handle]]) {
+        await send(email, "All good?", `Checking in like you asked. You're out with /${other}.\n\nAll good: ${SITE}/chat/?c=${c.id}&check=ok\nGet me out: ${SITE}/chat/?c=${c.id}&check=help\n\nTap the second one and I'll give you a reason to leave. — Val`);
+      }
+      results.checks++;
+    }
+
+    // 2. The morning after: "Worth a /second?"
+    const twelveHoursAgo = new Date(Date.now() - 12 * 3600 * 1000).toISOString();
+    const { data: done } = await db.from("date_chats").select("*").eq("status", "date_set").is("debrief_asked_at", null).lte("date_at", twelveHoursAgo).limit(50);
+    for (const c of done ?? []) {
+      await db.from("date_chats").update({ debrief_asked_at: nowIso }).eq("id", c.id);
+      for (const [email, other] of [[c.a_email, c.b_handle], [c.b_email, c.a_handle]]) {
+        await send(email, `Worth a /second with /${other}?`, `Morning. How was it with /${other}?\n\nTell me here — it's private, they never see it. If you both say /second, I'll book it.\n\n${SITE}/chat/?c=${c.id}\n\n— Val`);
+      }
+      results.debriefs++;
+    }
+    return json(results);
+  }
+
   return json({ error: "unknown kind" }, 400);
 });

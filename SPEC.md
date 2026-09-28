@@ -139,6 +139,17 @@ This is the half the original spec missed — and the half women decide on. Ever
 - Data: `date_handles`, `date_heys`; locked tables, RPC-only access.
 - Demo crew (7 seeded /names) at /demo — not real people.
 
+## 10e. /check, /pass, /second (v6, 2026-09-28)
+
+- **/check**: on a set /date, pick a time; Val's clock (pg_cron → notify
+  function, every minute) emails "All good?" with two links. "Get me out"
+  files a CHECK-IN report and emails the admins immediately.
+- **/pass**: one tap closes a /chat; Val posts the kind close to the other
+  person. The anti-ghost mechanic.
+- **/second**: twelve hours after a /date, Val emails both "Worth a
+  /second?" Two 'second' debriefs and `submit_debrief` opens date two
+  (`second_of` links it), new /dare, 48-hour clock.
+
 ## 10d. Safety, voice, notifications (v5, 2026-09-28)
 
 Built against the research: burnout (78–79%), ghosting (41%), fakes as the

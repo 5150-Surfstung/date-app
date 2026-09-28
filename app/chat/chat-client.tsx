@@ -9,12 +9,13 @@ import { VENUES } from '@/lib/venues'
 import { getDemo, demoPhoto } from '@/lib/demo'
 import { dareFor } from '@/lib/dares'
 import { INTAKE_BUCKET } from '@/lib/supabase'
-import { askVal } from '@/lib/val'
+import { askVal, notify } from '@/lib/val'
 
 type Chat = {
   id: string; created_at: string; closes_at: string; status: 'open' | 'date_set' | 'closed'
   spot_slug: string | null; date_at: string | null; val_note: string | null; me: string
   brief: { for: string; sections: Record<string, string>; text: string } | null
+  check_at: string | null; check_status: 'pending' | 'asked' | 'ok' | 'help' | null; passed_by: string | null; second_of: string | null
   them: { handle: string; name: string; tag: string | null; email: string; age: number | null; hood: string | null; photo_key: string | null }
   my_count: number; their_count: number; debriefed: boolean
 }
@@ -33,6 +34,16 @@ export default function ChatClient() {
     const { data } = await authClient()!.rpc('my_chats')
     setChats((data as Chat[]) ?? [])
   }
+
+  // Val's check-in links land here: ?c=<chat>&check=ok|help
+  useEffect(() => {
+    const c = params.get('c'), check = params.get('check')
+    if (!email || !c || !check) return
+    authClient()!.rpc('answer_check', { p_chat: c, p_ok: check === 'ok' }).then(() => {
+      if (check === 'help') notify(authClient(), { kind: 'help', id: c, email })
+      load()
+    })
+  }, [email])
   useEffect(() => { if (email) load() }, [email])
 
   if (loading) return <AppShell title="/chat"><p>One sec…</p></AppShell>
@@ -55,7 +66,7 @@ export default function ChatClient() {
               <button key={c.id} onClick={() => setActive(c.id)}
                 className="text-left border-2 border-[#141414]/10 hover:border-ob rounded-2xl p-5 flex items-center justify-between gap-4 transition-colors">
                 <div>
-                  <div className="font-display font-extrabold text-2xl tracking-tight">/{c.them.handle} {c.them.tag && <span className="text-ob">/{c.them.tag}</span>}</div>
+                  <div className="font-display font-extrabold text-2xl tracking-tight">/{c.them.handle} {c.them.tag && <span className="text-ob">/{c.them.tag}</span>} {c.second_of && <span className="ml-2 text-xs font-extrabold tracking-[0.15em] uppercase bg-ob text-white rounded-full px-2 py-0.5 align-middle">/second</span>}</div>
                   <div className="text-sm font-semibold mt-0.5">{c.them.name}{c.them.age ? `, ${c.them.age}` : ''}</div>
                 </div>
                 <Status c={c} />
@@ -167,6 +178,25 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
     setBriefBusy(false)
   }
 
+  const [checkWhen, setCheckWhen] = useState(() => {
+    const d = chat.date_at ? new Date(new Date(chat.date_at).getTime() + 90 * 60000) : new Date(Date.now() + 2 * 3600000)
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+  })
+  async function setCheck() {
+    await authClient()!.rpc('set_check', { p_chat: chat.id, p_at: new Date(checkWhen).toISOString() })
+    onChange()
+  }
+  async function answerCheck(ok: boolean) {
+    await authClient()!.rpc('answer_check', { p_chat: chat.id, p_ok: ok })
+    if (!ok) notify(authClient(), { kind: 'help', id: chat.id, email: me })
+    onChange()
+  }
+  async function pass() {
+    if (!confirm('Close this /chat kindly? Val tells them. No hard feelings, no ghosting.')) return
+    await authClient()!.rpc('pass_chat', { p_chat: chat.id })
+    onChange(); onBack()
+  }
+
   async function sendDebrief(outcome: string) {
     setDebrief(outcome)
     await authClient()!.rpc('submit_debrief', { p_chat: chat.id, p_outcome: outcome })
@@ -224,6 +254,35 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
               </>
             )}
           </div>
+        )}
+        {chat.status === 'date_set' && (
+          <div className="border-2 border-[#141414] rounded-2xl p-4">
+            <div className="text-xs tracking-[0.15em] uppercase font-semibold text-ob">/check</div>
+            {chat.check_status === 'asked' ? (
+              <div className="mt-2">
+                <div className="font-display font-extrabold text-xl">All good?</div>
+                <div className="flex gap-2 mt-3">
+                  <Pill primary onClick={() => answerCheck(true)}>All good</Pill>
+                  <Pill onClick={() => answerCheck(false)}>Get me out</Pill>
+                </div>
+              </div>
+            ) : chat.check_status === 'help' ? (
+              <p className="mt-2 text-sm font-semibold">On it. Say you have to take a call and step outside. Val&rsquo;s people have been told. &mdash; Val</p>
+            ) : chat.check_status === 'ok' ? (
+              <p className="mt-2 text-sm text-[#141414]/70">You said all good. Enjoy it. &mdash; Val</p>
+            ) : chat.check_status === 'pending' && chat.check_at ? (
+              <p className="mt-2 text-sm text-[#141414]/70">Val checks on you at {new Date(chat.check_at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })}. One email: all good, or get me out.</p>
+            ) : (
+              <div className="mt-2 grid gap-2">
+                <p className="text-sm text-[#141414]/70">Val, check on me at&hellip;</p>
+                <input type="datetime-local" value={checkWhen} onChange={(e) => setCheckWhen(e.target.value)} className="border-2 border-[#141414]/15 rounded-full px-4 py-2 text-sm bg-white" />
+                <Pill primary onClick={setCheck}>Set the /check</Pill>
+              </div>
+            )}
+          </div>
+        )}
+        {chat.status !== 'closed' && (
+          <button onClick={pass} className="text-xs text-[#141414]/40 underline underline-offset-4 self-start">/pass &mdash; good person, not my person</button>
         )}
         <ReportBlock chat={chat} onDone={() => { onChange(); onBack() }} />
         <div className="bg-[#FFF3EA] rounded-2xl p-4">
@@ -283,7 +342,11 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
           </div>
         )}
         {(chat.debriefed || debrief) && <p className="mt-6 text-sm font-semibold">Got it. Already looking. &mdash; Val</p>}
-        {chat.status === 'closed' && <p className="mt-6 text-sm text-[#141414]/60">Time&rsquo;s up on this one. No hard feelings either way. I&rsquo;m already looking. &mdash; Val</p>}
+        {chat.status === 'closed' && (
+          <p className="mt-6 text-sm text-[#141414]/60">
+            {chat.passed_by ? (chat.passed_by === me ? 'You passed. Val told them kindly. Already looking. \u2014 Val' : 'Not this one. Good person, not your person, and that\u2019s allowed. I\u2019m still looking for you. \u2014 Val') : 'Time\u2019s up on this one. No hard feelings either way. I\u2019m already looking. \u2014 Val'}
+          </p>
+        )}
       </section>
     </div>
   )

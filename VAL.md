@@ -61,6 +61,18 @@ who." Val shows the friend the wall only. If the friend says yes, Val sends
 the /hey on their behalf, so the other person still chooses. A wing is a
 strong signal in Val's pairing. Five a week per person.
 
+**/check** — On a set /date, you can ask Val to check on you at a time.
+She sends one message: all good, or get me out. "Get me out" files a
+report and alerts Val's people first; Val gives you a reason to leave.
+
+**/pass** — Anyone can leave a /chat with one tap. Val closes it and tells
+the other person kindly: "Good person, not your person, and that's allowed."
+Nobody is ever ghosted on /date.
+
+**/second** — The morning after a /date, Val asks both, privately: worth a
+/second? Two yeses and she opens date two herself, with a new /spot and a
+new /dare.
+
 **/dare** — Every /chat carries one small first-date mission from Val.
 Short, funny, doable in ten minutes. Never embarrassing, never expensive.
 
