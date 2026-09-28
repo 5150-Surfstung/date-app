@@ -1,10 +1,13 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { VENUES, getVenue } from '@/lib/venues'
-import { TAGS } from '@/lib/handles'
+import { TAGS, HANDLE_KEY, type Tag } from '@/lib/handles'
 import { DEMO_CREW, demoPhoto } from '@/lib/demo'
+import { VIBES, pickVibe, vibeFor, type VibeTheme } from '@/lib/vibes'
+import { getSupabase } from '@/lib/supabase'
 
 const PROMISES = [
   {
@@ -25,23 +28,56 @@ const PROMISES = [
   },
 ]
 
-const FACES = ['ava', 'nico', 'cam', 'sloane', 'maya', 'theo']
+// Faces for the strip: same /tag first, then fill from the rest.
+function facesFor(tag: Tag) {
+  const same = DEMO_CREW.filter((d) => d.tag === tag)
+  const rest = DEMO_CREW.filter((d) => d.tag !== tag)
+  return [...same, ...rest].slice(0, 6)
+}
 
 export default function LandingContent() {
   const params = useSearchParams()
   const slug = params.get('v') ?? undefined
   const venue = slug ? getVenue(slug) : undefined
   const applyHref = slug ? `/apply?v=${encodeURIComponent(slug)}` : '/apply'
-  const faces = FACES.map((h) => DEMO_CREW.find((d) => d.handle === h)!).filter(Boolean)
+
+  const [vibe, setVibe] = useState<VibeTheme>(VIBES[0])
+  const [mine, setMine] = useState<string | null>(null)
+  const [spin, setSpin] = useState(0)
+
+  // First paint: your own /tag if you have a /name, otherwise the moment's.
+  useEffect(() => {
+    let handle: string | null = null
+    try { handle = localStorage.getItem(HANDLE_KEY) } catch {}
+    if (!handle) { setVibe(pickVibe()); return }
+    setMine(handle)
+    getSupabase()?.rpc('handle_wall', { p_handle: handle }).then(({ data }) => {
+      setVibe(data?.tag ? vibeFor(data.tag) : pickVibe())
+    })
+  }, [])
+
+  function reroll() {
+    setSpin((n) => n + 1)
+    setVibe(pickVibe(vibe.tag))
+  }
+
+  const faces = facesFor(vibe.tag)
+  const ctaHref =
+    vibe.tag === 'fun' ? `/spot/${VENUES[0].slug}` :
+    vibe.tag === 'tonight' || vibe.tag === 'open' || vibe.tag === 'casual' ? '/claim' : applyHref
 
   return (
     <main className="min-h-screen flex flex-col">
-      {/* Hero — red */}
-      <section className="px-6 sm:px-12 pb-16">
+      {/* Hero — takes on a /vibe every visit */}
+      <section
+        key={spin}
+        className="px-6 sm:px-12 pb-16 transition-colors duration-700 vibe-in"
+        style={{ background: vibe.bg, color: vibe.fg }}
+      >
         <header className="flex items-center justify-between pt-8">
           <span className="font-display font-extrabold text-3xl tracking-tight">/date</span>
-          <span className="text-xs sm:text-sm tracking-[0.2em] uppercase text-chalk-2 font-medium">
-            Charleston · Season I
+          <span className="text-xs sm:text-sm tracking-[0.2em] uppercase font-medium" style={{ color: vibe.muted }}>
+            {mine ? `Welcome back, /${mine}` : 'Charleston · Season I'}
           </span>
         </header>
 
@@ -61,31 +97,41 @@ export default function LandingContent() {
             </Link>
           )}
 
+          <div className="text-xs tracking-[0.2em] uppercase font-semibold mb-4" style={{ color: vibe.muted }}>
+            Tonight&rsquo;s /vibe &middot; <span style={{ color: vibe.fg }}>/{vibe.tag}</span>
+          </div>
           <h1 className="font-display font-extrabold text-6xl sm:text-8xl leading-[0.95] tracking-[-0.035em] [text-wrap:balance]">
-            Your /vibe is your profile.
+            {vibe.headline}
           </h1>
           <p className="mt-8 text-lg sm:text-xl font-medium">
             Three matches. No games. Real people.
           </p>
-          <p className="mt-6 max-w-xl text-xl sm:text-2xl text-chalk-2 leading-snug font-medium">
-            Stop swiping. Val picks your people, tells you why, and holds the table.
-            You just show up. And out in the world, give out your /name instead of
-            your number.
+          <p className="mt-6 max-w-xl text-xl sm:text-2xl leading-snug font-medium" style={{ color: vibe.muted }}>
+            {vibe.sub}
           </p>
 
           <div className="mt-12 flex flex-col sm:flex-row sm:items-center gap-5">
             <Link
-              href={applyHref}
-              className="bg-white text-ob text-lg font-extrabold rounded-full px-12 py-5 text-center hover:scale-[1.02] transition-transform"
+              href={ctaHref}
+              className="text-lg font-extrabold rounded-full px-12 py-5 text-center hover:scale-[1.02] transition-transform"
+              style={{ background: vibe.accent, color: vibe.onAccent }}
             >
-              Get your /vibe
+              {vibe.cta}
             </Link>
             <Link
               href="/claim"
-              className="border-2 border-white text-lg font-extrabold rounded-full px-10 py-5 text-center hover:bg-gold-faint transition-colors"
+              className="border-2 text-lg font-extrabold rounded-full px-10 py-5 text-center hover:opacity-80 transition-opacity"
+              style={{ borderColor: vibe.fg }}
             >
               Claim your /name
             </Link>
+            <button
+              onClick={reroll}
+              className="text-sm font-semibold underline underline-offset-4 self-start sm:self-auto"
+              style={{ color: vibe.muted }}
+            >
+              Not my /vibe
+            </button>
           </div>
         </div>
       </section>
@@ -94,7 +140,7 @@ export default function LandingContent() {
       <section className="bg-[#FFF3EA] text-[#141414] px-6 sm:px-12 py-16">
         <div className="max-w-6xl">
           <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob mb-6">
-            People on /date
+            People on /date &middot; /{vibe.tag} first
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
             {faces.map((d) => (
