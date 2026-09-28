@@ -7,13 +7,14 @@ import { suggestPairs, draftIntro, type Person, type Pair } from '@/lib/match'
 import { VENUES } from '@/lib/venues'
 import { QUESTIONS } from '@/lib/questions'
 import { askVal, notify } from '@/lib/val'
+import System from './system'
 
 type Console = {
   handles: (Person & { founding: number | null; created_at: string; app_id: string | null; photo_keys: string[] | null; voice_key: string | null; verified: boolean })[]
   applications: any[]; heys: any[]; wings: any[]; chats: any[]; signals: any[]; debriefs: any[]; weights: any[]; reports: any[]
 }
 
-const TABS = ['Pairs', 'Tonight', 'Inbox', 'People', 'Chats', 'Signals', 'Debriefs', 'Reports'] as const
+const TABS = ['Pairs', 'Tonight', 'Inbox', 'People', 'Chats', 'Signals', 'Debriefs', 'Reports', 'System'] as const
 
 export default function ConsolePage() {
   const { email, loading } = useSession()
@@ -243,6 +244,8 @@ export default function ConsolePage() {
           ))}
         </div>
       )}
+
+      {tab === 'System' && <System email={email} />}
 
       {tab === 'Reports' && (
         <div className="mt-6 grid gap-2">

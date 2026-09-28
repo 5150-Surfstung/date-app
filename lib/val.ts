@@ -37,3 +37,18 @@ export async function askVal(client: SupabaseClient, body: Record<string, unknow
 export function notify(client: SupabaseClient | null, body: Record<string, unknown>) {
   client?.functions.invoke('notify', { body }).catch(() => {})
 }
+
+// Same function, but wait for the answer. Used by /status and the console.
+export async function notifyNow(client: SupabaseClient | null, body: Record<string, unknown>): Promise<Record<string, unknown> | null> {
+  if (!client) return null
+  const { data, error } = await client.functions.invoke('notify', { body })
+  if (error) return null
+  return (data as Record<string, unknown>) ?? null
+}
+
+// What's wired, as booleans. Never values.
+export type Wiring = { resend: boolean; anthropic: boolean; push: boolean; from: string; site: string }
+export async function wiring(client: SupabaseClient | null): Promise<Wiring | null> {
+  const r = await notifyNow(client, { kind: 'status' })
+  return r && typeof r.resend === 'boolean' ? (r as Wiring) : null
+}

@@ -92,6 +92,25 @@ Deno.serve(async (req) => {
     return json({ resend: Boolean(await secret("RESEND_API_KEY")), anthropic: Boolean(await secret("ANTHROPIC_API_KEY")), push: Boolean(v.publicKey && v.privateKey), from: await from(), site: SITE });
   }
 
+  if (kind === "test") {
+    // Admin only: one email or one push, to the caller, so the pipes can be
+    // checked from the console without touching a member.
+    const auth = req.headers.get("Authorization") ?? "";
+    const { data: { user } } = await createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: auth } },
+    }).auth.getUser();
+    const me = user?.email?.toLowerCase();
+    if (!me) return json({ error: "login" }, 401);
+    const { data: adminRow } = await db.from("date_admins").select("email").eq("email", me).maybeSingle();
+    if (!adminRow) return json({ error: "admin" }, 403);
+    if (body.what === "push") {
+      const pushed = await push(me, { title: "Val, checking the line", body: "If you can read this, lock-screen notes work.", url: `${SITE}/console/`, tag: "test" });
+      return json({ pushed });
+    }
+    const sent = await send(me, "Val, checking the line", `If you can read this, email works.\n\n${SITE}/status/\n\n— Val`);
+    return json({ sent });
+  }
+
   if (kind === "hey") {
     const { data: h } = await db.from("date_heys").select("*").eq("to_handle", body.to_handle).eq("from_email", String(body.from_email).toLowerCase())
       .is("notified_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
