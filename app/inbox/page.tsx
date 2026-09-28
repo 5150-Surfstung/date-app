@@ -6,12 +6,13 @@ import { AppShell, NeedLogin, Pill } from '../ui'
 import { authClient, useSession } from '@/lib/auth'
 import { tagLine } from '@/lib/handles'
 import { QUESTIONS } from '@/lib/questions'
-import { askVal } from '@/lib/val'
+import { askVal, notify } from '@/lib/val'
+import { INTAKE_BUCKET } from '@/lib/supabase'
 
 type Item = {
   kind: 'hey' | 'wing'; winger?: string
   id: string; created_at: string; note: string | null; to_handle: string
-  from: { handle: string; name: string; tag: string | null; age: number | null; hood: string | null; answers: Record<string, string> | null; has_vibe: boolean }
+  from: { handle: string; name: string; tag: string | null; age: number | null; hood: string | null; answers: Record<string, string> | null; has_vibe: boolean; voice_key: string | null; verified: boolean }
 }
 
 export default function InboxPage() {
@@ -20,6 +21,7 @@ export default function InboxPage() {
   const [opened, setOpened] = useState<string | null>(null)
   const [takes, setTakes] = useState<Record<string, string>>({})
   const [asking, setAsking] = useState<string | null>(null)
+  const [voices, setVoices] = useState<Record<string, string>>({})
 
   async function load() {
     const { data } = await authClient()!.rpc('my_inbox')
@@ -33,8 +35,14 @@ export default function InboxPage() {
       load(); return
     }
     const { data } = await authClient()!.rpc('answer_hey', { p_hey: it.id, p_yes: yes })
-    if (yes && data) location.assign(`/chat/?c=${data}`)
+    if (yes && data) { notify(authClient(), { kind: 'chat', id: data }); location.assign(`/chat/?c=${data}`) }
     else load()
+  }
+
+  async function hear(it: Item) {
+    if (!it.from.voice_key || voices[it.id]) return
+    const { data } = await authClient()!.storage.from(INTAKE_BUCKET).download(it.from.voice_key)
+    if (data) setVoices({ ...voices, [it.id]: URL.createObjectURL(data) })
   }
 
   async function take(it: Item) {

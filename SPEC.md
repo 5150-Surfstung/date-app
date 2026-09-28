@@ -139,6 +139,30 @@ This is the half the original spec missed — and the half women decide on. Ever
 - Data: `date_handles`, `date_heys`; locked tables, RPC-only access.
 - Demo crew (7 seeded /names) at /demo — not real people.
 
+## 10d. Safety, voice, notifications (v5, 2026-09-28)
+
+Built against the research: burnout (78–79%), ghosting (41%), fakes as the
+top complaint, hatred of pay-to-see-likes, human curation converting far
+better than apps, voice-first startups rising, verification and check-ins
+as the safety features women trust.
+
+- **Hear the sixty seconds.** In the inbox, a /hey or /wing comes with the
+  sender's voice note. Recipients can stream it (storage policy scoped to
+  pending /heys and /wings). The voice is the /preview.
+- **Verified by Val.** A human flag on the /vibe (photos + voice reviewed),
+  set from the console, shown on the wall, in the inbox, and on /me.
+- **Report / block.** From any /name page (email suffices) or inside a
+  /chat (closes it and blocks). Reports land in the console's Reports tab.
+  Rule 6 applies: remove first, ask after.
+- **Val's emails** (`notify` edge function, Resend): a /hey landed, a /wing
+  landed (or an invite if the friend isn't on /date), a /chat opened. One
+  per event, in Val's voice. Needs `RESEND_API_KEY` (and a sending domain
+  for `NOTIFY_FROM`); without it, silent.
+- **/me**: your /name, founding number, verified badge, change /tag or
+  private, your /vibe, badge and /hey page links.
+- **/privacy** and **/terms**: plain-language drafts for legal review.
+- Still never: pay to see who liked you.
+
 ## 10c. The signed-in side (v4, 2026-09-28)
 
 - **Login**: Supabase Auth magic link to the email on your /name. No

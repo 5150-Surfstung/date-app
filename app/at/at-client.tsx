@@ -5,9 +5,9 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase'
 import { EMAIL_KEY, normalizeHandle, tagLine } from '@/lib/handles'
-import { VAL } from '@/lib/val'
+import { VAL, notify } from '@/lib/val'
 
-type Wall = { taken: boolean; open?: boolean; name?: string; tag?: string | null }
+type Wall = { taken: boolean; open?: boolean; name?: string; tag?: string | null; verified?: boolean }
 
 export default function AtClient({ handle: handleProp }: { handle?: string } = {}) {
   const params = useSearchParams()
@@ -58,6 +58,7 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
       }
       if (data !== 'ok') throw new Error(msgs[data] ?? 'Something went wrong.')
       try { localStorage.setItem(EMAIL_KEY, email.trim().toLowerCase()) } catch {}
+      notify(getSupabase(), { kind: 'hey', to_handle: handle, from_email: email.trim().toLowerCase() })
       setResult('sent')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.')
@@ -79,6 +80,7 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
       }
       if (data !== 'ok' && data !== 'invited') throw new Error(msgs[data] ?? 'Something went wrong.')
       try { localStorage.setItem(EMAIL_KEY, email.trim().toLowerCase()) } catch {}
+      notify(getSupabase(), { kind: 'wing', subject: handle })
       setWingResult(data)
     } catch (e) { setError(e instanceof Error ? e.message : 'Something went wrong.') }
     finally { setBusy(false) }
@@ -188,7 +190,36 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
             )}
           </>
         )}
+        {wall && wall.taken && (
+          <ReportLink handle={handle} email={email} />
+        )}
       </section>
     </main>
+  )
+}
+
+function ReportLink({ handle, email }: { handle: string; email: string }) {
+  const [open, setOpen] = useState(false)
+  const [reason, setReason] = useState('')
+  const [done, setDone] = useState(false)
+  async function send() {
+    await getSupabase()?.rpc('report_handle', { p_handle: handle, p_reason: reason || 'report', p_details: null, p_reporter_email: email, p_chat: null })
+    setDone(true)
+  }
+  if (done) return <p className="text-sm text-chalk-3 mt-4">Got it. Val sees it, they don\u2019t. \u2014 Val</p>
+  return !open ? (
+    <button onClick={() => setOpen(true)} className="text-xs text-chalk-3 underline underline-offset-4 self-start mt-4">Report this /name</button>
+  ) : (
+    <div className="flex flex-col gap-2 max-w-md mt-4">
+      <select value={reason} onChange={(e) => setReason(e.target.value)} className="bg-ob-1 border-2 border-ob-3 rounded-xl px-4 py-3 text-base">
+        <option value="">Why?</option>
+        <option>Not who they say they are</option>
+        <option>Harassing or pressuring</option>
+        <option>Under 18</option>
+        <option>Something else felt off</option>
+      </select>
+      <button disabled={!reason || !/.+@.+\..+/.test(email)} onClick={send} className="bg-white text-ob text-sm font-extrabold rounded-full px-6 py-3 self-start disabled:opacity-30">Send to Val</button>
+      {!/.+@.+\..+/.test(email) && <p className="text-xs text-chalk-3">Enter your email above so Val can follow up.</p>}
+    </div>
   )
 }

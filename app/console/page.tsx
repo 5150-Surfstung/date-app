@@ -6,14 +6,14 @@ import { authClient, useSession } from '@/lib/auth'
 import { suggestPairs, draftIntro, type Person, type Pair } from '@/lib/match'
 import { VENUES } from '@/lib/venues'
 import { QUESTIONS } from '@/lib/questions'
-import { askVal } from '@/lib/val'
+import { askVal, notify } from '@/lib/val'
 
 type Console = {
-  handles: (Person & { founding: number | null; created_at: string; app_id: string | null; photo_keys: string[] | null; voice_key: string | null })[]
-  applications: any[]; heys: any[]; wings: any[]; chats: any[]; signals: any[]; debriefs: any[]; weights: any[]
+  handles: (Person & { founding: number | null; created_at: string; app_id: string | null; photo_keys: string[] | null; voice_key: string | null; verified: boolean })[]
+  applications: any[]; heys: any[]; wings: any[]; chats: any[]; signals: any[]; debriefs: any[]; weights: any[]; reports: any[]
 }
 
-const TABS = ['Pairs', 'Inbox', 'People', 'Chats', 'Signals', 'Debriefs'] as const
+const TABS = ['Pairs', 'Inbox', 'People', 'Chats', 'Signals', 'Debriefs', 'Reports'] as const
 
 export default function ConsolePage() {
   const { email, loading } = useSession()
@@ -41,7 +41,8 @@ export default function ConsolePage() {
     const key = p.a.handle + '|' + p.b.handle
     setBusy(key)
     const text = note[key] || draftIntro(p, VENUES[0].name)
-    await authClient()!.rpc('val_pair', { p_a: p.a.handle, p_b: p.b.handle, p_note: text })
+    const { data: chatId } = await authClient()!.rpc('val_pair', { p_a: p.a.handle, p_b: p.b.handle, p_note: text })
+    if (chatId) notify(authClient(), { kind: 'chat', id: chatId })
     setBusy(null); load()
   }
 
@@ -163,7 +164,8 @@ export default function ConsolePage() {
                   <div key={q.id}><span className="text-[#141414]/50">{q.prompt}</span> &mdash; {h.answers![q.id]}</div>
                 ))}
                 {h.app_id && (
-                  <div className="flex gap-2 mt-2">
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <Pill onClick={async () => { await authClient()!.rpc('set_verified', { p_app: h.app_id, p_verified: !h.verified }); load() }}>{h.verified ? 'Verified \u2713 (undo)' : 'Mark verified'}</Pill>
                     <Pill primary onClick={() => setStatus(h.app_id!, 'approved')}>Approve</Pill>
                     <Pill onClick={() => setStatus(h.app_id!, 'waitlisted')}>Waitlist</Pill>
                     <Pill onClick={() => setStatus(h.app_id!, 'rejected')}>Decline</Pill>
@@ -197,6 +199,24 @@ export default function ConsolePage() {
               <span className="text-[#141414]/60">{data.handles.find((h) => h.email === s.email)?.handle ? '/' + data.handles.find((h) => h.email === s.email)!.handle : s.email}</span>
               {s.note && <span className="italic">&ldquo;{s.note}&rdquo;</span>}
               <span className="ml-auto text-xs text-[#141414]/50">{new Date(s.created_at).toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === 'Reports' && (
+        <div className="mt-6 grid gap-2">
+          {(data.reports ?? []).length === 0 && <p className="text-sm">No reports. Good.</p>}
+          {(data.reports ?? []).map((r: any) => (
+            <div key={r.id} className="border-2 border-ob rounded-2xl p-4 text-sm grid gap-1">
+              <div className="flex flex-wrap gap-3 items-baseline">
+                <span className="font-display font-extrabold text-xl">/{r.about_handle}</span>
+                <span className="uppercase text-xs tracking-[0.15em] font-extrabold text-ob">{r.reason}</span>
+                <span className="ml-auto text-xs text-[#141414]/50">{new Date(r.created_at).toLocaleString()}</span>
+              </div>
+              <div className="text-[#141414]/60">from {r.reporter_email}{r.chat_id ? ' \u00b7 from a /chat' : ''}</div>
+              {r.details && <div>{r.details}</div>}
+              <div className="text-xs text-[#141414]/50 mt-1">Rule 6: remove first, ask after. Decline their /vibe under People to pull them from the pool.</div>
             </div>
           ))}
         </div>

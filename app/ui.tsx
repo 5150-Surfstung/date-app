@@ -13,6 +13,7 @@ export function AppShell({ title, children }: { title: string; children: React.R
         <nav className="flex items-center gap-5 text-sm font-semibold">
           <Link href="/inbox/" className="hover:text-ob">Inbox</Link>
           <Link href="/chat/" className="hover:text-ob">/chat</Link>
+          <Link href="/me/" className="hover:text-ob">/me</Link>
           {email ? (
             <button onClick={() => signOut().then(() => location.assign('/'))} className="text-[#141414]/50 hover:text-ob">Sign out</button>
           ) : (

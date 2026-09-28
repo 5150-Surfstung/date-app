@@ -32,3 +32,8 @@ export async function askVal(client: SupabaseClient, body: Record<string, unknow
   if (error) return {}
   return (data as Record<string, unknown>) ?? {}
 }
+
+// Val's emails. Fire-and-forget; the function is idempotent per event.
+export function notify(client: SupabaseClient | null, body: Record<string, unknown>) {
+  client?.functions.invoke('notify', { body }).catch(() => {})
+}

@@ -225,6 +225,7 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
             )}
           </div>
         )}
+        <ReportBlock chat={chat} onDone={() => { onChange(); onBack() }} />
         <div className="bg-[#FFF3EA] rounded-2xl p-4">
           <div className="text-xs tracking-[0.15em] uppercase font-semibold text-ob">Your /dare</div>
           <div className="font-display font-extrabold text-lg mt-1 leading-snug">{dare}</div>
@@ -284,6 +285,33 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
         {(chat.debriefed || debrief) && <p className="mt-6 text-sm font-semibold">Got it. Already looking. &mdash; Val</p>}
         {chat.status === 'closed' && <p className="mt-6 text-sm text-[#141414]/60">Time&rsquo;s up on this one. No hard feelings either way. I&rsquo;m already looking. &mdash; Val</p>}
       </section>
+    </div>
+  )
+}
+
+function ReportBlock({ chat, onDone }: { chat: Chat; onDone: () => void }) {
+  const [open, setOpen] = useState(false)
+  const [reason, setReason] = useState('')
+  async function send() {
+    await authClient()!.rpc('report_handle', { p_handle: chat.them.handle, p_reason: reason || 'report', p_details: null, p_reporter_email: null, p_chat: chat.id })
+    onDone()
+  }
+  return !open ? (
+    <button onClick={() => setOpen(true)} className="text-xs text-[#141414]/40 underline underline-offset-4 self-start">Report or block /{chat.them.handle}</button>
+  ) : (
+    <div className="border-2 border-[#141414]/10 rounded-2xl p-4 grid gap-2">
+      <div className="text-sm font-semibold">This closes the /chat and blocks them. Val sees it; they don\u2019t.</div>
+      <select value={reason} onChange={(e) => setReason(e.target.value)} className="border-2 border-[#141414]/15 rounded-xl px-3 py-2 text-sm bg-white">
+        <option value="">Why?</option>
+        <option>Not who they say they are</option>
+        <option>Harassing or pressuring</option>
+        <option>Didn\u2019t show up</option>
+        <option>Something felt off</option>
+      </select>
+      <div className="flex gap-2">
+        <Pill primary onClick={send} disabled={!reason}>Report and block</Pill>
+        <Pill onClick={() => setOpen(false)}>Cancel</Pill>
+      </div>
     </div>
   )
 }

@@ -208,7 +208,7 @@ export default function LandingContent() {
             </div>
           </div>
 
-          <p className="mt-12 text-sm text-white/50">/date · Matchmaking for humans · Val is the matchmaker</p>
+          <p className="mt-12 text-sm text-white/50">/date · Matchmaking for humans · Val is the matchmaker · <Link href="/privacy" className="underline">Privacy</Link> · <Link href="/terms" className="underline">Terms</Link></p>
         </div>
       </section>
     </main>
