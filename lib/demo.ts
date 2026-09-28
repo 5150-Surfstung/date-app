@@ -74,6 +74,14 @@ export const DEMO_CREW: DemoPerson[] = [
     handle: 'kenji', name: 'Kenji', age: 35, hood: 'Downtown', tag: 'open', visibility: 'public',
     vibe: 'Sommelier on King Street. Will pick the bottle, won’t make it a lecture. Quiet until he isn’t. Open to whatever this turns into.',
   },
+  {
+    handle: 'bri', name: 'Bri', age: 26, hood: 'Sullivan’s Island', tag: 'fun', visibility: 'public',
+    vibe: 'Owns the boutique by the pier and closes early when the water’s good. Beach at seven, dinner at nine, opinions on both. Keep up.',
+  },
+  {
+    handle: 'noor', name: 'Noor', age: 29, hood: 'Downtown', tag: 'looking', visibility: 'public',
+    vibe: 'Surgical resident at MUSC. Eighty-hour weeks and still the most fun person at the table. Wants someone worth the one night off.',
+  },
 ]
 
 export function getDemo(handle: string) {
