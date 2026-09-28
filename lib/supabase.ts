@@ -4,6 +4,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 // with other apps; a dedicated project drops the prefix later.
 export const APPLICATIONS_TABLE = 'date_applications'
 export const INTAKE_BUCKET = 'date-intake'
+export const SIGNALS_TABLE = 'date_signals'
 
 // Browser client on the anon key. RLS makes this write-only: it can submit
 // applications and upload intake media, and can never read either back.

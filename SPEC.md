@@ -110,10 +110,33 @@ This is the half the original spec missed — and the half women decide on. Ever
 
 ## 10. Brand
 
-- Colors: obsidian black + warm gold.
-- Type: Cormorant Garamond (display) + DM Mono (body).
-- Tone: confident, warm, zero tolerance for games. No emojis. No gamification chrome. Luxury tech, not toy app.
-- Copy voice examples: "Someone worth your time is waiting." / "That wasn't your person. Already looking." / "We admit slowly on purpose."
+- Colors: tomato red (#FF3B2F) ground, white type and controls. No gold, no black.
+- Type: Sora throughout; extra-bold headlines, pill buttons, rounded controls.
+- Tone: confident, warm, flirty, zero tolerance for games. No emojis.
+- **The slash language.** Everything in the /date world takes a slash:
+  **/vibe** (your profile — "Your /vibe is your profile"), **/spot** (a
+  participating venue), **/night** (a monthly event at a /spot), **/match**,
+  **/brief**.
+- Copy voice examples: "Your /vibe is your profile." / "Someone in this room might already be on /date." / "That wasn't your person. Already looking."
+
+## 10a. /spots and /nights (v3, 2026-09-28)
+
+Open to everyone in Charleston — no newcomer gate (transplants are a
+marketing channel, not a requirement).
+
+- **/spot**: a venue with the window sticker and a QR that lands on
+  `/spot/[slug]`. Scanning in records a check-in. "I noticed someone"
+  records a one-line note. Hard rule: **no one can ever see who is checked
+  in.** Only the matchmaker sees signals; only a mutual, curated intro
+  surfaces. Check-ins also feed matching (shared spots → date venue).
+- **/night**: one night a month per /spot. Room of verified singles, first
+  hour comped, QR at the door, matchmaker makes intros live. This is the
+  cold-start engine: one good /night is 60 people in the pool.
+- Venue ask (all three or no sticker): window sticker, host a monthly
+  /night, comp the first round for introduced couples.
+- Data: `date_signals` (kind: checkin | notice | rsvp), insert-only for anon.
+- Venues and their next /night live in `lib/venues.ts` until the console
+  manages them.
 
 ## 11. Stack
 

@@ -132,7 +132,7 @@ export default function IntakeFlow() {
       <Shell progress={100}>
         <div className="flex-1 flex flex-col justify-center max-w-md">
           <h1 className="font-display font-extrabold text-5xl tracking-[-0.03em] leading-tight [text-wrap:balance]">
-            You&rsquo;re in the pool.
+            Your /vibe is in the pool.
           </h1>
           <p className="mt-6 font-display text-2xl font-medium text-chalk-2 leading-relaxed">
             We review every profile by hand. When your Season is ready to begin,
@@ -266,7 +266,7 @@ function Shell({
           /date
         </Link>
         <span className="text-sm tracking-[0.22em] uppercase text-chalk-3">
-          Application
+          Your /vibe
         </span>
       </header>
       <div className="h-px bg-ob-3 relative mb-10">
@@ -524,7 +524,7 @@ function VoiceStep({
       title="Sixty seconds, unscripted."
       onBack={onBack}
       onNext={onSubmit}
-      nextLabel={submitting ? 'Submitting…' : 'Submit application'}
+      nextLabel={submitting ? "Submitting…" : "Send my /vibe"}
     >
       <p className="text-base text-chalk-3 leading-relaxed max-w-md mb-8">
         Talk about anything — your week, the thing you can&rsquo;t stop thinking

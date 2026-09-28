@@ -56,4 +56,12 @@ check('intake media unlistable (anon)', listBlocked, `${list.data?.length ?? 0} 
 const dl = await supabase.storage.from('date-intake').download(`${id}/e2e-test.txt`)
 check('intake media undownloadable (anon)', Boolean(dl.error))
 
+
+// 6. /spot signal insert (check-in) with anon key
+const sig = await supabase.from('date_signals').insert({
+  kind: 'checkin', venue_slug: 'golden-hour', email: `e2e-${runId}@test.invalid`,
+})
+check('spot signal insert (anon)', !sig.error, sig.error?.message)
+const sigRead = await supabase.from('date_signals').select('id').limit(1)
+check('signals unreadable (anon)', !sigRead.error && sigRead.data.length === 0)
 process.exit(failed ? 1 : 0)
