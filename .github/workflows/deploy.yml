@@ -35,7 +35,7 @@ jobs:
               out = f"public/demo/{handle}.jpg"
               if os.path.exists(out) and os.path.getsize(out) > 60000:
                   print(handle, "already full size"); continue
-              variants = [
+              variants = ([v["url"]] if v.get("url") else []) + [
                   base.format(h=1408, q=92, w=1136, uri=v["uri"], sig=v["sig"]) + "&signer=media-rpc",
                   base.format(h=1408, q=92, w=1136, uri=v["uri"], sig=v["sig"]) + "&signer=media-rpc&x-canva-quality=thumbnail",
                   base.format(h=200, q=75, w=161, uri=v["uri"], sig=v["sig"]) + "&signer=media-rpc&x-canva-quality=thumbnail",
