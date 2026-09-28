@@ -71,7 +71,7 @@ export default function LandingContent() {
     vibe.tag === 'tonight' || vibe.tag === 'open' || vibe.tag === 'casual' ? '/claim' : applyHref
 
   return (
-    <main className="min-h-screen flex flex-col">
+    <main className="min-h-dvh flex flex-col">
       {/* Hero — takes on a /vibe every visit */}
       <section
         key={spin}
@@ -84,7 +84,7 @@ export default function LandingContent() {
             <span className="hidden sm:inline text-xs sm:text-sm tracking-[0.2em] uppercase font-medium" style={{ color: vibe.muted }}>
               {mine ? `Welcome back, /${mine}` : 'Charleston · Season I'}
             </span>
-            <Link href="/login/" className="text-sm font-extrabold border-2 rounded-full px-4 py-1.5" style={{ borderColor: vibe.fg }}>
+            <Link href="/login/" className="text-sm font-extrabold border-2 rounded-full px-4 py-2.5" style={{ borderColor: vibe.fg }}>
               {mine ? 'Inbox' : 'Log in'}
             </Link>
           </div>
@@ -136,7 +136,7 @@ export default function LandingContent() {
             </Link>
             <button
               onClick={reroll}
-              className="text-sm font-semibold underline underline-offset-4 self-start sm:self-auto"
+              className="tap text-sm font-semibold underline underline-offset-4 self-start sm:self-auto"
               style={{ color: vibe.muted }}
             >
               Not my /vibe
@@ -151,7 +151,7 @@ export default function LandingContent() {
           <div className="text-xs tracking-[0.2em] uppercase font-semibold" style={{ color: vibe.bg === '#141414' ? '#FF3B2F' : vibe.bg === '#FFF3EA' ? '#FF3B2F' : vibe.bg }}>
             On /date right now &middot; /{vibe.tag} first &middot; tap a face to send a /hey
           </div>
-          <Link href="/demo" className="text-sm font-semibold underline underline-offset-4 text-white/60 hover:text-white">All {DEMO_CREW.length}</Link>
+          <Link href="/demo" className="text-sm font-semibold underline underline-offset-4 text-white/60 hover:text-white px-3 -mx-3">All {DEMO_CREW.length}</Link>
         </div>
         <Wall people={faces} direction="left" accent={accent} />
         <div className="h-3" />

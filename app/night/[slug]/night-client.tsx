@@ -18,7 +18,9 @@ export default function NightClient({ venue }: { venue: Venue }) {
   const [busy, setBusy] = useState(false)
 
   async function refresh() {
-    const { data } = await getSupabase()!.rpc('night_count', { p_slug: venue.slug })
+    const s = getSupabase()
+    if (!s) return
+    const { data } = await s.rpc('night_count', { p_slug: venue.slug })
     setCount((data as number) ?? 0)
   }
   useEffect(() => {
@@ -30,7 +32,8 @@ export default function NightClient({ venue }: { venue: Venue }) {
 
   async function scanIn() {
     setBusy(true)
-    const s = getSupabase()!
+    const s = getSupabase()
+    if (!s) return
     await s.from(SIGNALS_TABLE).insert({ kind: 'checkin', venue_slug: venue.slug, email: email.trim().toLowerCase(), note: 'night' })
     // Tonight-only for the night: your /name goes dark at midnight unless you change it back.
     if (handle) await s.rpc('set_tag', { p_handle: handle, p_email: email.trim().toLowerCase(), p_tag: 'tonight', p_private: false })
@@ -39,12 +42,12 @@ export default function NightClient({ venue }: { venue: Venue }) {
   }
   async function noticed() {
     setBusy(true)
-    await getSupabase()!.from(SIGNALS_TABLE).insert({ kind: 'notice', venue_slug: venue.slug, email: email.trim().toLowerCase(), note: note.trim() })
+    await getSupabase()?.from(SIGNALS_TABLE).insert({ kind: 'notice', venue_slug: venue.slug, email: email.trim().toLowerCase(), note: note.trim() })
     setBusy(false); setStage('noticed')
   }
 
   return (
-    <main className="min-h-screen bg-[#140A20] text-[#F6EFFF] px-6 sm:px-12 pb-16">
+    <main className="page min-h-dvh bg-[#140A20] text-[#F6EFFF] px-6 sm:px-12 pb-16">
       <header className="flex items-center justify-between pt-8 pb-10">
         <Link href="/" className="font-display font-extrabold text-3xl tracking-tight">/date</Link>
         <span className="text-xs sm:text-sm tracking-[0.2em] uppercase font-medium text-[#FF5CA8]">/night</span>

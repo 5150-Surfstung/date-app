@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import QRCode from 'qrcode'
 import { heyUrl, normalizeHandle } from '@/lib/handles'
 import { getSupabase } from '@/lib/supabase'
+import Install from '../install'
 
 export default function BadgeClient() {
   const params = useSearchParams()
@@ -23,7 +24,7 @@ export default function BadgeClient() {
   }, [handle])
 
   return (
-    <main className="min-h-screen flex flex-col px-6 sm:px-12 pb-12">
+    <main className="min-h-dvh flex flex-col px-6 sm:px-12 pb-12">
       <header className="flex items-center justify-between pt-8 pb-10 print:hidden">
         <Link href="/" className="font-display font-extrabold text-3xl tracking-tight">/date</Link>
         <span className="text-xs sm:text-sm tracking-[0.2em] uppercase text-chalk-2 font-medium">badge</span>
@@ -62,6 +63,7 @@ export default function BadgeClient() {
           Card stock, cut it out, lanyard it. Or just hold it up. Scanning the code
           sends you a /hey &mdash; they never see anything until you say yes.
         </p>
+        <div className="print:hidden"><Install /></div>
       </section>
 
       <style>{`

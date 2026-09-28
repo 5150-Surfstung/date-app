@@ -2,10 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  background: #ff3b2f;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
 body {
   background: #ff3b2f;
   color: #ffffff;
+  /* Installed on a phone: keep clear of the notch and the home bar. */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
+
+/* Screens with their own ground (white, plum) run under the status bar too. */
+.page {
+  margin-top: calc(-1 * env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+}
+
+/* iOS zooms into any field under 16px. Never give it the chance. */
+input, select, textarea, button {
+  font: inherit;
+}
+input, select, textarea {
+  font-size: max(16px, 1em);
+}
+
+a, button, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* Inline text links keep their look but get a thumb-sized hit area. */
+p > a, a.underline, .tap, a.font-display {
+  display: inline-block;
+  padding-block: 11px;
+  margin-block: -11px;
+}
+img { -webkit-user-drag: none; }
 
 ::selection {
   background: #ffffff;

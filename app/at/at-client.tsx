@@ -30,12 +30,21 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
     } catch {}
   }, [])
 
+  const [slow, setSlow] = useState(false)
+  const [tries, setTries] = useState(0)
   useEffect(() => {
     if (!handle) { setWall({ taken: false }); return }
     const supabase = getSupabase()
     if (!supabase) return
-    supabase.rpc('handle_wall', { p_handle: handle }).then(({ data }) => setWall(data ?? { taken: false }))
-  }, [handle])
+    setSlow(false)
+    const t = setTimeout(() => setSlow(true), 8000)
+    supabase.rpc('handle_wall', { p_handle: handle }).then(({ data, error }) => {
+      clearTimeout(t)
+      if (error) { setSlow(true); return }
+      setWall(data ?? { taken: false })
+    })
+    return () => clearTimeout(t)
+  }, [handle, tries])
 
   const emailValid = /.+@.+\..+/.test(email)
 
@@ -87,14 +96,21 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
   }
 
   return (
-    <main className="min-h-screen flex flex-col px-6 sm:px-12 pb-12">
+    <main className="min-h-dvh flex flex-col px-6 sm:px-12 pb-12">
       <header className="flex items-center justify-between pt-8 pb-10">
         <Link href="/" className="font-display font-extrabold text-3xl tracking-tight">/date</Link>
         <span className="text-xs sm:text-sm tracking-[0.2em] uppercase text-chalk-2 font-medium">/hey</span>
       </header>
 
       <section className="max-w-xl flex flex-col gap-8">
-        {wall === null && <p className="text-xl font-medium">Looking up /{handle}…</p>}
+        {wall === null && !slow && <p className="text-xl font-medium">Looking up /{handle}…</p>}
+        {wall === null && slow && (
+          <div>
+            <p className="text-xl font-medium">Can&rsquo;t reach Val right now.</p>
+            <p className="mt-2 text-chalk-3">Check your signal and try again.</p>
+            <button onClick={() => { setSlow(false); setTries((n) => n + 1) }} className="mt-5 bg-white text-ob rounded-full px-7 py-3.5 font-extrabold">Try again</button>
+          </div>
+        )}
 
         {wall && !wall.taken && (
           <>

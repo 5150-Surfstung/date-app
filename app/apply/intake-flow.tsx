@@ -262,7 +262,7 @@ function Shell({
   children: React.ReactNode
 }) {
   return (
-    <main className="min-h-screen flex flex-col px-6 sm:px-10 pb-10">
+    <main className="min-h-dvh flex flex-col px-6 sm:px-10 pb-10">
       <header className="flex items-center justify-between pt-8 pb-6">
         <Link href="/" className="font-display font-extrabold text-gold text-3xl tracking-tight">
           /date

@@ -185,7 +185,7 @@ export default function ClaimClient() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-screen flex flex-col px-6 sm:px-12 pb-12">
+    <main className="min-h-dvh flex flex-col px-6 sm:px-12 pb-12">
       <header className="flex items-center justify-between pt-8 pb-10">
         <Link href="/" className="font-display font-extrabold text-3xl tracking-tight">/date</Link>
         <span className="text-xs sm:text-sm tracking-[0.2em] uppercase text-chalk-2 font-medium">/name</span>

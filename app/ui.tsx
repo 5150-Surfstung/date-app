@@ -3,27 +3,30 @@
 // Chrome for the signed-in side of /date: white, ink, one red accent.
 import Link from 'next/link'
 import { useSession, signOut } from '@/lib/auth'
+import Install from './install'
+import Notes from './push'
 
 export function AppShell({ title, children }: { title: string; children: React.ReactNode }) {
   const { email } = useSession()
   return (
-    <main className="min-h-screen bg-white text-[#141414]">
-      <header className="flex items-center justify-between px-6 sm:px-12 py-6 border-b border-[#141414]/10">
-        <Link href="/" className="font-display font-extrabold text-2xl tracking-tight">/date</Link>
-        <nav className="flex items-center gap-5 text-sm font-semibold">
-          <Link href="/inbox/" className="hover:text-ob">Inbox</Link>
-          <Link href="/chat/" className="hover:text-ob">/chat</Link>
-          <Link href="/me/" className="hover:text-ob">/me</Link>
+    <main className="page min-h-dvh bg-white text-[#141414]">
+      <header className="flex items-center justify-between gap-3 px-5 sm:px-12 py-4 sm:py-6 border-b border-[#141414]/10">
+        <Link href="/" className="font-display font-extrabold text-2xl tracking-tight py-2">/date</Link>
+        <nav className="flex items-center gap-1 sm:gap-3 text-sm font-semibold">
+          <Link href="/inbox/" className="px-2.5 py-2.5 rounded-full hover:text-ob">Inbox</Link>
+          <Link href="/chat/" className="px-2.5 py-2.5 rounded-full hover:text-ob">/chat</Link>
+          <Link href="/me/" className="px-2.5 py-2.5 rounded-full hover:text-ob">/me</Link>
           {email ? (
-            <button onClick={() => signOut().then(() => location.assign('/'))} className="text-[#141414]/50 hover:text-ob">Sign out</button>
+            <button onClick={() => signOut().then(() => location.assign('/'))} className="px-2.5 py-2.5 text-[#141414]/50 hover:text-ob">Out</button>
           ) : (
-            <Link href="/login/" className="bg-ob text-white rounded-full px-4 py-2">Log in</Link>
+            <Link href="/login/" className="bg-ob text-white rounded-full px-4 py-2.5 ml-1">Log in</Link>
           )}
         </nav>
       </header>
-      <section className="px-6 sm:px-12 py-10 max-w-5xl">
+      <section className="px-5 sm:px-12 py-8 sm:py-10 max-w-5xl">
         <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob mb-2">{title}</div>
         {children}
+        {email && <div className="mt-12 flex flex-col gap-4"><Install dark /><Notes dark /></div>}
       </section>
     </main>
   )

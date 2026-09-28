@@ -4,7 +4,7 @@ export const metadata = { title: '/date — Terms' }
 
 export default function Terms() {
   return (
-    <main className="min-h-screen bg-white text-[#141414] px-6 sm:px-12 py-10">
+    <main className="page min-h-dvh bg-white text-[#141414] px-6 sm:px-12 py-10">
       <Link href="/" className="font-display font-extrabold text-2xl tracking-tight">/date</Link>
       <article className="mt-10 max-w-2xl grid gap-5 text-base leading-relaxed">
         <h1 className="font-display font-extrabold text-4xl tracking-tight">The rules. Short on purpose.</h1>

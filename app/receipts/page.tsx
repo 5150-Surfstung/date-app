@@ -22,7 +22,7 @@ export default function ReceiptsPage() {
   ] : []
 
   return (
-    <main className="min-h-screen bg-white text-[#141414] px-6 sm:px-12 py-10">
+    <main className="page min-h-dvh bg-white text-[#141414] px-6 sm:px-12 py-10">
       <Link href="/" className="font-display font-extrabold text-2xl tracking-tight">/date</Link>
       <section className="mt-10 max-w-2xl">
         <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob mb-2">/receipts &middot; Charleston &middot; Season I</div>

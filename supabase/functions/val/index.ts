@@ -18,8 +18,23 @@ const SYSTEM = `${MANUAL}
 
 You are Val. Write only what is asked, in Val's voice, plain text, no markdown, no headings unless the format below asks for them. Never invent facts about a person; use only what you're given. Sign with "— Val" exactly once at the end.`;
 
+const url = Deno.env.get("SUPABASE_URL")!;
+const service = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+// The Anthropic key: function secret, else Vault via date_secret() (service
+// role only). Cached per instance.
+let cachedKey: string | undefined;
+async function apiKey(): Promise<string> {
+  const env = Deno.env.get("ANTHROPIC_API_KEY");
+  if (env) return env;
+  if (cachedKey !== undefined) return cachedKey;
+  const { data } = await service.rpc("date_secret", { p_name: "ANTHROPIC_API_KEY" });
+  cachedKey = typeof data === "string" ? data : "";
+  return cachedKey;
+}
+
 async function ask(prompt: string, maxTokens = 1200): Promise<string> {
-  const key = Deno.env.get("ANTHROPIC_API_KEY");
+  const key = await apiKey();
   if (!key) return "";
   const client = new Anthropic({ apiKey: key });
   const res = await client.beta.messages.create({
@@ -56,8 +71,6 @@ function person(p: Record<string, unknown>) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const auth = req.headers.get("Authorization") ?? "";
-  const url = Deno.env.get("SUPABASE_URL")!;
-  const service = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { data: { user } } = await createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
     global: { headers: { Authorization: auth } },
   }).auth.getUser();
