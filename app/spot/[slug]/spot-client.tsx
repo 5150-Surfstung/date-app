@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import type { Venue } from '@/lib/venues'
 import { getSupabase, SIGNALS_TABLE } from '@/lib/supabase'
+import { VAL } from '@/lib/val'
 
 const EMAIL_KEY = 'date:email'
 
@@ -114,8 +115,7 @@ export default function SpotClient({ venue }: { venue: Venue }) {
         {stage === 'in' && (
           <>
             <p className="text-xl sm:text-2xl font-medium leading-snug">
-              You&rsquo;re in. If someone here catches your eye, tell us. They never
-              see this unless it&rsquo;s mutual.
+              {VAL.spotIn} <span className="text-chalk-2">{VAL.sign}</span>
             </p>
             <div className="flex flex-col gap-3 max-w-md">
               <textarea
@@ -144,8 +144,7 @@ export default function SpotClient({ venue }: { venue: Venue }) {
 
         {stage === 'noticed' && (
           <p className="text-xl sm:text-2xl font-medium leading-snug">
-            Got it. If it&rsquo;s mutual, you&rsquo;ll hear from us. If not, nothing
-            happens and nobody knows. Enjoy your night.
+            {VAL.spotNoticed} <span className="text-chalk-2">{VAL.sign}</span>
           </p>
         )}
 

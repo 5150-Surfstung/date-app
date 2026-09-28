@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase'
 import { EMAIL_KEY, normalizeHandle, tagLine } from '@/lib/handles'
+import { VAL } from '@/lib/val'
 
 type Wall = { taken: boolean; open?: boolean; name?: string; tag?: string | null }
 
@@ -91,7 +92,7 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
           <>
             <h1 className="font-display font-extrabold text-5xl sm:text-7xl leading-[0.95] tracking-[-0.03em] break-all">/{handle}</h1>
             <p className="text-xl sm:text-2xl font-medium leading-snug">
-              This /name is private. Introductions come through the matchmaker only.
+              {VAL.privateWall} <span className="text-chalk-2">{VAL.sign}</span>
             </p>
             <Link href="/apply" className="border-2 border-white text-base font-extrabold rounded-full px-9 py-4 self-start hover:bg-gold-faint transition-colors">
               Get your /vibe
@@ -111,14 +112,14 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
 
             {result === 'sent' ? (
               <p className="text-xl sm:text-2xl font-medium leading-snug">
-                Sent. {wall.name} gets a /preview of your /vibe and decides. If it&rsquo;s a yes,
-                you&rsquo;ll hear from us. If not, nothing happens and nobody knows.
+                {VAL.heySent(wall.name ?? handle)} <span className="text-chalk-2">{VAL.sign}</span>
               </p>
             ) : (
               <>
                 <p className="text-xl sm:text-2xl font-medium leading-snug">
-                  Send {wall.name} a /hey. They see your /vibe first. You see nothing
-                  until they say yes.
+                  {handle === VAL.handle
+                    ? VAL.valWall
+                    : <>Send {wall.name} a /hey. Val shows them your /vibe first. You hear nothing until they say yes.</>}
                 </p>
                 <div className="flex flex-col gap-3 max-w-md">
                   <label className="grid gap-1.5">

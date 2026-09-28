@@ -1,0 +1,48 @@
+name: Fetch demo photos
+
+# Downloads generated demo photos from URLs this sandbox can't reach and
+# commits them to public/demo. Input is a JSON object {handle: url}.
+
+on:
+  workflow_dispatch:
+    inputs:
+      manifest:
+        description: 'JSON object mapping handle -> image URL'
+        required: true
+        type: string
+      ext:
+        description: 'File extension to save as'
+        required: false
+        default: 'jpg'
+        type: string
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download
+        env:
+          MANIFEST: ${{ inputs.manifest }}
+          EXT: ${{ inputs.ext }}
+        run: |
+          set -e
+          mkdir -p public/demo
+          echo "$MANIFEST" | python3 -c '
+          import json, sys, subprocess, os
+          m = json.load(sys.stdin)
+          ext = os.environ["EXT"]
+          for h, url in m.items():
+              out = f"public/demo/{h}.{ext}"
+              subprocess.run(["curl", "-fsSL", "-o", out, url], check=True)
+              print(h, subprocess.run(["file", out], capture_output=True, text=True).stdout.strip())
+          '
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/demo
+          git diff --cached --quiet && echo "no changes" || git commit -m "Add demo photos (full resolution)"
+          git push

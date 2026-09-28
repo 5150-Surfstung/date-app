@@ -8,6 +8,7 @@ import {
   normalizeHandle, type Tag,
 } from '@/lib/handles'
 import { DEMO_CREW } from '@/lib/demo'
+import { VAL } from '@/lib/val'
 
 type Avail = 'idle' | 'checking' | 'open' | 'taken' | 'reserved' | 'bad'
 
@@ -92,9 +93,7 @@ export default function ClaimClient() {
           /{handle}{tag && <span className="block text-4xl sm:text-5xl mt-2 text-chalk-2">/{tag}</span>}
         </h1>
         <p className="mt-6 text-xl sm:text-2xl font-medium leading-snug max-w-lg">
-          That&rsquo;s you now. Give it out instead of your number. Anyone with it can
-          send you a /hey &mdash; you see their /vibe first, and they see nothing
-          until you say so.
+          {VAL.claimed(handle)} <span className="text-chalk-2">{VAL.sign}</span>
         </p>
         <div className="mt-10 flex flex-col sm:flex-row gap-4">
           <Link href={`/badge/?h=${handle}`} className="bg-white text-ob text-base font-extrabold rounded-full px-9 py-4 text-center hover:scale-[1.02] transition-transform">

@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { QUESTIONS } from '@/lib/questions'
 import { getSupabase, APPLICATIONS_TABLE, INTAKE_BUCKET } from '@/lib/supabase'
+import { VAL } from '@/lib/val'
 
 const MIN_PHOTOS = 3
 const MAX_PHOTOS = 10
@@ -134,10 +135,7 @@ export default function IntakeFlow() {
           <h1 className="font-display font-extrabold text-5xl tracking-[-0.03em] leading-tight [text-wrap:balance]">
             Your /vibe is in the pool.
           </h1>
-          <p className="mt-6 font-display text-2xl font-medium text-chalk-2 leading-relaxed">
-            We review every profile by hand. When your Season is ready to begin,
-            you&rsquo;ll hear from us — and not before. No noise in between.
-          </p>
+          <p className="mt-6 text-2xl font-medium text-chalk-2 leading-snug">{VAL.applied} <span className="text-chalk-3">{VAL.sign}</span></p>
           <p className="mt-6 text-sm text-chalk-3 tracking-wide leading-relaxed">
             Profiles under 80% don&rsquo;t receive matches. Yours is complete.
           </p>
