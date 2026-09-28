@@ -28,11 +28,11 @@ const PROMISES = [
   },
 ]
 
-// Faces for the strip: same /tag first, then fill from the rest.
+// Profiles for the homepage: same /tag first, then everyone else.
 function facesFor(tag: Tag) {
   const same = DEMO_CREW.filter((d) => d.tag === tag)
   const rest = DEMO_CREW.filter((d) => d.tag !== tag)
-  return [...same, ...rest].slice(0, 6)
+  return [...same, ...rest]
 }
 
 export default function LandingContent() {
@@ -136,29 +136,37 @@ export default function LandingContent() {
         </div>
       </section>
 
-      {/* Faces — cream */}
+      {/* Profiles — cream */}
       <section className="bg-[#FFF3EA] text-[#141414] px-6 sm:px-12 py-16">
         <div className="max-w-6xl">
-          <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob mb-6">
-            People on /date &middot; /{vibe.tag} first
+          <div className="flex items-baseline justify-between gap-4 mb-6">
+            <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob">
+              People on /date &middot; /{vibe.tag} first
+            </div>
+            <Link href="/demo" className="text-sm font-semibold underline underline-offset-4">All {DEMO_CREW.length}</Link>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {faces.map((d) => (
-              <Link key={d.handle} href={`/${d.handle}`} className="group">
+              <Link key={d.handle} href={`/${d.handle}`} className="group bg-white rounded-2xl overflow-hidden border border-[#141414]/10 hover:border-ob transition-colors">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={demoPhoto(d.handle)}
-                  alt={d.name}
-                  className="w-full aspect-[4/5] object-cover rounded-2xl group-hover:opacity-90 transition-opacity"
+                  alt={`${d.name}, ${d.age}`}
+                  className="w-full aspect-[4/5] object-cover"
                 />
-                <div className="mt-2 font-display font-extrabold text-lg tracking-tight">
-                  /{d.handle} <span className="text-ob">/{d.tag}</span>
+                <div className="p-4">
+                  <div className="font-display font-extrabold text-xl tracking-tight leading-tight">
+                    /{d.handle} <span className="text-ob">/{d.tag}</span>
+                  </div>
+                  <div className="text-sm font-semibold mt-1">{d.name}, {d.age} &middot; {d.hood}</div>
+                  <p className="text-sm text-[#141414]/70 leading-snug mt-2 line-clamp-3">{d.vibe}</p>
+                  <div className="text-xs font-extrabold text-ob mt-3">Send a /hey &rarr;</div>
                 </div>
               </Link>
             ))}
           </div>
-          <p className="mt-5 text-sm text-[#141414]/60">
-            Demo crew. Not real people &mdash; yet. <Link href="/demo" className="underline">Meet all of them.</Link>
+          <p className="mt-6 text-sm text-[#141414]/60">
+            Demo crew. Not real people &mdash; yet. Photos are generated.
           </p>
         </div>
       </section>
