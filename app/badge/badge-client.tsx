@@ -12,10 +12,11 @@ export default function BadgeClient() {
   const handle = normalizeHandle(params.get('h') ?? '')
   const [qr, setQr] = useState<string>('')
   const [tag, setTag] = useState<string | null>(null)
+  const [founding, setFounding] = useState<number | null>(null)
 
   useEffect(() => {
     if (!handle) return
-    getSupabase()?.rpc('handle_wall', { p_handle: handle }).then(({ data }) => setTag(data?.tag ?? null))
+    getSupabase()?.rpc('handle_wall', { p_handle: handle }).then(({ data }) => { setTag(data?.tag ?? null); setFounding(data?.founding ?? null) })
     QRCode.toDataURL(heyUrl(handle), {
       margin: 0, width: 512, color: { dark: '#FF3B2F', light: '#FFFFFF' },
     }).then(setQr)
@@ -39,7 +40,7 @@ export default function BadgeClient() {
           <div className="mt-auto flex items-end justify-between gap-4">
             <div>
               <div className="font-extrabold text-lg leading-tight">Send me a /hey.</div>
-              <div className="text-sm font-medium mt-1">on /date · Charleston</div>
+              <div className="text-sm font-medium mt-1">on /date · Charleston{founding ? ` · #${String(founding).padStart(3, '0')}` : ''}</div>
             </div>
             {qr && (
               // eslint-disable-next-line @next/next/no-img-element

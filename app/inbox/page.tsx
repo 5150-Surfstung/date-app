@@ -8,6 +8,7 @@ import { tagLine } from '@/lib/handles'
 import { QUESTIONS } from '@/lib/questions'
 
 type Item = {
+  kind: 'hey' | 'wing'; winger?: string
   id: string; created_at: string; note: string | null; to_handle: string
   from: { handle: string; name: string; tag: string | null; age: number | null; hood: string | null; answers: Record<string, string> | null; has_vibe: boolean }
 }
@@ -23,8 +24,12 @@ export default function InboxPage() {
   }
   useEffect(() => { if (email) load() }, [email])
 
-  async function answer(id: string, yes: boolean) {
-    const { data } = await authClient()!.rpc('answer_hey', { p_hey: id, p_yes: yes })
+  async function answer(it: Item, yes: boolean) {
+    if (it.kind === 'wing') {
+      await authClient()!.rpc('answer_wing', { p_wing: it.id, p_yes: yes })
+      load(); return
+    }
+    const { data } = await authClient()!.rpc('answer_hey', { p_hey: it.id, p_yes: yes })
     if (yes && data) location.assign(`/chat/?c=${data}`)
     else load()
   }
@@ -47,6 +52,9 @@ export default function InboxPage() {
           const open = opened === it.id
           return (
             <div key={it.id} className="border-2 border-[#141414]/10 rounded-2xl p-5">
+              {it.kind === 'wing' && (
+                <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob mb-2">/wing from /{it.winger} &middot; &ldquo;you two should meet&rdquo;</div>
+              )}
               <div className="flex items-baseline justify-between gap-3">
                 <div className="font-display font-extrabold text-2xl tracking-tight">
                   /{f.handle} {f.tag && <span className="text-ob">/{f.tag}</span>}
@@ -71,8 +79,8 @@ export default function InboxPage() {
 
               <div className="mt-4 flex flex-wrap gap-3">
                 {!open && <Pill onClick={() => setOpened(it.id)}>/preview</Pill>}
-                <Pill primary onClick={() => answer(it.id, true)}>Yes &mdash; open a /chat</Pill>
-                <Pill onClick={() => answer(it.id, false)}>No</Pill>
+                <Pill primary onClick={() => answer(it, true)}>{it.kind === 'wing' ? `Send /${f.handle} a /hey` : 'Yes \u2014 open a /chat'}</Pill>
+                <Pill onClick={() => answer(it, false)}>{it.kind === 'wing' ? 'Pass' : 'No'}</Pill>
               </div>
             </div>
           )

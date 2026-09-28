@@ -76,9 +76,14 @@ export default function LandingContent() {
       >
         <header className="flex items-center justify-between pt-8">
           <span className="font-display font-extrabold text-3xl tracking-tight">/date</span>
-          <span className="text-xs sm:text-sm tracking-[0.2em] uppercase font-medium" style={{ color: vibe.muted }}>
-            {mine ? `Welcome back, /${mine}` : 'Charleston · Season I'}
-          </span>
+          <div className="flex items-center gap-5">
+            <span className="hidden sm:inline text-xs sm:text-sm tracking-[0.2em] uppercase font-medium" style={{ color: vibe.muted }}>
+              {mine ? `Welcome back, /${mine}` : 'Charleston · Season I'}
+            </span>
+            <Link href="/login/" className="text-sm font-extrabold border-2 rounded-full px-4 py-1.5" style={{ borderColor: vibe.fg }}>
+              {mine ? 'Inbox' : 'Log in'}
+            </Link>
+          </div>
         </header>
 
         <div className="pt-16 max-w-4xl">

@@ -18,6 +18,10 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [wing, setWing] = useState(false)
+  const [friend, setFriend] = useState('')
+  const [wingNote, setWingNote] = useState('')
+  const [wingResult, setWingResult] = useState<string | null>(null)
 
   useEffect(() => {
     try {
@@ -60,6 +64,24 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
     } finally {
       setBusy(false)
     }
+  }
+
+  async function sendWing() {
+    setBusy(true); setError(null)
+    try {
+      const supabase = getSupabase()
+      if (!supabase) throw new Error('Not configured yet.')
+      const { data, error } = await supabase.rpc('send_wing', { p_from_email: email, p_subject: handle, p_to: friend.trim().replace(/^\//, ''), p_note: wingNote })
+      if (error) throw new Error('Something went wrong. Try again.')
+      const msgs: Record<string, string> = {
+        no_vibe: 'You need a /name to /wing someone.', no_handle: 'That /name doesn\u2019t exist.', closed: 'This /name is private.',
+        limit: 'Five /wings a week. You\u2019re out for now.', self: 'That\u2019s one of you.', no_friend: 'No /name by that. Try their email to invite them.',
+      }
+      if (data !== 'ok' && data !== 'invited') throw new Error(msgs[data] ?? 'Something went wrong.')
+      try { localStorage.setItem(EMAIL_KEY, email.trim().toLowerCase()) } catch {}
+      setWingResult(data)
+    } catch (e) { setError(e instanceof Error ? e.message : 'Something went wrong.') }
+    finally { setBusy(false) }
   }
 
   return (
@@ -139,6 +161,28 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
                     No /name yet?{' '}
                     <Link href="/claim" className="underline font-semibold text-chalk">Claim yours</Link> &mdash; thirty seconds.
                   </p>
+                </div>
+
+                <div className="border-2 border-white/40 rounded-2xl p-5 max-w-md mt-2">
+                  <div className="text-xs tracking-[0.2em] uppercase font-semibold mb-1">Not for you? /wing them.</div>
+                  {wingResult ? (
+                    <p className="text-base font-medium">{wingResult === 'invited' ? 'Sent. Your friend isn\u2019t on /date yet \u2014 Val will invite them.' : `Sent. Val will show your friend /${handle}. If they\u2019re into it, they send the /hey.`} <span className="text-chalk-2">{VAL.sign}</span></p>
+                  ) : !wing ? (
+                    <>
+                      <p className="text-sm text-chalk-2">Know who {wall.name} is right for? Pass the /name to a friend. They only see this page. Saying yes is theirs.</p>
+                      <button onClick={() => setWing(true)} className="mt-3 border-2 border-white rounded-full px-5 py-2.5 text-sm font-extrabold hover:bg-white hover:text-ob transition-colors">I know who</button>
+                    </>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <input value={friend} onChange={(e) => setFriend(e.target.value)} placeholder="Friend's /name or email"
+                        className="bg-ob-1 border-2 border-ob-3 rounded-xl focus:border-gold outline-none px-4 py-3 text-base placeholder:text-chalk-3" />
+                      <input value={wingNote} onChange={(e) => setWingNote(e.target.value)} placeholder="Why them (optional)"
+                        className="bg-ob-1 border-2 border-ob-3 rounded-xl focus:border-gold outline-none px-4 py-3 text-base placeholder:text-chalk-3" />
+                      <button disabled={!emailValid || !friend.trim() || busy} onClick={sendWing}
+                        className="bg-white text-ob text-base font-extrabold rounded-full px-8 py-3 hover:scale-[1.02] transition-transform disabled:opacity-30 self-start">Send the /wing</button>
+                      {!emailValid && <p className="text-xs text-chalk-3">Enter the email on your /name above first.</p>}
+                    </div>
+                  )}
                 </div>
               </>
             )}

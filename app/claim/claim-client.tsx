@@ -104,7 +104,7 @@ export default function ClaimClient() {
           </Link>
         </div>
         <p className="mt-8 text-sm text-chalk-3">
-          Your /hey link: <span className="font-semibold text-chalk">/at/?h={handle}</span>
+          Founding member. Your number is on your badge. Season I is free. Your /hey link: <span className="font-semibold text-chalk">/{handle}</span>
         </p>
       </Shell>
     )

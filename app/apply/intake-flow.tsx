@@ -202,6 +202,10 @@ export default function IntakeFlow() {
               value={basics.seeking}
               onChange={(v) => setBasics({ ...basics, seeking: v })}
             />
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Age from" type="number" value={answers.age_min ?? ''} onChange={(v) => setAnswers({ ...answers, age_min: v })} />
+              <Field label="Age to" type="number" value={answers.age_max ?? ''} onChange={(v) => setAnswers({ ...answers, age_max: v })} />
+            </div>
             {Number(basics.age) > 0 && Number(basics.age) < 18 && (
               <p className="text-sm text-gold">
                 /date is for adults — 18 and over.

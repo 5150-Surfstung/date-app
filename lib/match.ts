@@ -19,6 +19,7 @@ export type Person = {
 
 export type Signal = { kind: string; venue_slug: string; email: string; note: string | null }
 export type Hey = { to_handle: string; from_email: string; status: string }
+export type Wing = { subject_handle: string; to_handle: string | null; from_email: string }
 
 export type Pair = {
   a: Person
@@ -99,7 +100,7 @@ function ageOk(a: Person, b: Person) {
   return inRange(b.age, ra.age_min, ra.age_max) && inRange(a.age, rb.age_min, rb.age_max)
 }
 
-export function scorePair(a: Person, b: Person, signals: Signal[], heys: Hey[]): Pair | null {
+export function scorePair(a: Person, b: Person, signals: Signal[], heys: Hey[], wings: Wing[] = []): Pair | null {
   if (a.email === b.email) return null
   if (!seekingOk(a, b)) return null
   if (!ageOk(a, b)) return null
@@ -158,17 +159,19 @@ export function scorePair(a: Person, b: Person, signals: Signal[], heys: Hey[]):
   if (shared.length) { score += Math.min(10, 5 * shared.length); reasons.push(`Both scan in at the same /spot.`) }
   const hey = heys.find((h) => (h.from_email === a.email && h.to_handle === b.handle) || (h.from_email === b.email && h.to_handle === a.handle))
   if (hey) { score += 15; reasons.push('One of them already sent a /hey.') }
+  const wing = wings.find((w) => (w.subject_handle === a.handle && w.to_handle === b.handle) || (w.subject_handle === b.handle && w.to_handle === a.handle))
+  if (wing) { score += 12; reasons.push('A friend /winged this pair.') }
 
   return { a, b, score: Math.round(Math.min(100, score)), reasons, flags }
 }
 
-export function suggestPairs(people: Person[], signals: Signal[], heys: Hey[], existing: Set<string>, limit = 20): Pair[] {
+export function suggestPairs(people: Person[], signals: Signal[], heys: Hey[], existing: Set<string>, limit = 20, wings: Wing[] = []): Pair[] {
   const out: Pair[] = []
   for (let i = 0; i < people.length; i++) {
     for (let j = i + 1; j < people.length; j++) {
       const key = [people[i].handle, people[j].handle].sort().join('|')
       if (existing.has(key)) continue
-      const p = scorePair(people[i], people[j], signals, heys)
+      const p = scorePair(people[i], people[j], signals, heys, wings)
       if (p) out.push(p)
     }
   }

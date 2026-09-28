@@ -139,6 +139,39 @@ This is the half the original spec missed — and the half women decide on. Ever
 - Data: `date_handles`, `date_heys`; locked tables, RPC-only access.
 - Demo crew (7 seeded /names) at /demo — not real people.
 
+## 10c. The signed-in side (v4, 2026-09-28)
+
+- **Login**: Supabase Auth magic link to the email on your /name. No
+  passwords. (Supabase's built-in sender is rate-limited; connect real SMTP
+  before launch.)
+- **Inbox** (`/inbox`): your /heys and /wings as /previews. Yes on a /hey
+  opens a /chat; no is silent. Yes on a /wing sends a /hey (consent stays
+  two-sided).
+- **/chat** (`/chat`): 48-hour ring clock; photos are blurred and sharpen as
+  you both write, unlocking at three messages each ("you talked first");
+  every /chat gets a **/dare** from Val (one small first-date mission);
+  pick a /spot and time to make it a /date; after the date, a private
+  **debrief** (second / good-not-my-person / no spark / didn't happen).
+- **Debriefs feed Val**: each outcome nudges that person's weights
+  (`date_weights`). The engine reads them next.
+- **/wing**: "not for me, but I know who." From any /name page, pass the
+  /name to a friend (their /name or email). The friend sees only the wall.
+  Five a week. Val counts a wing as a strong pairing signal.
+- **Founding members**: the first 500 /names claimed get a number
+  (#001–#500) on the badge. Open enrollment for 30 days, then release day
+  with a /night. Season I is free for founding members.
+- **Val's console** (`/console`, admin emails only): Pairs (engine
+  suggestions with score, reasons and flags; one tap opens a /chat with
+  Val's note), Inbox, People (approve / waitlist / decline), Chats,
+  Signals, Debriefs.
+- **The engine** (`lib/match.ts`): hard filters on identity/seeking and
+  age range wanted; score = /tag chemistry 35 + the eight answers 30 + age
+  15 + Charleston cluster 10 + /spot signals 10, plus a /hey or /wing
+  between them. Every pair returns reasons in Val's voice, never a number
+  to the user.
+- Val's AI voice (Claude drafting intros and briefs) needs a server-side
+  key; until then Val's notes are templated from the engine's reasons.
+
 ## 10a. /spots and /nights (v3, 2026-09-28)
 
 Open to everyone in Charleston — no newcomer gate (transplants are a
