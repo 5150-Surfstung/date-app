@@ -6,6 +6,8 @@ on:
   workflow_dispatch:
 
 env:
+  STATIC_EXPORT: '1'
+  NEXT_PUBLIC_STATIC_EXPORT: '1'
   NEXT_PUBLIC_SITE_URL: https://5150-surfstung.github.io/date-app
   NEXT_PUBLIC_BASE_PATH: /date-app
   NEXT_PUBLIC_SUPABASE_URL: https://iwotispqqcnkrbcnvozq.supabase.co

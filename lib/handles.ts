@@ -39,8 +39,12 @@ export function siteUrl() {
   return ''
 }
 
+// Clean short link on Vercel; query-param form on the static export.
 export function heyUrl(handle: string) {
-  return `${siteUrl()}/at/?h=${encodeURIComponent(handle)}`
+  const h = encodeURIComponent(handle)
+  return process.env.NEXT_PUBLIC_STATIC_EXPORT
+    ? `${siteUrl()}/at/?h=${h}`
+    : `${siteUrl()}/${h}`
 }
 
 export const EMAIL_KEY = 'date:email'

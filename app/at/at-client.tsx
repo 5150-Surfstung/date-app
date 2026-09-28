@@ -8,9 +8,9 @@ import { EMAIL_KEY, normalizeHandle, tagLine } from '@/lib/handles'
 
 type Wall = { taken: boolean; open?: boolean; name?: string; tag?: string | null }
 
-export default function AtClient() {
+export default function AtClient({ handle: handleProp }: { handle?: string } = {}) {
   const params = useSearchParams()
-  const handle = normalizeHandle(params.get('h') ?? '')
+  const handle = normalizeHandle(handleProp ?? params.get('h') ?? '')
   const [wall, setWall] = useState<Wall | null>(null)
   const [email, setEmail] = useState('')
   const [note, setNote] = useState('')
