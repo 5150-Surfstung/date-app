@@ -10,7 +10,7 @@ import { VAL, notify } from '@/lib/val'
 import { SignIn } from '../gate'
 import { TagLine } from '../tags'
 
-type Wall = { taken: boolean; open?: boolean; pending?: boolean; name?: string; tag?: string | null; tags?: string[] | null; verified?: boolean; demo?: boolean }
+type Wall = { taken: boolean; open?: boolean; pending?: boolean; found?: boolean; name?: string; tag?: string | null; tags?: string[] | null; verified?: boolean; demo?: boolean }
 
 export default function AtClient({ handle: handleProp }: { handle?: string } = {}) {
   const params = useSearchParams()
@@ -128,7 +128,9 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
           <>
             <h1 className="font-display font-extrabold text-5xl sm:text-7xl leading-[0.95] tracking-[-0.03em] break-all">/{handle}</h1>
             <p className="text-xl sm:text-2xl font-medium leading-snug">
-              {wall.pending
+              {wall.found
+                ? <>Off the market. They found their person on /date.</>
+                : wall.pending
                 ? <>Almost ready. I&rsquo;m still reading their /vibe &mdash; every member is approved by a person before anyone can reach them.</>
                 : VAL.privateWall} <span className="text-[#141414]/70">{VAL.sign}</span>
             </p>

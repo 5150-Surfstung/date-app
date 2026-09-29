@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Found } from './found'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { AppShell, NeedLogin, Pill } from '../ui'
@@ -272,6 +273,7 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
           </div>
         )}
         <Swap chat={chat} />
+        {chat.status === 'date_set' && <Found chatId={chat.id} them={chat.them.handle} />}
         {chat.status !== 'closed' && (
           <button onClick={pass} className="text-xs text-[#141414]/40 underline underline-offset-4 self-start">/pass &mdash; good person, not my person</button>
         )}

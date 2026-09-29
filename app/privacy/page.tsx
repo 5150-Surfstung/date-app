@@ -15,6 +15,7 @@ export default function Privacy() {
         <p><b>Debriefs.</b> What you tell Val after a date is private. It is never shown to the other person.</p>
         <p><b>Reports.</b> If you report someone, Val sees it. They don&rsquo;t.</p>
         <p><b>Your copy.</b> /me &rarr; Settings &rarr; Download my data gives you everything /date holds about you, in one file, any time.</p>
+        <p><b>If /date changes hands.</b> If /date is ever sold or merged, your account moves with it under this same policy. You&rsquo;ll be told first, with the chance to delete everything before it does.</p>
         <p><b>Deleting.</b> /me &rarr; Settings &rarr; Leave /date deletes your /name, answers, photos, voice, /heys and /chats immediately. Reports other members filed about you are kept, detached from your /name, so Val can keep people safe. Or email hello@surfstung.com and a person does it for you.</p>
         <p><b>Email.</b> Every email from Val has a one-tap stop. Safety check-ins you asked for always come through.</p>
         <p><b>Where it lives.</b> Supabase (database and files, US) and Vercel (the site). Email is sent by Resend.</p>

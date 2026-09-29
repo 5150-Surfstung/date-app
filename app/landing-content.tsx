@@ -256,6 +256,7 @@ export default function LandingContent() {
             <Link href="/tonight/" className="rounded-full border-2 border-current px-5 py-2.5 text-sm font-extrabold">Who&rsquo;s out tonight</Link>
             <Link href="/trending/" className="rounded-full border-2 border-current px-5 py-2.5 text-sm font-extrabold">What Charleston is slashing</Link>
             <Link href="/share/" className="rounded-full border-2 border-current px-5 py-2.5 text-sm font-extrabold">Make a vibe card</Link>
+            <Link href="/couples/" className="rounded-full border-2 border-current px-5 py-2.5 text-sm font-extrabold">Val&rsquo;s couples</Link>
           </div>
           <Link href="/partner/" className="rise mt-6 inline-block text-sm font-semibold underline underline-offset-4" style={{ ['--d' as string]: 5 }}>
             Run a bar, caf&eacute;, gym or studio? Make it a /date spot &rarr;

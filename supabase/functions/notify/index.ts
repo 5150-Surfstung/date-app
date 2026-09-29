@@ -198,6 +198,16 @@ Deno.serve(async (req) => {
     return json({ sent });
   }
 
+  if (kind === "found") {
+    // One of them tapped "We found each other". Tell the other, gently.
+    const { data: k } = await db.from("date_couples").select("*").eq("id", body.id).maybeSingle();
+    if (!k || (k.a_yes && k.b_yes)) return json({ skipped: "none" });
+    const [to, from] = k.a_yes ? [k.b_email, k.a_handle] : [k.a_email, k.b_handle];
+    await tell(to, `/${from} thinks you found each other`, `/${from} tapped "We found each other."\n\nIf you feel the same, tap it too and you both come off the market. Nothing is shared unless you both say so.\n\n${SITE}/chat/?c=${k.chat_id}\n\n— Val`,
+      { title: `/${from} thinks you found each other`, body: "Tap it too and you're both off the market.", url: `${SITE}/chat/?c=${k.chat_id}`, tag: `found-${k.id}` }, "chats");
+    return json({ ok: true });
+  }
+
   if (kind === "drop") {
     // Friday, 6pm: everyone with fresh weekend picks hears at once. Lock screen first.
     const since = new Date(Date.now() - 3 * 3600 * 1000).toISOString();

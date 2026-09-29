@@ -532,3 +532,11 @@ Every /spot is approved by a person. Nothing is public until it is.
 - **Voice /hey**: in the pool's send box, "Say it instead (10 seconds)". The clip is stored in the sender's own folder; `send_hey_voice` only accepts a file from the sender's folder, and only the recipient (and sender) can play it (`date_can_see_media`). The inbox shows "They sent a voice note. Play it".
 - **Trending slashes** (`/trending`, public; `trending_vibes()`): the vibes people are setting and sending this week; a word only shows once 3+ people use it. "Around Charleston": /follybeach, /kingst, /shemcreek, /sullys, /iop and more, one tap in every vibe picker and on /share.
 - **Sponsored vibes** (Console → Spots): sell a venue its word (/tacotuesday) for a day to a month. It sits on top of /trending, marked Sponsored, and first in everyone's vibe suggestions until it ends. Payment is taken outside the app for now.
+
+## 10x. Val's couples (v25)
+
+- **"We found each other"** (in a /chat once a date is set; `found_each_other`): one tap is only a question; the other person is told (`notify` kind `found`, lock screen first). When both tap, both come off the market (`date_handles.taken_at`): out of every pool, drop and /hey, and their /name page says "Off the market. They found their person on /date."
+- **The story is theirs.** It goes on the wall (`/couples`, `couples_wall()`) only if both say yes (`share_our_story`), with /names only, where the first date was, when, and Val's reason. Either can take it down anytime; "Back on the market" (`back_on_the_market`) takes it down and puts them back in the pool.
+- **Couple card**: a story-sized "WE MET ON /DATE /sloane + /nico, first date at [spot]" card with a QR to /couples ("Your turn.").
+- The wall's big number counts every couple, including those who kept it private. We never make one up.
+- Privacy page: if /date is ever sold or merged, accounts move under the same policy, members are told first and can delete (lawyer to review).

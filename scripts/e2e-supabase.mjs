@@ -220,6 +220,23 @@ const seenA = await A.c.rpc('my_swap', { p_chat: yes.data })
 const seenB = await B.c.rpc('my_swap', { p_chat: yes.data })
 check('both tap → both see', offerB.data === 'swapped' && seenA.data?.theirs?.instagram === 'e2e.b' && seenB.data?.theirs?.phone === '8435550100', JSON.stringify([seenA.data?.theirs, seenB.data?.theirs]))
 
+// "We found each other": both must tap; story only if both share; either can undo
+const foundA = await A.c.rpc('found_each_other', { p_chat: yes.data })
+check('one tap is only a question', foundA.data?.state === 'waiting', JSON.stringify(foundA.data))
+const foundB = await B.c.rpc('found_each_other', { p_chat: yes.data })
+check('both tap: off the market', foundB.data?.state === 'together', JSON.stringify(foundB.data))
+const wallTaken = await anon.rpc('handle_wall', { p_handle: hA })
+check('their /name says found, not open', wallTaken.data?.open === false && wallTaken.data?.found === true, JSON.stringify(wallTaken.data))
+const couple = foundB.data?.id
+await A.c.rpc('share_our_story', { p_couple: couple, p_yes: true })
+const wallOne = await anon.rpc('couples_wall')
+check('a story needs both yeses', !(wallOne.data?.stories ?? []).some((x) => x.a === hA || x.b === hA))
+const stranger = await anon.rpc('share_our_story', { p_couple: couple, p_yes: true })
+check('strangers cannot share a story', stranger.data !== 'ok' || !!stranger.error)
+const backA = await A.c.rpc('back_on_the_market')
+const backB = await B.c.rpc('back_on_the_market')
+check('back on the market works', backA.data === 'ok' && backB.data === 'ok')
+
 // Home, edit, prefs, export
 const home = await A.c.rpc('my_home')
 check('home: where you stand', home.data?.handle?.handle === hA && home.data?.vibe?.status === 'approved' && home.data?.open_chats === 1, JSON.stringify(home.data?.open_chats))
