@@ -96,9 +96,10 @@ export default function LandingContent() {
   return (
     <main ref={morph.root} className="relative overflow-x-clip">
       <div ref={morph.backdrop} aria-hidden className="fixed inset-0 z-0" style={{ background: vibe.bg }} />
+      <div ref={morph.overlay} aria-hidden className="fixed inset-0 z-0 opacity-0 will-change-[opacity]" />
       <div aria-hidden className="grain fixed inset-0 z-20 pointer-events-none" />
 
-      <header ref={morph.header} className="fixed top-0 inset-x-0 z-30 px-6 sm:px-12 pt-[max(1.5rem,env(safe-area-inset-top))] pb-3 flex items-center justify-between pointer-events-none" style={{ color: vibe.fg }}>
+      <header ref={morph.header} className="head-color fixed top-0 inset-x-0 z-30 px-6 sm:px-12 pt-[max(1.5rem,env(safe-area-inset-top))] pb-3 flex items-center justify-between pointer-events-none" style={{ color: vibe.fg }}>
         <button onClick={() => morph.go(0)} className="font-display font-extrabold text-3xl tracking-tight pointer-events-auto">/date</button>
         <div className="flex items-center gap-5 pointer-events-auto">
           <span className="hidden sm:inline text-xs sm:text-sm tracking-[0.2em] uppercase font-medium opacity-70">
@@ -122,8 +123,8 @@ export default function LandingContent() {
       {/* 1 · Hero — /vibes cycle on their own; a glow follows your finger */}
       <section data-scene="0" className="scene relative z-10 px-6 sm:px-12 pt-32 pb-20 overflow-hidden" style={{ color: vibe.fg }}
         onPointerMove={(e) => morph.glow(e)} onPointerDown={(e) => { setAuto(false); burst(e.clientX, e.clientY, [vibe.fg, vibe.bg === '#FF3B2F' ? '#FFD23F' : '#FF3B2F', '#FF5CA8'], 18) }}>
-        <div ref={morph.orb} aria-hidden className="orb" style={{ background: vibe.accent === vibe.fg ? '#FFD23F' : vibe.accent }} />
-        <div className="hero-exit relative max-w-4xl">
+        <div ref={morph.orb} aria-hidden className="orb" style={{ ['--orb' as string]: vibe.accent === vibe.fg ? '#FFD23F' : vibe.accent }} />
+        <div ref={morph.exit} className="relative max-w-4xl will-change-transform">
           {venue && (
             <Link href={`/spot/${venue.slug}`} className="rise border-2 border-current rounded-2xl px-6 py-5 mb-12 max-w-lg block">
               <div className="text-xs tracking-[0.2em] uppercase font-medium mb-2">You&rsquo;re at a /date spot</div>
@@ -135,7 +136,7 @@ export default function LandingContent() {
             {mine ? 'Your /vibe' : 'Tonight’s /vibe'} &middot; <span key={vibe.tag} className="swap-in inline-block" style={{ color: vibe.fg }}>/{vibe.tag}</span>
           </div>
           {!mine && auto && <div key={`bar-${vibe.tag}-${spin}`} className="cycle-bar mt-3 h-[3px] w-36 rounded-full" style={{ background: vibe.muted }} />}
-          <h1 key={`h-${vibe.tag}-${spin}`} className="tilt-far mt-6 font-display font-extrabold text-[3.6rem] sm:text-8xl leading-[0.95] tracking-[-0.04em] [text-wrap:balance]">
+          <h1 key={`h-${vibe.tag}-${spin}`} className="mt-6 font-display font-extrabold text-[3.6rem] sm:text-8xl leading-[0.95] tracking-[-0.04em] [text-wrap:balance]">
             {words.map((w, i) => (
               <Fragment key={i}><span className="word"><span style={{ animationDelay: `${i * 70}ms` }}>{w}</span></span>{i < words.length - 1 ? ' ' : ''}</Fragment>
             ))}
@@ -166,7 +167,7 @@ export default function LandingContent() {
           </div>
           <Link href="/demo" className="text-sm font-semibold underline underline-offset-4 text-white/60 hover:text-white px-3 -mx-3 shrink-0">All {DEMO_CREW.length}</Link>
         </div>
-        <div className="skew tilt-near">
+        <div ref={morph.skew} className="will-change-transform">
           <div className="rise" style={{ ['--d' as string]: 1 }}><Wall people={faces} direction="left" accent={accent} /></div>
           <div className="h-3" />
           <div className="rise" style={{ ['--d' as string]: 2 }}><Wall people={[...faces.slice(Math.ceil(faces.length / 2)), ...faces.slice(0, Math.ceil(faces.length / 2))]} direction="right" accent={accent} /></div>
@@ -194,7 +195,7 @@ export default function LandingContent() {
           <div className="rise px-2 text-xs tracking-[0.2em] uppercase font-semibold text-ob mb-6">How /date works</div>
           {PROMISES.map((p, i) => (
             <div key={p.title} className="stack-card sticky" style={{ top: `calc(6.5rem + ${i * 18}px)`, zIndex: i }}>
-              <div className="rounded-[28px] p-7 sm:p-10 min-h-[58vh] flex flex-col shadow-[0_-24px_48px_rgba(0,0,0,0.35)]" style={{ background: CARD_COLORS[i][0], color: CARD_COLORS[i][1] }}>
+              <div className="rounded-[28px] p-7 sm:p-10 min-h-[58vh] flex flex-col shadow-[0_-10px_24px_rgba(0,0,0,0.3)]" style={{ background: CARD_COLORS[i][0], color: CARD_COLORS[i][1] }}>
                 <div className="font-display font-extrabold text-7xl leading-none tabular-nums" style={{ color: CARD_COLORS[i][2] }}>0{i + 1}</div>
                 <div className="font-display font-extrabold text-4xl sm:text-5xl tracking-[-0.035em] mt-4">{p.title}</div>
                 <p className="mt-5 text-lg sm:text-xl leading-relaxed opacity-80 max-w-xl">{p.body}</p>
@@ -444,15 +445,18 @@ function ValIntro() {
   )
 }
 
-// Scroll-driven morph. The backdrop and header colors are blended between the
-// scene you're leaving and the one coming in, frame by frame, so the page
-// changes under your finger instead of cutting. Scenes rise in as they arrive,
-// and the photo wall leans with how fast you swipe.
+// Scroll-driven morph, built to stay at 60fps on a phone: per frame it only
+// changes the opacity of one full-screen color layer and a transform or two.
+// Colors, the header and the dots change only when you cross into a new scene.
+// Scene positions are measured once (and on resize), never per frame.
 function useMorph(scenes: { bg: string; fg: string }[]) {
   const root = useRef<HTMLElement>(null)
   const backdrop = useRef<HTMLDivElement>(null)
+  const overlay = useRef<HTMLDivElement>(null)
   const header = useRef<HTMLElement>(null)
   const orb = useRef<HTMLDivElement>(null)
+  const exit = useRef<HTMLDivElement>(null)
+  const skewEl = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)
   const key = scenes.map((s) => s.bg + s.fg).join()
 
@@ -460,96 +464,86 @@ function useMorph(scenes: { bg: string; fg: string }[]) {
     const el = root.current
     if (!el) return
     const nodes = Array.from(el.querySelectorAll<HTMLElement>('[data-scene]'))
-    document.documentElement.classList.add('snap')
     el.classList.add('js-reveal')
-    // A /vibe change (not a scroll) eases the color instead of snapping it.
-    const eased = [backdrop.current, header.current]
-    eased.forEach((n) => n?.classList.add('ease-color'))
-    const unEase = setTimeout(() => eased.forEach((n) => n?.classList.remove('ease-color')), 900)
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     const io = new IntersectionObserver((entries) => {
       for (const e of entries) if (e.isIntersecting) e.target.setAttribute('data-on', '')
     }, { threshold: 0.15 })
     nodes.forEach((n) => io.observe(n))
 
+    let tops: number[] = []
+    let vh = window.innerHeight
+    const measure = () => {
+      vh = window.innerHeight
+      tops = nodes.map((n) => n.getBoundingClientRect().top + window.scrollY)
+    }
+    measure()
+    const ro = new ResizeObserver(() => { measure(); onScroll() })
+    ro.observe(el)
+
     let frame = 0
-    let last = -1
+    let seg = -1
+    let shown = -1
     let lastY = window.scrollY
     let skew = 0
-    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const paint = () => {
       frame = 0
-      const vh = window.innerHeight
-      let i = 0
-      nodes.forEach((n, k) => { if (n.getBoundingClientRect().top <= vh * 0.4) i = k })
-      const next = nodes[i + 1]
-      const t = next ? Math.min(1, Math.max(0, (vh - next.getBoundingClientRect().top) / (vh * 0.6))) : 0
-      const a = scenes[i], b = scenes[Math.min(i + 1, scenes.length - 1)]
-      if (backdrop.current) backdrop.current.style.background = mix(a.bg, b.bg, t)
-      if (header.current) header.current.style.color = mix(a.fg, b.fg, t)
-      const now = t > 0.5 ? i + 1 : i
-      if (now !== last) { last = now; setActive(now) }
-
-      // Swipe speed → lean, easing back to flat.
       const y = window.scrollY
-      const target = still ? 0 : Math.max(-7, Math.min(7, (y - lastY) * 0.18))
+      // Which scene is on screen, and how far the next one has come in.
+      let i = 0
+      for (let k = 0; k < tops.length; k++) if (tops[k] - y <= vh * 0.4) i = k
+      const nextTop = tops[i + 1]
+      const t = nextTop == null ? 0 : Math.min(1, Math.max(0, (vh * 0.85 - (nextTop - y)) / (vh * 0.4)))
+      if (i !== seg) {
+        seg = i
+        if (backdrop.current) backdrop.current.style.background = scenes[i].bg
+        if (overlay.current) overlay.current.style.background = scenes[Math.min(i + 1, scenes.length - 1)].bg
+      }
+      if (overlay.current) overlay.current.style.opacity = t.toFixed(3)
+      const now = t > 0.5 ? i + 1 : i
+      if (now !== shown) {
+        shown = now
+        setActive(now)
+        if (header.current) header.current.style.color = scenes[now].fg
+      }
+
+      // The hero drifts up and fades as you leave it.
+      if (exit.current && !still) {
+        const h = Math.min(1, Math.max(0, y / vh))
+        exit.current.style.transform = h ? `translate3d(0, ${(-90 * h).toFixed(1)}px, 0)` : ''
+        exit.current.style.opacity = h ? (1 - 0.85 * h).toFixed(3) : ''
+      }
+
+      // The wall leans a little with a fast swipe, easing back flat.
+      const target = still ? 0 : Math.max(-4, Math.min(4, (y - lastY) * 0.1))
       lastY = y
-      skew += (target - skew) * 0.25
-      if (Math.abs(skew) < 0.02) skew = 0
-      el.style.setProperty('--skew', `${skew.toFixed(2)}deg`)
-      el.style.setProperty('--hero', Math.min(1, Math.max(0, -nodes[0].getBoundingClientRect().top / vh)).toFixed(3))
+      skew += (target - skew) * 0.2
+      if (Math.abs(skew) < 0.05) skew = 0
+      if (skewEl.current) skewEl.current.style.transform = skew ? `skewY(${skew.toFixed(2)}deg)` : ''
       if (skew !== 0) frame = requestAnimationFrame(paint)
     }
-    const onScroll = () => { if (!frame) frame = requestAnimationFrame(paint) }
+    function onScroll() { if (!frame) frame = requestAnimationFrame(paint) }
     paint()
     window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll)
-
-    // Tilt: the phone's gyro moves the layers a little, like looking through glass.
-    // iOS asks permission, and only from a tap, so ask on the first one.
-    let tiltFrame = 0
-    const setTilt = (x: number, y: number) => {
-      if (still || tiltFrame) return
-      tiltFrame = requestAnimationFrame(() => {
-        tiltFrame = 0
-        el.style.setProperty('--tx', Math.max(-1, Math.min(1, x)).toFixed(3))
-        el.style.setProperty('--ty', Math.max(-1, Math.min(1, y)).toFixed(3))
-      })
-    }
-    const onOrient = (e: DeviceOrientationEvent) => { if (e.gamma != null && e.beta != null) setTilt(e.gamma / 25, (e.beta - 50) / 25) }
-    const onMouse = (e: PointerEvent) => { if (e.pointerType === 'mouse') setTilt((e.clientX / window.innerWidth) * 2 - 1, (e.clientY / window.innerHeight) * 2 - 1) }
-    const askGyro = () => {
-      const D = (window as unknown as { DeviceOrientationEvent?: { requestPermission?: () => Promise<string> } }).DeviceOrientationEvent
-      if (D?.requestPermission) D.requestPermission().then((r) => { if (r === 'granted') window.addEventListener('deviceorientation', onOrient) }).catch(() => {})
-    }
-    window.addEventListener('deviceorientation', onOrient)
-    window.addEventListener('pointermove', onMouse, { passive: true })
-    window.addEventListener('click', askGyro, { once: true })
     return () => {
       io.disconnect()
-      clearTimeout(unEase)
+      ro.disconnect()
       cancelAnimationFrame(frame)
       window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-      window.removeEventListener('deviceorientation', onOrient)
-      window.removeEventListener('pointermove', onMouse)
-      window.removeEventListener('click', askGyro)
-      cancelAnimationFrame(tiltFrame)
-      document.documentElement.classList.remove('snap')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 
   const go = (i: number) => root.current?.querySelector(`[data-scene="${i}"]`)?.scrollIntoView({ behavior: 'smooth' })
+  // The hero glow slides to your finger (a transform on one element, nothing else).
   const glow = (e: React.PointerEvent<HTMLElement>) => {
     const o = orb.current
     if (!o) return
     const r = e.currentTarget.getBoundingClientRect()
-    o.style.setProperty('--x', `${e.clientX - r.left}px`)
-    o.style.setProperty('--y', `${e.clientY - r.top}px`)
-    o.classList.add('is-held')
+    o.style.transform = `translate3d(${(e.clientX - r.left).toFixed(0)}px, ${(e.clientY - r.top).toFixed(0)}px, 0) translate(-50%, -50%)`
   }
-  return { root, backdrop, header, orb, active, go, glow, fg: scenes[active]?.fg }
+  return { root, backdrop, overlay, header, orb, exit, skew: skewEl, active, go, glow, fg: scenes[active]?.fg }
 }
 
 // A burst of slashes from a point: taps in the hero, picked /tags, a match.

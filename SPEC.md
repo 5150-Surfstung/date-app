@@ -480,3 +480,11 @@ On phones: tap anywhere in the hero (or pick a /tag) and slashes burst from your
 - **Every page but the homepage** (`app/template.tsx` + `.enter` in globals.css): the header stays put and the page's blocks rise in one after another over half a second, on first load and on every navigation. Cards further down fade up as they scroll in (CSS scroll-driven, no script; older browsers just show them). Round buttons give slightly under your thumb. All of it is CSS and goes still with reduced motion.
 - **Photos:** the demo crew is 720px WebP, 0.47MB total instead of 8.6MB; off-screen photos load lazily. The service worker cache is bumped (date-v5) so phones drop the old files.
 - **Less JavaScript on public pages:** the homepage, /founding, /receipts and /unsub read the database with one plain request (`lib/rest.ts`) instead of the Supabase client. Homepage first load: 172KB → 109KB of JS.
+
+## 10r. Smooth on real phones (v19)
+
+The homepage was dropping 12-46% of frames while scrolling on a slow phone (CPU throttled 4x). Now 0-2%.
+- The color morph is two full-screen layers: the current scene's color, and the next one fading in on top (opacity only, no repaint). Colors, header and dots change only when you cross into a new scene. Scene positions are measured once and on resize, never per frame.
+- Nothing sets a style variable on the whole page per frame anymore (that forced every element to be restyled). The hero drift and the wall's lean are a transform on one element each; the wall leans less (4° max).
+- Removed: the gyro tilt (and with it iOS's "Motion and Orientation" permission popup), blur on the reveal animations, the blurred drifting glow (now a gradient that just slides to your finger), blend modes on the button shine, snap scrolling, and the film grain on phones.
+- App pages: the scroll fade applies to cards only, not every list item.

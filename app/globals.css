@@ -96,39 +96,34 @@ img { -webkit-user-drag: none; }
 @keyframes valbar { 0%, 100% { transform: scaleY(.35) } 50% { transform: scaleY(1) } }
 
 /* Homepage: full-screen scenes that morph into each other. */
-html.snap { scroll-snap-type: y proximity; }
-.scene { min-height: 100dvh; scroll-snap-align: start; }
-.ease-color { transition: background-color .9s ease, color .9s ease; }
+.scene { min-height: 100dvh; }
+.head-color { transition: color .35s ease; }
 .js-reveal .rise {
   opacity: 0;
-  transform: translateY(32px) scale(0.98);
-  filter: blur(6px);
+  transform: translate3d(0, 24px, 0);
   transition:
-    opacity 0.8s cubic-bezier(.2,.7,.2,1) calc(var(--d, 0) * 90ms),
-    transform 0.9s cubic-bezier(.2,.7,.2,1) calc(var(--d, 0) * 90ms),
-    filter 0.8s ease calc(var(--d, 0) * 90ms);
+    opacity 0.7s cubic-bezier(.2,.7,.2,1) calc(var(--d, 0) * 80ms),
+    transform 0.7s cubic-bezier(.2,.7,.2,1) calc(var(--d, 0) * 80ms);
 }
-.js-reveal [data-on] .rise, .js-reveal .rise[data-on] { opacity: 1; transform: none; filter: none; }
-/* The how-it-works section isn't a snap scene; its cards reveal on their own. */
-.js-reveal [data-scene="4"] .rise { opacity: 1; transform: none; filter: none; }
+.js-reveal [data-on] .rise, .js-reveal .rise[data-on] { opacity: 1; transform: none; }
+/* How-it-works cards are sticky; they show without the reveal. */
+.js-reveal [data-scene="4"] .rise { opacity: 1; transform: none; }
 
 /* Film grain: keeps the flat color from looking like a template. */
+.grain { display: none; }
+@media (hover: hover) and (pointer: fine) { .grain { display: block; } }
 .grain {
   opacity: .07;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Hero glow: drifts on its own, follows your finger once you touch. */
+/* Hero glow: a soft gradient that slides to your finger. No blur filter. */
 .orb {
-  position: absolute; left: 0; top: 0; width: 26rem; height: 26rem; border-radius: 50%;
-  opacity: .35; filter: blur(70px); pointer-events: none;
-  transform: translate(calc(var(--x, 60vw) - 50%), calc(var(--y, 55vh) - 50%));
-  animation: drift 14s ease-in-out infinite alternate;
-  transition: transform .5s cubic-bezier(.2,.7,.2,1), background-color .9s ease;
-}
-.orb.is-held { animation: none; }
-@keyframes drift {
-  0% { translate: -18vw -8vh; } 50% { translate: 10vw 12vh; } 100% { translate: -4vw 22vh; }
+  position: absolute; left: 0; top: 0; width: 30rem; height: 30rem; border-radius: 50%;
+  pointer-events: none; opacity: .5; will-change: transform;
+  background: radial-gradient(closest-side, var(--orb) 0%, transparent 100%) !important;
+  transform: translate3d(65vw, 55vh, 0) translate(-50%, -50%);
+  transition: transform .6s cubic-bezier(.2,.7,.2,1);
 }
 
 /* Headline words slide up out of a mask, one after another. */
@@ -146,13 +141,12 @@ html.snap { scroll-snap-type: y proximity; }
 .shine::after {
   content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,.45) 50%, transparent 65%);
-  transform: translateX(-120%); animation: shine 3.6s ease-in-out infinite 1.2s;
-  mix-blend-mode: soft-light;
+  transform: translateX(-120%); animation: shine 5s ease-in-out infinite 1.5s;
+  background: linear-gradient(110deg, transparent 38%, rgba(255,255,255,.22) 50%, transparent 62%);
 }
 @keyframes shine { 0%, 60% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
 
 /* The wall leans with swipe speed. */
-.skew { transform: skewY(var(--skew, 0deg)); will-change: transform; }
 
 /* Val's intro. */
 .intro-card {
@@ -196,7 +190,7 @@ html.snap { scroll-snap-type: y proximity; }
   position: absolute; bottom: 6vh; left: 0; white-space: nowrap; pointer-events: none;
   font-family: var(--font-sora), system-ui, sans-serif; font-weight: 800; font-size: clamp(9rem, 32vw, 22rem);
   letter-spacing: -0.06em; line-height: 1; color: transparent; -webkit-text-stroke: 2px currentColor; opacity: .16;
-  animation: giant 40s linear infinite;
+  animation: giant 60s linear infinite; will-change: transform;
 }
 @keyframes giant { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
@@ -211,23 +205,7 @@ html.snap { scroll-snap-type: y proximity; }
   to { transform: translate(calc(var(--x0) + var(--dx)), calc(var(--y0) + var(--dy))) translate(-50%, -50%) rotate(var(--r)) scale(.3); opacity: 0; }
 }
 
-/* Hero drifts up and away as you leave it. */
-.hero-exit {
-  transform: translateY(calc(var(--hero, 0) * -110px)) scale(calc(1 - var(--hero, 0) * 0.08));
-  opacity: calc(1 - var(--hero, 0) * 0.85);
-  transform-origin: top left;
-}
-
-/* Gyro / mouse parallax: far layers move less, near layers more. */
-.tilt-far { translate: calc(var(--tx, 0) * -8px) calc(var(--ty, 0) * -5px); transition: translate .3s ease-out; }
-.tilt-near { translate: calc(var(--tx, 0) * 22px) 0; transition: translate .3s ease-out; }
-.intro-card.is-left { translate: calc(var(--tx, 0) * -14px) calc(var(--ty, 0) * -10px); }
-.intro-card.is-right { translate: calc(var(--tx, 0) * 14px) calc(var(--ty, 0) * 10px); }
-.orb { margin-left: calc(var(--tx, 0) * 70px); margin-top: calc(var(--ty, 0) * 50px); }
-
 @media (prefers-reduced-motion: reduce) {
-  .hero-exit { transform: none; opacity: 1; }
-  html.snap { scroll-snap-type: none; }
   .js-reveal .rise { opacity: 1; transform: none; filter: none; }
   .intro-card, .intro-bubble, .intro-badge { opacity: 1 !important; transform: none !important; }
   .is-right { transform: none; }
@@ -246,7 +224,7 @@ html.snap { scroll-snap-type: y proximity; }
 /* 2. Cards further down fade up as they scroll in (browsers that can do it
    without script; the rest just show them). */
 @supports (animation-timeline: view()) {
-  .enter main > * :is(.rounded-2xl, .rounded-3xl, li) {
+  .enter main > * :is(.rounded-2xl, .rounded-3xl) {
     animation: card-in linear both;
     animation-timeline: view();
     animation-range: entry 0% entry 35%;
@@ -258,6 +236,6 @@ html.snap { scroll-snap-type: y proximity; }
 :is(a, button).rounded-full:active:not(:disabled) { scale: .97; }
 
 @media (prefers-reduced-motion: reduce) {
-  .enter main > *, .enter main > * :is(.rounded-2xl, .rounded-3xl, li) { animation: none !important; }
+  .enter main > *, .enter main > * :is(.rounded-2xl, .rounded-3xl) { animation: none !important; }
   :is(a, button).rounded-full:active { scale: 1; }
 }
