@@ -169,7 +169,7 @@ export default function IntakeFlow() {
         <div className="flex-1 flex flex-col justify-center max-w-lg">
           <div className="text-xs tracking-[0.2em] uppercase font-extrabold text-ob mb-3">Your /vibe</div>
           <h1 className="font-display font-extrabold text-5xl sm:text-6xl tracking-[-0.03em] leading-[0.95] [text-wrap:balance]">Eight questions, your photos, sixty seconds of you.</h1>
-          <p className="mt-5 text-xl text-[#141414]/70 font-medium leading-snug">It starts with your email, so your /vibe is only ever yours. Val sends a link; you land right back here.</p>
+          <p className="mt-5 text-xl text-[#141414]/70 font-medium leading-snug">Val, your matchmaker, reads every answer. Be honest; she&rsquo;s on your side. It starts with your email, so your /vibe is only ever yours.</p>
           <div className="mt-8"><SignIn cta="Start my /vibe" /></div>
         </div>
       </Shell>

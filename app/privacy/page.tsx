@@ -11,7 +11,7 @@ export default function Privacy() {
         <p className="text-sm text-[#141414]/60">Draft for legal review. This is what we do; a lawyer will make it a policy.</p>
         <p><b>What we collect.</b> Your /name, email, first name, age, neighborhood, who you are and who you&rsquo;re seeking, your eight answers, your photos, and your sixty-second voice note. At /spots: that you scanned in, and any &ldquo;I noticed someone&rdquo; note.</p>
         <p><b>Who sees what.</b> Your /name page shows your /name, your /tag and your first name. Nothing else, to anyone. Your /vibe (answers, photos, voice) is shown only to a person you sent a /hey to, or who Val introduced you to, and photos only after you&rsquo;ve both written in a /chat. Nobody ever sees who is checked in anywhere.</p>
-        <p><b>Val.</b> Val is our matchmaker &mdash; software plus a human. Your /vibe is read by Val to make introductions. It is not sold, not used for ads, and not shared with anyone outside /date.</p>
+        <p><b>Val.</b> Val is our matchmaker: smart matchmaking software, including AI, with real people behind her who review every /vibe, every safety report and every /spot. Your /vibe is read by Val to make introductions. It is not sold, not used for ads, and not shared with anyone outside /date.</p>
         <p><b>Debriefs.</b> What you tell Val after a date is private. It is never shown to the other person.</p>
         <p><b>Reports.</b> If you report someone, Val sees it. They don&rsquo;t.</p>
         <p><b>Your copy.</b> /me &rarr; Settings &rarr; Download my data gives you everything /date holds about you, in one file, any time.</p>

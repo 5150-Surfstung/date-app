@@ -84,7 +84,7 @@ export default function LandingContent() {
   const SCENES = [
     { bg: vibe.bg, fg: vibe.fg, name: 'Top' },
     { bg: '#141414', fg: '#FFFFFF', name: 'Who’s on' },
-    { bg: '#FFF3EA', fg: '#141414', name: 'Watch Val work' },
+    { bg: '#FFF3EA', fg: '#141414', name: 'Meet Val' },
     { bg: '#FF3B2F', fg: '#FFFFFF', name: 'Your /tags' },
     { bg: '#141414', fg: '#FFFFFF', name: 'How it works' },
     { bg: vibe.bg, fg: vibe.fg, name: 'Get in' },
@@ -135,13 +135,17 @@ export default function LandingContent() {
           <div className="rise text-xs tracking-[0.2em] uppercase font-semibold" style={{ color: vibe.muted }}>
             {mine ? 'Your /vibe' : 'Tonight’s /vibe'} &middot; <span key={vibe.tag} className="swap-in inline-block" style={{ color: vibe.fg }}>/{vibe.tag}</span>
           </div>
-          {!mine && auto && <div key={`bar-${vibe.tag}-${spin}`} className="cycle-bar mt-3 h-[3px] w-36 rounded-full" style={{ background: vibe.muted }} />}
+          {/* Always takes its space, so stopping the cycle never shifts the page under a finger. */}
+          <div key={`bar-${vibe.tag}-${spin}-${auto}`} className={`mt-3 h-[3px] w-36 rounded-full ${!mine && auto ? 'cycle-bar' : 'opacity-0'}`} style={{ background: vibe.muted }} />
           <h1 key={`h-${vibe.tag}-${spin}`} className="mt-6 font-display font-extrabold text-[3.6rem] sm:text-8xl leading-[0.95] tracking-[-0.04em] [text-wrap:balance]">
             {words.map((w, i) => (
               <Fragment key={i}><span className="word"><span style={{ animationDelay: `${i * 70}ms` }}>{w}</span></span>{i < words.length - 1 ? ' ' : ''}</Fragment>
             ))}
           </h1>
           <p className="rise mt-8 text-lg sm:text-xl font-semibold" style={{ ['--d' as string]: 2 }}>Three matches. No games. Real people.</p>
+          <button onClick={() => morph.go(2)} className="rise mt-2 text-base sm:text-lg font-semibold underline underline-offset-4 decoration-2" style={{ ['--d' as string]: 2, color: vibe.muted }}>
+            Meet Val, your matchmaker &rarr;
+          </button>
           <p key={`s-${vibe.tag}`} className="swap-in mt-4 max-w-xl text-lg sm:text-2xl leading-snug font-medium" style={{ color: vibe.muted }}>{vibe.sub}</p>
           <div className="rise mt-10 flex flex-col sm:flex-row sm:items-center gap-4" style={{ ['--d' as string]: 4 }}>
             <Link href={ctaHref} className="shine text-lg font-extrabold rounded-full px-12 py-5 text-center active:scale-[0.97] transition-transform"
@@ -178,8 +182,11 @@ export default function LandingContent() {
       {/* 3 · Val makes an intro, live */}
       <section data-scene="2" className="scene relative z-10 text-[#141414] px-6 sm:px-12 pt-28 pb-16 flex flex-col justify-center">
         <div className="max-w-xl w-full pr-6">
-          <div className="rise text-xs tracking-[0.2em] uppercase font-semibold text-ob">Watch Val work</div>
+          <div className="rise text-xs tracking-[0.2em] uppercase font-semibold text-ob">Meet Val, your matchmaker</div>
           <h2 className="rise mt-3 font-display font-extrabold text-5xl sm:text-6xl leading-[0.95] tracking-[-0.04em]" style={{ ['--d' as string]: 1 }}>No swiping. She just knows.</h2>
+          <p className="rise mt-4 text-lg leading-snug text-[#141414]/75 max-w-md" style={{ ['--d' as string]: 1 }}>
+            Val reads your /vibe, picks your first three, tells you why, and keeps an eye out after that. Smart matchmaking, with real people behind her.
+          </p>
           <div className="rise" style={{ ['--d' as string]: 2 }}><ValIntro /></div>
         </div>
       </section>

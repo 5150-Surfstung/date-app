@@ -46,6 +46,7 @@ export default function PoolPage() {
       {picks.length > 0 && (
         <section className="mt-10">
           <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob">Val&rsquo;s picks for you</div>
+          <p className="mt-1 text-sm text-[#141414]/60">Your matchmaker picked these three. She&rsquo;ll keep an eye out for more.</p>
           <div className="mt-3 grid sm:grid-cols-3 gap-3">
             {picks.map((p) => <Card key={p.handle} r={p.person!} url={urls[p.person!.photos[0]]} pick why={p.reason} onSent={reload} />)}
           </div>
