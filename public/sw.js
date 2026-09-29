@@ -2,7 +2,7 @@
    Pages: network first, cache as you go, offline page when both fail.
    Static assets and demo photos: cache first, refresh in the background.
    Supabase and any other origin: never touched. */
-const VERSION = 'date-v3'
+const VERSION = 'date-v4'
 const BASE = new URL(self.registration.scope).pathname.replace(/\/$/, '')
 const OFFLINE = `${BASE}/offline/`
 const SHELL = [OFFLINE, `${BASE}/`, `${BASE}/icons/icon-192.png`]
@@ -24,7 +24,7 @@ self.addEventListener('message', (e) => {
 
 function isStatic(url) {
   return url.pathname.startsWith(`${BASE}/_next/static/`) || url.pathname.startsWith(`${BASE}/demo/`) ||
-    url.pathname.startsWith(`${BASE}/icons/`) || /\.(png|jpg|jpeg|webp|svg|woff2?)$/.test(url.pathname)
+    url.pathname.startsWith(`${BASE}/icons/`) || /\.(png|jpg|jpeg|webp|svg|woff2?|mp3)$/.test(url.pathname)
 }
 
 self.addEventListener('fetch', (e) => {

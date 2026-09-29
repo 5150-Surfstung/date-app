@@ -7,6 +7,7 @@ import { QUESTIONS } from '@/lib/questions'
 import { APPLICATIONS_TABLE, INTAKE_BUCKET } from '@/lib/supabase'
 import { authClient, useSession } from '@/lib/auth'
 import { SignIn } from '../gate'
+import ValInterview from './val-interview'
 import { VAL } from '@/lib/val'
 
 const MIN_PHOTOS = 3
@@ -44,6 +45,7 @@ export default function IntakeFlow() {
 
   const { session, email: me, loading: sessionLoading } = useSession()
   const [hasVibe, setHasVibe] = useState<boolean | null>(null)
+  const [mode, setMode] = useState<'voice' | 'type' | null>(null)
   const [step, setStep] = useState(0)
   const [basics, setBasics] = useState<Basics>(EMPTY_BASICS)
   const [answers, setAnswers] = useState<Record<string, string>>({})
@@ -249,7 +251,15 @@ export default function IntakeFlow() {
         </StepFrame>
       )}
 
-      {step >= 1 && step <= QUESTIONS.length && (
+      {step >= 1 && step <= QUESTIONS.length && mode !== 'type' && (
+        <ValInterview
+          initial={answers}
+          onDone={(a) => { setAnswers(a); setMode('voice'); setStep(PHOTO_STEP) }}
+          onType={(a, at) => { setAnswers(a); setMode('type'); setStep(at + 1) }}
+        />
+      )}
+
+      {step >= 1 && step <= QUESTIONS.length && mode === 'type' && (
         <QuestionStep
           index={step - 1}
           value={answers[QUESTIONS[step - 1].id] ?? ''}

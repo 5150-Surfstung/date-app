@@ -68,6 +68,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Val's ear (voice parser) test
+        run: npx --yes tsx tests/voice.test.ts
       - name: End-to-end Supabase intake test
         run: node scripts/e2e-supabase.mjs
 

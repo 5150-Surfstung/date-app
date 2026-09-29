@@ -110,6 +110,22 @@ Suggested /spot: ${spot}`,
     return json({ text });
   }
 
+  if (kind === "parse") {
+    // The voice interview: which option did they mean? JSON only, never a guess.
+    const { question, options = [], said = "" } = body;
+    if (!Array.isArray(options) || !options.length || typeof said !== "string" || !said.trim()) return json({ index: null, confidence: 0 });
+    const raw = await ask(
+      `You're matching a spoken answer to one multiple-choice option in a dating app interview. Reply with JSON only, no prose, no signature: {"index": <0-based option index or null>, "confidence": <0 to 1>}. Use null if they didn't clearly mean one option. Never pick just to pick.\n\nQuestion: ${question}\nOptions:\n${options.map((o: string, i: number) => `${i}. ${o}`).join("\n")}\n\nThey said: "${said.slice(0, 600)}"`,
+      60,
+    );
+    const m = raw.match(/\{[^}]*\}/);
+    try {
+      const j = m ? JSON.parse(m[0]) : null;
+      const idx = typeof j?.index === "number" && j.index >= 0 && j.index < options.length ? j.index : null;
+      return json({ index: idx, confidence: typeof j?.confidence === "number" ? j.confidence : 0 });
+    } catch { return json({ index: null, confidence: 0 }); }
+  }
+
   if (kind === "preview") {
     // One line of Val's context for a /hey or /wing in the recipient's inbox.
     const { from, winger, note } = body;

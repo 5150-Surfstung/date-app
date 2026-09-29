@@ -387,3 +387,26 @@ claim and /me: tap in order, numbered chips, "make lead", a gentle stop at
 three. Engine: leads carry 60% of tag chemistry, the best match across both
 sets 40%; a shared second word is a reason and can soften a lead clash. Val's
 manual and brain read the whole set, lead first.
+
+## 10l. Talk it through with Val (v13)
+
+The eight questions, out loud. `app/apply/val-interview.tsx`, the default
+path into the questions (the form is one tap away, always).
+
+- **Val's voice:** ten recorded clips (ElevenLabs, voice "Simone — warm &
+  direct"), shipped as static files in `public/val/`, cached offline. Backup:
+  the phone's own voice. Captions always on screen. A watchdog moves on if a
+  line never reports finishing; autoplay blocks show "Hear Val".
+- **Listening:** the phone's speech recognition, live captions, stops itself
+  after a 2.4 s pause. Each session is bound to its question, so a late
+  result can never land on the wrong one. Mic blocked or unsupported: tap or
+  type, with a plain message.
+- **Understanding:** `lib/voice.ts` matches ordinals ("the second one", "B")
+  and plain-English cues per option, handles negation, and only auto-picks
+  when it's clearly ahead; otherwise it marks the closest and asks. Val's
+  brain (`parse`, 4 s cap) can confirm an unclear one when her key is in.
+  Text answers are tidied (fillers, capitals, punctuation), never rewritten.
+- **Nothing saved unconfirmed:** each answer is shown and accepted; a review
+  screen lists all eight, each tappable to fix. Progress survives leaving.
+- **Tested:** `tests/voice.test.ts` (30 cases, runs in CI) and a full
+  eight-question browser run with a scripted mic.
