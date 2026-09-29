@@ -10,6 +10,7 @@ import { askVal, notify } from '@/lib/val'
 import System from './system'
 import { FunnelTab, HealthTab } from './insights'
 import { SpotsTab } from './spots'
+import { ApproveTab } from './approve'
 import { TagLine } from '../tags'
 
 type Console = {
@@ -17,12 +18,12 @@ type Console = {
   applications: any[]; heys: any[]; wings: any[]; chats: any[]; signals: any[]; debriefs: any[]; weights: any[]; reports: any[]
 }
 
-const TABS = ['Pairs', 'Spots', 'Tonight', 'Inbox', 'People', 'Chats', 'Signals', 'Debriefs', 'Reports', 'Funnel', 'Health', 'System'] as const
+const TABS = ['Approve', 'Pairs', 'Spots', 'Tonight', 'Inbox', 'People', 'Chats', 'Signals', 'Debriefs', 'Reports', 'Funnel', 'Health', 'System'] as const
 
 export default function ConsolePage() {
   const { email, loading } = useSession()
   const [data, setData] = useState<Console | null | undefined>(undefined)
-  const [tab, setTab] = useState<(typeof TABS)[number]>('Pairs')
+  const [tab, setTab] = useState<(typeof TABS)[number]>('Approve')
   const [note, setNote] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState<string | null>(null)
   const [reads, setReads] = useState<Record<string, string>>({})
@@ -264,6 +265,7 @@ export default function ConsolePage() {
       {tab === 'System' && <System email={email} />}
       {tab === 'Funnel' && <FunnelTab />}
       {tab === 'Spots' && <SpotsTab />}
+      {tab === 'Approve' && <ApproveTab apps={data.applications} handles={data.handles} onDone={load} />}
       {tab === 'Health' && <HealthTab />}
 
       {tab === 'Reports' && (

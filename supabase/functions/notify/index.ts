@@ -198,6 +198,19 @@ Deno.serve(async (req) => {
     return json({ sent });
   }
 
+  if (kind === "vibe_new") {
+    // Someone finished their /vibe. Nobody gets in until a person approves them.
+    const { data: a } = await db.from("date_applications").select("id, name, age, status").eq("id", body.id).maybeSingle();
+    if (!a || a.status !== "pending_review") return json({ skipped: "none" });
+    const { data: admins } = await db.from("date_admins").select("email");
+    const subj = `New /vibe to approve: ${a.name}, ${a.age}`;
+    await Promise.all((admins ?? []).map(async (x: { email: string }) => {
+      const pushed = await push(x.email, { title: subj, body: "Photos, voice, answers. Approve, waitlist or decline.", url: `${SITE}/console/?tab=Approve`, tag: `vibe-${a.id}` });
+      if (!pushed) await send(x.email, subj, `${a.name}, ${a.age}, finished their /vibe.\n\nNobody can reach them, and they can't reach anyone, until you approve them.\n${SITE}/console/?tab=Approve`);
+    }));
+    return json({ ok: true });
+  }
+
   if (kind === "spot_apply") {
     // A venue applied. Val's people hear first; the venue hears "a person reviews every spot".
     const { data: v } = await db.from("date_venues").select("*").eq("slug", body.slug).maybeSingle();

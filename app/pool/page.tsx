@@ -10,6 +10,7 @@ import { notify } from '@/lib/val'
 import { TAGS, cleanVibe } from '@/lib/handles'
 import { rank, usePool, usePhotoUrls, type Ranked } from '@/lib/pool'
 import { TagLine, VibeInput } from '../tags'
+import { ShareButton } from '../share'
 
 const SHOW = ['saturday', 'looking_for', 'life_stage'] as const
 const ASK: Record<string, string> = { saturday: 'Saturday', looking_for: 'Looking for', life_stage: 'Right now' }
@@ -41,7 +42,7 @@ export default function PoolPage() {
 
   return (
     <AppShell title="Your pool">
-      <VibeNow lead={myLead} onChange={reload} />
+      <VibeNow lead={myLead} handle={pool.me?.handle ?? null} onChange={reload} />
 
       {picks.length > 0 && (
         <section className="mt-10">
@@ -109,7 +110,7 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
 }
 
 // Your vibe right now. One tap to change it; it stays until you change it again.
-function VibeNow({ lead, onChange }: { lead: string | null; onChange: () => void }) {
+function VibeNow({ lead, handle, onChange }: { lead: string | null; handle: string | null; onChange: () => void }) {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   async function set(v: string) {
@@ -124,7 +125,10 @@ function VibeNow({ lead, onChange }: { lead: string | null; onChange: () => void
           <div className="text-xs tracking-[0.2em] uppercase font-semibold text-white/50">Your vibe right now</div>
           <div className="mt-1 font-display font-extrabold text-4xl tracking-tight text-ob">/{lead ?? '…'}</div>
         </div>
-        <button onClick={() => setOpen(!open)} className="rounded-full border-2 border-white px-5 py-2.5 text-sm font-extrabold">{open ? 'Done' : 'Change it'}</button>
+        <div className="flex flex-col sm:flex-row gap-2 items-end">
+          <button onClick={() => setOpen(!open)} className="rounded-full border-2 border-white px-5 py-2.5 text-sm font-extrabold">{open ? 'Done' : 'Change it'}</button>
+          {lead && <ShareButton vibe={lead} handle={handle} className="rounded-full bg-ob text-white px-5 py-2.5 text-sm font-extrabold" />}
+        </div>
       </div>
       {open && (
         <div className="mt-4 grid gap-3">
@@ -161,7 +165,7 @@ function Card({ r, url, pick, why, onSent }: { r: Ranked; url?: string; pick?: b
       setState('sent'); setSend(false)
       if (data === 'ok') notify(c, { kind: 'hey', to_handle: r.handle, from_email: email })
       onSent()
-    } else setState(data === 'limit' ? 'That’s a lot for one day. Try tomorrow.' : data === 'bad_vibe' ? 'That vibe isn’t allowed.' : 'Couldn’t send. Try again.')
+    } else setState(data === 'limit' ? 'That’s a lot for one day. Try tomorrow.' : data === 'not_approved' ? 'You can send once Val approves your /vibe.' : data === 'bad_vibe' ? 'That vibe isn’t allowed.' : 'Couldn’t send. Try again.')
   }
   async function playVoice() {
     if (!r.voice_key || voice) return

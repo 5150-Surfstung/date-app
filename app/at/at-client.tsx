@@ -10,7 +10,7 @@ import { VAL, notify } from '@/lib/val'
 import { SignIn } from '../gate'
 import { TagLine } from '../tags'
 
-type Wall = { taken: boolean; open?: boolean; name?: string; tag?: string | null; tags?: string[] | null; verified?: boolean; demo?: boolean }
+type Wall = { taken: boolean; open?: boolean; pending?: boolean; name?: string; tag?: string | null; tags?: string[] | null; verified?: boolean; demo?: boolean }
 
 export default function AtClient({ handle: handleProp }: { handle?: string } = {}) {
   const params = useSearchParams()
@@ -55,7 +55,8 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
       const msgs: Record<string, string> = {
         no_vibe: 'You need a /name to send a /hey.',
         login: 'Sign in first.',
-        limit: 'Ten /heys a day. Val likes you choosy.',
+        limit: 'That’s a lot for one day. Try tomorrow.',
+        not_approved: 'Val’s still reading your /vibe. You can send /heys once you’re approved.',
         demo: `/${handle} is a demo profile, not a real person.`,
         closed: `/${handle} isn’t taking /heys right now.`,
         self: 'That’s you.',
@@ -80,7 +81,7 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
       const { data, error } = await supabase.rpc('send_wing', { p_subject: handle, p_to: friend.trim().replace(/^\//, ''), p_note: wingNote })
       if (error) throw new Error('Something went wrong. Try again.')
       const msgs: Record<string, string> = {
-        no_vibe: 'You need a /name to /wing someone.', no_handle: 'That /name doesn\u2019t exist.', closed: 'This /name is private.',
+        no_vibe: 'You need a /name to /wing someone.', not_approved: 'You can /wing once Val approves your /vibe.', no_handle: 'That /name doesn\u2019t exist.', closed: 'This /name is private.',
         limit: 'Five /wings a week. You\u2019re out for now.', self: 'That\u2019s one of you.', no_friend: 'No /name by that. Try their email to invite them.',
       }
       if (data !== 'ok' && data !== 'invited') throw new Error(msgs[data] ?? 'Something went wrong.')
@@ -127,7 +128,9 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
           <>
             <h1 className="font-display font-extrabold text-5xl sm:text-7xl leading-[0.95] tracking-[-0.03em] break-all">/{handle}</h1>
             <p className="text-xl sm:text-2xl font-medium leading-snug">
-              {VAL.privateWall} <span className="text-[#141414]/70">{VAL.sign}</span>
+              {wall.pending
+                ? <>Almost ready. I&rsquo;m still reading their /vibe &mdash; every member is approved by a person before anyone can reach them.</>
+                : VAL.privateWall} <span className="text-[#141414]/70">{VAL.sign}</span>
             </p>
             <Link href="/apply" className="border-2 border-[#141414] text-base font-extrabold rounded-full px-9 py-4 self-start hover:bg-[#141414]/5 transition-colors">
               Get your /vibe

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ShareButton } from '../share'
 import Link from 'next/link'
 import { AppShell, NeedLogin, Pill } from '../ui'
 import { TagLine } from '../tags'
@@ -72,7 +73,10 @@ export default function InboxPage() {
           return (
             <div key={it.id} className="border-2 border-[#141414]/10 rounded-2xl p-5">
               {it.vibe && (
-                <div className="mb-2 font-display font-extrabold text-3xl tracking-tight text-ob">sent you /{it.vibe}</div>
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <div className="font-display font-extrabold text-3xl tracking-tight text-ob">sent you /{it.vibe}</div>
+                  <ShareButton vibe={it.vibe} handle={it.to_handle} kind="got" className="rounded-full border-2 border-[#141414] px-4 py-2 text-xs font-extrabold" />
+                </div>
               )}
               {it.kind === 'wing' && (
                 <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob mb-2">/wing from /{it.winger} &middot; &ldquo;you two should meet&rdquo;</div>
