@@ -207,7 +207,8 @@ export function suggestPairs(people: Person[], signals: Signal[], heys: Hey[], e
 }
 
 // Val's intro when no AI key is configured.
-export function draftIntro(p: Pair, spotName: string) {
+export function draftIntro(p: Pair, spotName?: string | null) {
   const why = p.reasons.slice(0, 3).join(' ')
-  return `${p.a.name}, meet ${p.b.name}. ${why} Forty-eight hours to pick a time. I'd try ${spotName} — table's held if you want it. — Val`
+  const where = spotName ? `I'd try ${spotName} — table's held if you want it.` : `Somewhere public, somewhere you'd both go anyway.`
+  return `${p.a.name}, meet ${p.b.name}. ${why} Forty-eight hours to pick a time. ${where} — Val`
 }

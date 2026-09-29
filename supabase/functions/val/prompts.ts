@@ -28,7 +28,7 @@ export const RULES = `You are Val. Write only what is asked, in Val's voice, pla
 
 export const prompts = {
   intro: (a: P, b: P, reasons: string[], flags: string[], spot: string) =>
-    `Write Val's intro note that opens a /chat between these two. 2–4 short sentences: name them both, give the real reason in plain words (from the reasons below, not the numbers), mention the /spot and that the table's held, and that they have forty-eight hours to pick a time.\n\nPerson A:\n${person(a)}\n\nPerson B:\n${person(b)}\n\nWhy Val paired them: ${reasons.join(' ') || 'gut call'}\nWatch-outs (don't mention unless useful): ${flags.join(' ') || 'none'}\nSuggested /spot: ${spot}`,
+    `Write Val's intro note that opens a /chat between these two. 2–4 short sentences: name them both, give the real reason in plain words (from the reasons below, not the numbers), ${spot ? "mention the /spot and that the table's held" : "tell them to pick somewhere public they'd both go anyway (name no place)"}, and that they have forty-eight hours to pick a time.\n\nPerson A:\n${person(a)}\n\nPerson B:\n${person(b)}\n\nWhy Val paired them: ${reasons.join(' ') || 'gut call'}\nWatch-outs (don't mention unless useful): ${flags.join(' ') || 'none'}\nSuggested /spot: ${spot || 'none yet'}`,
   read: (p: P) =>
     `Write Val's two-line read of this person for the console: who they actually are and what they need in a match. No flattery, no clinical words.\n\n${person(p)}`,
   preview: (from: P, winger: string | null, note: string | null) =>

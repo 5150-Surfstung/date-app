@@ -1,26 +1,56 @@
+'use client'
+
+// /date spots live in the database now. Venues apply (or a rep sends them),
+// Val approves every one, and only approved spots are ever public.
+import { useEffect, useState } from 'react'
+import { rpc } from './rest'
+
 export type Venue = {
   slug: string
   name: string
-  area: string
-  perk: string
+  area: string | null
+  kind: string | null
+  perk: string | null
   // Next /night at this spot, if one is scheduled.
-  night?: { when: string; detail: string }
+  night?: { when: string; detail: string } | null
 }
 
-// Participating /spots. Edit here until the matchmaker console manages them.
-export const VENUES: Venue[] = [
-  {
-    slug: 'golden-hour',
-    name: 'Golden Hour Coffee',
-    area: 'Downtown Charleston',
-    perk: 'Introduced couples get the corner table and the first round on the house.',
-    night: {
-      when: 'Thursday, Oct 16 · 7pm',
-      detail: 'A room full of verified singles. First hour comped. Scan in at the door.',
-    },
-  },
+export const SPOT_KINDS: [string, string][] = [
+  ['bar', 'Bar'], ['coffee', 'Coffee shop'], ['restaurant', 'Restaurant'], ['gym', 'Gym or fitness'],
+  ['studio', 'Studio or class'], ['bookstore', 'Bookstore'], ['outdoor', 'Outdoor or park'], ['other', 'Something else'],
 ]
 
-export function getVenue(slug: string): Venue | undefined {
-  return VENUES.find((v) => v.slug === slug)
+let cache: Venue[] | null = null
+let pending: Promise<Venue[]> | null = null
+
+/** Every approved spot. Cached for the page's life. */
+export function fetchSpots(): Promise<Venue[]> {
+  if (cache) return Promise.resolve(cache)
+  if (!pending) pending = rpc<Venue[]>('public_spots').then(({ data }) => (cache = data ?? []))
+  return pending
+}
+
+/** One approved spot, or null if it isn't one (yet). */
+export async function fetchSpot(slug: string): Promise<Venue | null> {
+  const { data } = await rpc<Venue | null>('public_spot', { p_slug: slug })
+  return data ?? null
+}
+
+/** Approved spots; null while loading. */
+export function useSpots(): Venue[] | null {
+  const [spots, setSpots] = useState<Venue[] | null>(cache)
+  useEffect(() => { if (!cache) fetchSpots().then(setSpots) }, [])
+  return spots
+}
+
+/** One spot by slug; undefined while loading, null if it isn't approved. */
+export function useSpot(slug: string | null | undefined): Venue | null | undefined {
+  const [spot, setSpot] = useState<Venue | null | undefined>(slug ? undefined : null)
+  useEffect(() => {
+    if (!slug) { setSpot(null); return }
+    let live = true
+    fetchSpot(slug).then((s) => { if (live) setSpot(s) })
+    return () => { live = false }
+  }, [slug])
+  return spot
 }

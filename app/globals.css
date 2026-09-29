@@ -224,7 +224,7 @@ img { -webkit-user-drag: none; }
 /* 2. Cards further down fade up as they scroll in (browsers that can do it
    without script; the rest just show them). */
 @supports (animation-timeline: view()) {
-  .enter main > * :is(.rounded-2xl, .rounded-3xl) {
+  .enter main > * :is(.rounded-2xl, .rounded-3xl):not(input, select, textarea, button, a) {
     animation: card-in linear both;
     animation-timeline: view();
     animation-range: entry 0% entry 35%;
@@ -238,4 +238,11 @@ img { -webkit-user-drag: none; }
 @media (prefers-reduced-motion: reduce) {
   .enter main > *, .enter main > * :is(.rounded-2xl, .rounded-3xl) { animation: none !important; }
   :is(a, button).rounded-full:active { scale: 1; }
+}
+
+/* Spot kit printing: each block on its own page, no app chrome or motion. */
+@media print {
+  html, body { background: #fff !important; padding: 0 !important; }
+  .kit-page { break-after: page; box-shadow: none; }
+  .enter main > *, .enter main > * :is(.rounded-2xl, .rounded-3xl) { animation: none !important; opacity: 1 !important; transform: none !important; }
 }

@@ -1,15 +1,12 @@
-import { notFound } from 'next/navigation'
-import { VENUES, getVenue } from '@/lib/venues'
-import SpotClient from './spot-client'
+import SpotLoader from './spot-loader'
 
+// /spot/<slug>: what a spot's QR opens. Spots live in the database and only
+// approved ones load; on Vercel any slug renders on demand.
 export function generateStaticParams() {
-  return VENUES.map((v) => ({ slug: v.slug }))
+  return [{ slug: 'preview' }]
 }
-
-export const dynamicParams = false
+export const dynamicParams = !process.env.STATIC_EXPORT
 
 export default function SpotPage({ params }: { params: { slug: string } }) {
-  const venue = getVenue(params.slug)
-  if (!venue) notFound()
-  return <SpotClient venue={venue} />
+  return <SpotLoader slug={params.slug} />
 }

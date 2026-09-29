@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { AppShell, NeedLogin, Pill } from '../ui'
 import { TagLine } from '../tags'
 import { authClient, useSession } from '@/lib/auth'
-import { VENUES } from '@/lib/venues'
+import { useSpots } from '@/lib/venues'
 import { getDemo, demoPhoto } from '@/lib/demo'
 import { dareFor } from '@/lib/dares'
 import { INTAKE_BUCKET } from '@/lib/supabase'
@@ -127,7 +127,8 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
   const [msgs, setMsgs] = useState<Msg[]>([])
   const [text, setText] = useState('')
   const [photo, setPhoto] = useState<string | null>(null)
-  const [spot, setSpot] = useState(chat.spot_slug ?? VENUES[0].slug)
+  const spots = useSpots()
+  const [spot, setSpot] = useState(chat.spot_slug ?? '')
   const [when, setWhen] = useState('')
   const [debrief, setDebrief] = useState<string | null>(null)
   const [brief, setBrief] = useState(chat.brief)
@@ -204,7 +205,7 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
     onChange()
   }
 
-  const venue = VENUES.find((v) => v.slug === (chat.spot_slug ?? spot))
+  const venue = spots?.find((v) => v.slug === (chat.spot_slug ?? spot))
 
   return (
     <div className="grid lg:grid-cols-[320px_1fr] gap-8">
@@ -227,12 +228,12 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
           <div className="text-sm font-semibold mt-0.5">{chat.them.name}{chat.them.age ? `, ${chat.them.age}` : ''}{chat.them.hood ? ` · ${chat.them.hood}` : ''}</div>
         </div>
         {chat.status === 'open' && <Clock closesAt={chat.closes_at} />}
-        {chat.status === 'date_set' && venue && (
+        {chat.status === 'date_set' && (
           <div className="border-2 border-ob rounded-2xl p-4">
             <div className="text-xs tracking-[0.15em] uppercase font-semibold text-ob">/date set</div>
-            <div className="font-display font-extrabold text-xl mt-1">{venue.name}</div>
+            <div className="font-display font-extrabold text-xl mt-1">{venue?.name ?? 'Your pick'}</div>
             <div className="text-sm">{chat.date_at ? new Date(chat.date_at).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : ''}</div>
-            <div className="text-sm text-[#141414]/70 mt-2">{venue.perk}</div>
+            <div className="text-sm text-[#141414]/70 mt-2">{venue?.perk ?? 'Somewhere public, somewhere you’d go anyway.'}</div>
           </div>
         )}
         {chat.status === 'date_set' && (
@@ -323,7 +324,8 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
             <div className="flex flex-wrap items-center gap-2 border-t border-[#141414]/10 pt-4">
               <span className="text-xs tracking-[0.15em] uppercase font-semibold text-[#141414]/50 mr-1">Make it a /date</span>
               <select value={spot} onChange={(e) => setSpot(e.target.value)} className="border-2 border-[#141414]/15 rounded-full px-4 py-2 text-sm font-semibold bg-white">
-                {VENUES.map((v) => <option key={v.slug} value={v.slug}>{v.name}</option>)}
+                <option value="">Somewhere of our own</option>
+                {(spots ?? []).map((v) => <option key={v.slug} value={v.slug}>{v.name}</option>)}
               </select>
               <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="border-2 border-[#141414]/15 rounded-full px-4 py-2 text-sm font-semibold bg-white" />
               <Pill primary onClick={setDate} disabled={!when}>Set it</Pill>

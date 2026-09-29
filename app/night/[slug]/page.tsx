@@ -1,14 +1,10 @@
-import { notFound } from 'next/navigation'
-import { VENUES, getVenue } from '@/lib/venues'
-import NightClient from './night-client'
+import NightLoader from './night-loader'
 
 export function generateStaticParams() {
-  return VENUES.map((v) => ({ slug: v.slug }))
+  return [{ slug: 'preview' }]
 }
-export const dynamicParams = false
+export const dynamicParams = !process.env.STATIC_EXPORT
 
 export default function NightPage({ params }: { params: { slug: string } }) {
-  const venue = getVenue(params.slug)
-  if (!venue) notFound()
-  return <NightClient venue={venue} />
+  return <NightLoader slug={params.slug} />
 }

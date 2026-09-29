@@ -4,11 +4,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { AppShell, NeedLogin, Pill } from '../ui'
 import { authClient, useSession } from '@/lib/auth'
 import { suggestPairs, draftIntro, type Person, type Pair } from '@/lib/match'
-import { VENUES } from '@/lib/venues'
+import { useSpots } from '@/lib/venues'
 import { QUESTIONS } from '@/lib/questions'
 import { askVal, notify } from '@/lib/val'
 import System from './system'
 import { FunnelTab, HealthTab } from './insights'
+import { SpotsTab } from './spots'
 import { TagLine } from '../tags'
 
 type Console = {
@@ -16,7 +17,7 @@ type Console = {
   applications: any[]; heys: any[]; wings: any[]; chats: any[]; signals: any[]; debriefs: any[]; weights: any[]; reports: any[]
 }
 
-const TABS = ['Pairs', 'Tonight', 'Inbox', 'People', 'Chats', 'Signals', 'Debriefs', 'Reports', 'Funnel', 'Health', 'System'] as const
+const TABS = ['Pairs', 'Spots', 'Tonight', 'Inbox', 'People', 'Chats', 'Signals', 'Debriefs', 'Reports', 'Funnel', 'Health', 'System'] as const
 
 export default function ConsolePage() {
   const { email, loading } = useSession()
@@ -26,6 +27,12 @@ export default function ConsolePage() {
   const [busy, setBusy] = useState<string | null>(null)
   const [reads, setReads] = useState<Record<string, string>>({})
   const [thinking, setThinking] = useState<string | null>(null)
+  const spots = useSpots()
+  // Emails link straight to a tab: /console/?tab=Spots
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('tab')
+    if (t && (TABS as readonly string[]).includes(t)) setTab(t as (typeof TABS)[number])
+  }, [])
 
   async function load() {
     const { data } = await authClient()!.rpc('val_console')
@@ -43,7 +50,7 @@ export default function ConsolePage() {
   async function pair(p: Pair) {
     const key = p.a.handle + '|' + p.b.handle
     setBusy(key)
-    const text = note[key] || draftIntro(p, VENUES[0].name)
+    const text = note[key] || draftIntro(p, spots?.[0]?.name)
     const { data: chatId } = await authClient()!.rpc('val_pair', { p_a: p.a.handle, p_b: p.b.handle, p_note: text })
     if (chatId) notify(authClient(), { kind: 'chat', id: chatId })
     setBusy(null); load()
@@ -52,9 +59,9 @@ export default function ConsolePage() {
   async function valIntro(p: Pair) {
     const key = p.a.handle + '|' + p.b.handle
     setThinking(key)
-    const r = await askVal(authClient()!, { kind: 'intro', a: p.a, b: p.b, reasons: p.reasons, flags: p.flags, spot: VENUES[0].name })
+    const r = await askVal(authClient()!, { kind: 'intro', a: p.a, b: p.b, reasons: p.reasons, flags: p.flags, spot: spots?.[0]?.name ?? '' })
     if (typeof r.text === 'string' && r.text) setNote({ ...note, [key]: r.text })
-    else setNote({ ...note, [key]: draftIntro(p, VENUES[0].name) + '\n\n(Val\u2019s AI voice needs ANTHROPIC_API_KEY set on the edge function; this is her template.)' })
+    else setNote({ ...note, [key]: draftIntro(p, spots?.[0]?.name) + '\n\n(Val\u2019s AI voice needs ANTHROPIC_API_KEY set on the edge function; this is her template.)' })
     setThinking(null)
   }
 
@@ -122,7 +129,7 @@ export default function ConsolePage() {
                     {p.reasons.map((r) => <li key={r}>&#10003; {r}</li>)}
                     {p.flags.map((f) => <li key={f} className="text-ob">&#9888; {f}</li>)}
                   </ul>
-                  <textarea value={note[key] ?? draftIntro(p, VENUES[0].name)} onChange={(e) => setNote({ ...note, [key]: e.target.value })} rows={3}
+                  <textarea value={note[key] ?? draftIntro(p, spots?.[0]?.name)} onChange={(e) => setNote({ ...note, [key]: e.target.value })} rows={3}
                     className="mt-3 w-full border-2 border-[#141414]/10 focus:border-ob outline-none rounded-xl px-3 py-2 text-sm" />
                 </div>
                 <div className="flex md:flex-col items-start gap-3">
@@ -141,7 +148,7 @@ export default function ConsolePage() {
           {Object.entries(rooms).map(([slug, emails]) => (
             <div key={slug} className="border-2 border-[#141414] rounded-2xl p-5">
               <div className="flex items-baseline justify-between gap-4">
-                <div className="font-display font-extrabold text-2xl">{VENUES.find((v) => v.slug === slug)?.name ?? slug}</div>
+                <div className="font-display font-extrabold text-2xl">{spots?.find((v) => v.slug === slug)?.name ?? slug}</div>
                 <div className="font-display font-extrabold text-4xl tabular-nums text-ob">{emails.size}</div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -233,7 +240,7 @@ export default function ConsolePage() {
             <div key={c.id} className="border-2 border-[#141414]/10 rounded-2xl p-4 flex flex-wrap items-baseline gap-3">
               <span className="font-display font-extrabold text-xl">/{c.a_handle} + /{c.b_handle}</span>
               <span className="text-xs uppercase tracking-[0.15em] font-extrabold text-ob">{c.status}</span>
-              {c.spot_slug && <span className="text-sm">{VENUES.find((v) => v.slug === c.spot_slug)?.name} &middot; {c.date_at && new Date(c.date_at).toLocaleString()}</span>}
+              {c.spot_slug && <span className="text-sm">{(spots?.find((v) => v.slug === c.spot_slug)?.name ?? 'their own pick')} &middot; {c.date_at && new Date(c.date_at).toLocaleString()}</span>}
               <span className="ml-auto text-xs text-[#141414]/50">closes {new Date(c.closes_at).toLocaleString()}</span>
             </div>
           ))}
@@ -245,7 +252,7 @@ export default function ConsolePage() {
           {data.signals.map((s: any) => (
             <div key={s.id} className="text-sm flex flex-wrap gap-3 border-b border-[#141414]/10 py-2">
               <span className="font-extrabold uppercase text-xs tracking-[0.15em] w-16">{s.kind}</span>
-              <span>{VENUES.find((v) => v.slug === s.venue_slug)?.name ?? s.venue_slug}</span>
+              <span>{spots?.find((v) => v.slug === s.venue_slug)?.name ?? s.venue_slug}</span>
               <span className="text-[#141414]/60">{data.handles.find((h) => h.email === s.email)?.handle ? '/' + data.handles.find((h) => h.email === s.email)!.handle : s.email}</span>
               {s.note && <span className="italic">&ldquo;{s.note}&rdquo;</span>}
               <span className="ml-auto text-xs text-[#141414]/50">{new Date(s.created_at).toLocaleString()}</span>
@@ -256,6 +263,7 @@ export default function ConsolePage() {
 
       {tab === 'System' && <System email={email} />}
       {tab === 'Funnel' && <FunnelTab />}
+      {tab === 'Spots' && <SpotsTab />}
       {tab === 'Health' && <HealthTab />}
 
       {tab === 'Reports' && (

@@ -488,3 +488,14 @@ The homepage was dropping 12-46% of frames while scrolling on a slow phone (CPU 
 - Nothing sets a style variable on the whole page per frame anymore (that forced every element to be restyled). The hero drift and the wall's lean are a transform on one element each; the wall leans less (4° max).
 - Removed: the gyro tilt (and with it iOS's "Motion and Orientation" permission popup), blur on the reveal animations, the blurred drifting glow (now a gradient that just slides to your finger), blend modes on the button shine, snap scrolling, and the film grain on phones.
 - App pages: the scroll fade applies to cards only, not every list item.
+
+## 10s. /spots: apply, vet, approve (v20)
+
+Every /spot is approved by a person. Nothing is public until it is.
+
+- **Sales reps** (`/console` → Spots → Sales reps): add a rep with a short code. Their pitch page, `/partner/rep/?c=<code>`, is made to hold up on a phone: a big QR plus "Send them the link" / Text / Email, and a twenty-second pitch. Both the QR and the link open `/partner/?rep=<code>`, so the application is credited to the rep. Turn a rep off and their links stop crediting.
+- **Venues apply** at `/partner/` (linked from the homepage, from rep links, and from any `/spot` page that isn't live): what a spot is, the standards (public place with staff, welcoming to everyone, tell us about unsafe guests, no paying for placement or matches, we can pause any time), and a short form. `date_spot_apply` validates, drops bots (honeypot), allows one pending application per email and 5 per IP per hour, and stores it as `pending`.
+- **Val hears first:** a trigger emails and pushes every admin with the details and a link to the console; the venue gets "a person reviews every spot" right away.
+- **Console → Spots:** pending first, with the address on a map, the website, a one-tap "vet it" search, who brought it in, and what they'd offer. Approve, decline or pause, with an optional note that goes in the email. Live spots get their page and kit links, their perk, and the next /night.
+- **On approval** the venue is emailed their page (`/spot/<slug>/`) and their kit (`/spot/<slug>/kit/`): a door poster and four table cards, each with the QR to their page, print-ready, plus a PNG download.
+- **Public** reads go only through `public_spots()` / `public_spot()`: approved rows, safe fields. Contact details, IPs and notes are never readable from the browser. Check-ins, date-setting and Val's chat suggestions only ever use approved spots; with none, Val says "somewhere public, somewhere you'd both go anyway". The Golden Hour placeholder is paused and gone from the site.

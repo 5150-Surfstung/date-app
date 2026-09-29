@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
 
   if (kind === "intro") {
     if (!isAdmin) return json({ error: "admin" }, 403);
-    const { a, b, reasons = [], flags = [], spot = "the /spot" } = body;
+    const { a, b, reasons = [], flags = [], spot = "" } = body;
     return json({ text: await say("intro", prompts.intro(a, b, reasons, flags, spot), 600, [first(a), first(b)]) });
   }
 
@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
       ? await service.from("date_venues").select("*").eq("slug", chat.spot_slug).maybeSingle()
       : { data: null };
     const text = await say("brief", prompts.brief(reader, other,
-      venue ? `${venue.name}, ${venue.area}. Perk: ${venue.perk}` : "not set yet", chat.date_at ?? "not set yet", chat.val_note ?? ""), 900);
+      venue ? `${venue.name}, ${venue.area}. Perk: ${venue.perk}` : chat.date_at ? "their own pick, somewhere public (no /spot)" : "not set yet", chat.date_at ?? "not set yet", chat.val_note ?? ""), 900);
     if (!text) return json({ brief: null });
     const sections: Record<string, string> = {};
     let current = "";

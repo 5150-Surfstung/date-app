@@ -29,8 +29,8 @@ export const VIBES: VibeTheme[] = [
   {
     tag: 'fun', bg: '#FFD23F', fg: '#141414', accent: '#141414', onAccent: '#FFD23F', muted: 'rgba(20,20,20,0.7)',
     headline: 'Say yes to the plan.',
-    sub: 'A room full of verified singles, first hour comped, introductions made live. Once a month at every /spot.',
-    cta: 'See the next /night',
+    sub: 'A room full of verified singles, introductions made live. Once a month, at the best places in town.',
+    cta: 'Claim your /name',
   },
   {
     tag: 'casual', bg: '#BFE3FF', fg: '#0A1A2A', accent: '#0A1A2A', onAccent: '#BFE3FF', muted: 'rgba(10,26,42,0.7)',

@@ -199,6 +199,25 @@ const funnelAnon = await anon.rpc('val_funnel')
 const funnelB = await B.c.rpc('val_funnel')
 check('funnel and health are Val-only', (funnelAnon.error || funnelAnon.data === null) && funnelB.data === null)
 
+// /spots: anyone can apply, only Val approves, nothing pending is public
+const spotEmail = `e2e-${runId}-spot@test.invalid`
+const spotApp = { name: `E2E Spot ${runId}`, kind: 'bar', contact_name: 'Tess', contact_email: spotEmail, standards_ok: true }
+const applied = await anon.rpc('date_spot_apply', { p: spotApp })
+check('a venue can apply', applied.data === 'ok', applied.error?.message ?? applied.data)
+const again = await anon.rpc('date_spot_apply', { p: spotApp })
+check('one pending application per email', again.data === 'dupe', again.data)
+const noStd = await anon.rpc('date_spot_apply', { p: { ...spotApp, contact_email: `e2e-${runId}-spot2@test.invalid`, standards_ok: false } })
+check('standards must be agreed', noStd.data === 'standards', noStd.data)
+const pendingSpot = await anon.rpc('public_spot', { p_slug: `e2e-spot-${runId}` })
+const publicList = await anon.rpc('public_spots')
+check('pending spots are not public', pendingSpot.data === null && !(publicList.data ?? []).some((s) => s.slug === `e2e-spot-${runId}`))
+const rawVenues = await anon.from('date_venues').select('contact_email').limit(1)
+check('venue contact details are private', (rawVenues.data ?? []).length === 0)
+const selfApprove = await B.c.rpc('val_review_spot', { p_slug: `e2e-spot-${runId}`, p_action: 'approve', p_note: null })
+check('members cannot approve spots', selfApprove.data === 'admin' || !!selfApprove.error, selfApprove.data)
+const selfRep = await B.c.rpc('val_save_rep', { p_code: `e2e${runId}`, p_name: 'Sneaky', p_email: null, p_active: true })
+check('members cannot add reps', selfRep.data === 'admin' || !!selfRep.error, selfRep.data)
+
 const clean = await anon.rpc('cleanup_e2e')
 check('cleanup', !clean.error, clean.error?.message)
 process.exit(failed ? 1 : 0)

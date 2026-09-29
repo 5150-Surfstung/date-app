@@ -181,6 +181,56 @@ Deno.serve(async (req) => {
     return json({ sent });
   }
 
+  if (kind === "spot_apply") {
+    // A venue applied. Val's people hear first; the venue hears "a person reviews every spot".
+    const { data: v } = await db.from("date_venues").select("*").eq("slug", body.slug).maybeSingle();
+    if (!v || v.status !== "pending") return json({ skipped: "none" });
+    const { data: rep } = v.rep_code ? await db.from("date_reps").select("name").eq("code", v.rep_code).maybeSingle() : { data: null };
+    const { data: admins } = await db.from("date_admins").select("email");
+    const subj = `New /spot: ${v.name}${v.area ? ` · ${v.area}` : ""}`;
+    const text = [
+      `${v.name} wants to be a /date spot.`,
+      ``,
+      `Type: ${v.kind ?? "other"}${v.area ? ` · ${v.area}` : ""}${v.address ? `\nAddress: ${v.address}` : ""}${v.website ? `\nWeb: ${v.website}` : ""}`,
+      `Contact: ${v.contact_name}${v.contact_role ? ` (${v.contact_role})` : ""} · ${v.contact_email}${v.contact_phone ? ` · ${v.contact_phone}` : ""}`,
+      v.perk ? `They'd offer: ${v.perk}` : "",
+      v.pitch ? `Why: ${v.pitch}` : "",
+      `Would host a /night: ${v.night_ok ? "yes" : "not yet"}`,
+      rep ? `Brought in by: ${rep.name} (${v.rep_code})` : "Came in on its own",
+      ``,
+      `Nothing is public until you approve it. Check them out first.`,
+      `${SITE}/console/?tab=Spots`,
+    ].filter((l) => l !== "").join("\n");
+    await Promise.all((admins ?? []).map(async (a: { email: string }) => {
+      await send(a.email, subj, text);
+      await push(a.email, { title: subj, body: "Waiting on your approval.", url: `${SITE}/console/?tab=Spots`, tag: `spot-${v.slug}` });
+    }));
+    await send(v.contact_email, `We got it: ${v.name}`,
+      `${v.contact_name} —\n\nThanks for putting ${v.name} forward as a /date spot.\n\nA person looks at every spot before it goes live. We keep it to places we'd send our own friends. You'll hear back from us either way, usually within two days.\n\nQuestions: just reply.\n\n— Val, the /date matchmaker`);
+    return json({ ok: true });
+  }
+
+  if (kind === "spot_status") {
+    // Val approved, declined or paused a spot. Tell the venue once per status.
+    const { data: v } = await db.from("date_venues").select("*").eq("slug", body.slug).maybeSingle();
+    if (!v || !v.contact_email || v.status_notified === v.status || v.status === "pending") return json({ skipped: "none" });
+    const { data: took } = await db.from("date_venues").update({ status_notified: v.status }).eq("slug", v.slug)
+      .or(`status_notified.is.null,status_notified.neq.${v.status}`).select("slug");
+    if (!took?.length) return json({ skipped: "claimed" });
+    const note = v.review_note ? `\n\n${v.review_note}` : "";
+    const msg: Record<string, [string, string]> = {
+      approved: [`${v.name} is a /date spot`,
+        `${v.contact_name} —\n\nYou're in. ${v.name} is now a /date spot.${note}\n\nYour page (this is what your QR opens):\n${SITE}/spot/${v.slug}/\n\nYour spot kit — print the poster and table cards, put them where people wait or sit:\n${SITE}/spot/${v.slug}/kit/\n\nHow it works: a guest scans in, and if someone else in the room is on /date and it's mutual, Val introduces them. Nobody has to walk over. Your staff don't have to do anything.\n\nWelcome aboard.\n\n— Val`],
+      declined: [`About ${v.name}`,
+        `${v.contact_name} —\n\nThank you for putting ${v.name} forward. We're not adding it as a /date spot right now.${note}\n\nWe keep the list small on purpose while we grow. If things change, we'll reach out.\n\n— Val`],
+      paused: [`${v.name} is paused on /date`,
+        `${v.contact_name} —\n\nWe've paused ${v.name} as a /date spot for now, so it won't show in the app and its QR won't check guests in.${note}\n\nQuestions: just reply.\n\n— Val`],
+    };
+    const m = msg[v.status];
+    const sent = m ? await send(v.contact_email, m[0], m[1]) : false;
+    return json({ sent });
+  }
+
   if (kind === "swap") {
     // Both tapped "swap numbers". Once, to both. The numbers stay in the app, not the email.
     const { data: c } = await db.from("date_chats").select("*").eq("id", body.id).not("swapped_at", "is", null).is("swap_notified_at", null).maybeSingle();

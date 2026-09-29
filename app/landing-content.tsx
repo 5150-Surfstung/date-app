@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { VENUES, getVenue } from '@/lib/venues'
+import { useSpot, useSpots } from '@/lib/venues'
 import { TAGS, HANDLE_KEY, type Tag } from '@/lib/handles'
 import { DEMO_CREW, demoPhoto } from '@/lib/demo'
 import { VIBES, pickVibe, vibeFor, type VibeTheme } from '@/lib/vibes'
@@ -39,7 +39,8 @@ function facesFor(tag: Tag) {
 export default function LandingContent() {
   const params = useSearchParams()
   const slug = params.get('v') ?? undefined
-  const venue = slug ? getVenue(slug) : undefined
+  const venue = useSpot(slug)
+  const spots = useSpots()
   const applyHref = slug ? `/apply?v=${encodeURIComponent(slug)}` : '/apply'
 
   const [vibe, setVibe] = useState<VibeTheme>(VIBES[0])
@@ -67,8 +68,7 @@ export default function LandingContent() {
   const faces = facesFor(vibe.tag)
   const accent = ['#141414', '#FFF3EA', '#140A20', '#1F3D2B', '#0E7C7B'].includes(vibe.bg) ? '#FF3B2F' : vibe.bg
   const ctaHref =
-    vibe.tag === 'fun' ? `/spot/${VENUES[0].slug}` :
-    vibe.tag === 'tonight' || vibe.tag === 'open' || vibe.tag === 'casual' ? '/claim' : applyHref
+    vibe.tag === 'fun' || vibe.tag === 'tonight' || vibe.tag === 'open' || vibe.tag === 'casual' ? '/claim' : applyHref
 
   // Auto-cycle /vibes in the hero until you scroll or it's yours.
   const [auto, setAuto] = useState(true)
@@ -227,13 +227,13 @@ export default function LandingContent() {
             <Link href="/founding" className="border-2 border-current text-lg font-extrabold rounded-full px-10 py-5 text-center">The first 500</Link>
           </div>
 
-          <div className="rise mt-14" style={{ ['--d' as string]: 4 }}>
+          {spots && spots.length > 0 && <div className="rise mt-14" style={{ ['--d' as string]: 4 }}>
             <div className="text-xs tracking-[0.2em] uppercase font-semibold mb-4" style={{ color: vibe.muted }}>Participating /spots</div>
             <div className="flex flex-wrap gap-3">
-              {VENUES.map((v) => (
+              {spots.map((v) => (
                 <span key={v.slug} className="flex gap-2">
                   <Link href={`/spot/${v.slug}`} className="border-2 border-current rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-70 transition-opacity">
-                    {v.name} · {v.area}
+                    {v.name}{v.area ? ` · ${v.area}` : ''}
                   </Link>
                   {v.night && (
                     <Link href={`/night/${v.slug}`} className="bg-[#FF5CA8] text-[#140A20] rounded-full px-5 py-2.5 text-sm font-extrabold">
@@ -242,9 +242,12 @@ export default function LandingContent() {
                   )}
                 </span>
               ))}
-              <span className="border-2 border-dashed border-current rounded-full px-5 py-2.5 text-sm opacity-60">Your place? hello@surfstung.com</span>
             </div>
-          </div>
+          </div>}
+
+          <Link href="/partner/" className="rise mt-12 inline-block text-sm font-semibold underline underline-offset-4" style={{ ['--d' as string]: 5 }}>
+            Run a bar, caf&eacute;, gym or studio? Make it a /date spot &rarr;
+          </Link>
 
           <p className="mt-14 text-sm" style={{ color: vibe.muted }}>
             /date · Matchmaking for humans · Val is the matchmaker · <Link href="/receipts" className="underline">All the numbers</Link> · <Link href="/privacy" className="underline">Privacy</Link> · <Link href="/terms" className="underline">Terms</Link>
