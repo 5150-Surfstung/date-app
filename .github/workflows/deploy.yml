@@ -10,9 +10,9 @@ env:
   NEXT_PUBLIC_STATIC_EXPORT: '1'
   NEXT_PUBLIC_SITE_URL: https://5150-surfstung.github.io/date-app
   NEXT_PUBLIC_BASE_PATH: /date-app
-  NEXT_PUBLIC_SUPABASE_URL: https://iwotispqqcnkrbcnvozq.supabase.co
+  NEXT_PUBLIC_SUPABASE_URL: https://bjnfxgdulhmqktqqezro.supabase.co
   # Anon key is public by design; RLS makes it write-only.
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3b3Rpc3BxcWNua3JiY252b3pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5ODk5MTQsImV4cCI6MjA5NzU2NTkxNH0.cnvrHhZkrygCNuxMQitqsS9TBqC_1Uy0h6ymh9jmppY
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqbmZ4Z2R1bGhtcWt0cXFlenJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2Njk0MjcsImV4cCI6MjEwNjI0NTQyN30._rFzgf4phGkwDQF70JQil5BqPmfGuyDz9yBD6p3mN5g
 
 jobs:
   photos:

@@ -303,3 +303,23 @@ is public by design). The Anthropic key is the one thing still unset: add
 it as a function secret named ANTHROPIC_API_KEY, or store it in Vault
 under the same name, and Val's brain switches on. `{"kind":"status"}` on
 `notify` reports booleans for all three.
+
+## 10h. Own project (v9)
+
+/date moved off the shared database to its own Supabase project, `date`
+(ref bjnfxgdulhmqktqqezro, us-east-1). fundraiser-platform was paused to
+make room under the free tier's two-active-project cap.
+
+- Schema replayed in two migrations (`date_replay_1_…`, `date_replay_2_…`),
+  functions in their final form, plus `date_seed_demo_and_e2e_cleanup`
+  (the 17 demo profiles, the `/val` handle, and a cleanup that removes
+  every row a test run touches, in FK order).
+- Functions `val` and `notify` deployed there. The Resend key was handed
+  from the old database to the new one database-to-database through a
+  one-time token; the handoff function is retired. New VAPID pair.
+- Clock job `date-val-clock` now runs on the new project; the old one is
+  unscheduled. The old `date_` tables stay on the shared project, untouched,
+  as a backup. No real members existed yet, so nothing personal moved.
+- Vercel env and the GitHub workflow point at the new URL and anon key.
+- Still the owner's: Auth → URL Configuration (Site URL and redirect list)
+  on the new project, and the Anthropic key.
