@@ -468,9 +468,9 @@ One page, six full-screen scenes, and the color behind them blends from one to t
 
 1. **Hero.** /vibes cycle on their own every 4.5s (color, headline, sub) with a progress bar, until you touch the page, scroll, or it's your own /name. The headline words slide up one at a time. A soft glow drifts, then follows your finger.
 2. **The wall.** Two rows of demo faces drift in opposite directions and lean into a fast swipe, then settle.
-3. **Watch Val work.** A loop: two people fly in, a chemistry score counts up, the cards pull together, and Val types the intro with a reason, a time and a /spot. Six pairs, all combinations (same-gender pairs included). Runs only while on screen.
+3. **Watch Val work.** A loop: two people fly in, a chemistry score counts up, the cards pull together with a burst, and Val types the intro with a reason, a time and a /spot. Six pairs: five mixed, one same-gender, roughly who's on the app. Runs only while on screen.
 4. **Your /tags.** Tap up to three; the first leads. A fourth tap shakes and says "three max." The button carries them to /claim (`/claim?tags=a,b,c` prefills the picker).
 5. **How it works.** Four cards stack on top of each other as you scroll.
 6. **Close.** /receipts count up from zero, a giant outlined /date drifts behind "Val's ready when you are," then the /spots and footer.
 
-Everything goes still for people who turn motion off. Nothing new is installed.
+On phones: tap anywhere in the hero (or pick a /tag) and slashes burst from your finger; tilt the phone and the layers shift like looking through glass (iOS asks once, on the first tap); the hero drifts up and fades as you leave it. Everything goes still for people who turn motion off. Nothing new is installed.

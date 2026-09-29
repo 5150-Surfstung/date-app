@@ -200,7 +200,33 @@ html.snap { scroll-snap-type: y proximity; }
 }
 @keyframes giant { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
+/* Tap bursts. */
+.burst-p {
+  position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; line-height: 1;
+  font-family: var(--font-sora), system-ui, sans-serif; font-weight: 800; font-size: var(--s); color: var(--c);
+  transform: translate(var(--x0), var(--y0)) translate(-50%, -50%);
+  animation: burst .95s cubic-bezier(.12,.75,.3,1) forwards;
+}
+@keyframes burst {
+  to { transform: translate(calc(var(--x0) + var(--dx)), calc(var(--y0) + var(--dy))) translate(-50%, -50%) rotate(var(--r)) scale(.3); opacity: 0; }
+}
+
+/* Hero drifts up and away as you leave it. */
+.hero-exit {
+  transform: translateY(calc(var(--hero, 0) * -110px)) scale(calc(1 - var(--hero, 0) * 0.08));
+  opacity: calc(1 - var(--hero, 0) * 0.85);
+  transform-origin: top left;
+}
+
+/* Gyro / mouse parallax: far layers move less, near layers more. */
+.tilt-far { translate: calc(var(--tx, 0) * -8px) calc(var(--ty, 0) * -5px); transition: translate .3s ease-out; }
+.tilt-near { translate: calc(var(--tx, 0) * 22px) 0; transition: translate .3s ease-out; }
+.intro-card.is-left { translate: calc(var(--tx, 0) * -14px) calc(var(--ty, 0) * -10px); }
+.intro-card.is-right { translate: calc(var(--tx, 0) * 14px) calc(var(--ty, 0) * 10px); }
+.orb { margin-left: calc(var(--tx, 0) * 70px); margin-top: calc(var(--ty, 0) * 50px); }
+
 @media (prefers-reduced-motion: reduce) {
+  .hero-exit { transform: none; opacity: 1; }
   html.snap { scroll-snap-type: none; }
   .js-reveal .rise { opacity: 1; transform: none; filter: none; }
   .intro-card, .intro-bubble, .intro-badge { opacity: 1 !important; transform: none !important; }

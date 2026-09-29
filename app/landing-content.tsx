@@ -121,9 +121,9 @@ export default function LandingContent() {
 
       {/* 1 · Hero — /vibes cycle on their own; a glow follows your finger */}
       <section data-scene="0" className="scene relative z-10 px-6 sm:px-12 pt-32 pb-20 overflow-hidden" style={{ color: vibe.fg }}
-        onPointerMove={(e) => morph.glow(e)} onPointerDown={() => setAuto(false)}>
+        onPointerMove={(e) => morph.glow(e)} onPointerDown={(e) => { setAuto(false); burst(e.clientX, e.clientY, [vibe.fg, vibe.bg === '#FF3B2F' ? '#FFD23F' : '#FF3B2F', '#FF5CA8'], 18) }}>
         <div ref={morph.orb} aria-hidden className="orb" style={{ background: vibe.accent === vibe.fg ? '#FFD23F' : vibe.accent }} />
-        <div className="relative max-w-4xl">
+        <div className="hero-exit relative max-w-4xl">
           {venue && (
             <Link href={`/spot/${venue.slug}`} className="rise border-2 border-current rounded-2xl px-6 py-5 mb-12 max-w-lg block">
               <div className="text-xs tracking-[0.2em] uppercase font-medium mb-2">You&rsquo;re at a /date spot</div>
@@ -135,7 +135,7 @@ export default function LandingContent() {
             {mine ? 'Your /vibe' : 'Tonight’s /vibe'} &middot; <span key={vibe.tag} className="swap-in inline-block" style={{ color: vibe.fg }}>/{vibe.tag}</span>
           </div>
           {!mine && auto && <div key={`bar-${vibe.tag}-${spin}`} className="cycle-bar mt-3 h-[3px] w-36 rounded-full" style={{ background: vibe.muted }} />}
-          <h1 key={`h-${vibe.tag}-${spin}`} className="mt-6 font-display font-extrabold text-[3.6rem] sm:text-8xl leading-[0.95] tracking-[-0.04em] [text-wrap:balance]">
+          <h1 key={`h-${vibe.tag}-${spin}`} className="tilt-far mt-6 font-display font-extrabold text-[3.6rem] sm:text-8xl leading-[0.95] tracking-[-0.04em] [text-wrap:balance]">
             {words.map((w, i) => (
               <Fragment key={i}><span className="word"><span style={{ animationDelay: `${i * 70}ms` }}>{w}</span></span>{i < words.length - 1 ? ' ' : ''}</Fragment>
             ))}
@@ -166,7 +166,7 @@ export default function LandingContent() {
           </div>
           <Link href="/demo" className="text-sm font-semibold underline underline-offset-4 text-white/60 hover:text-white px-3 -mx-3 shrink-0">All {DEMO_CREW.length}</Link>
         </div>
-        <div className="skew">
+        <div className="skew tilt-near">
           <div className="rise" style={{ ['--d' as string]: 1 }}><Wall people={faces} direction="left" accent={accent} /></div>
           <div className="h-3" />
           <div className="rise" style={{ ['--d' as string]: 2 }}><Wall people={[...faces.slice(Math.ceil(faces.length / 2)), ...faces.slice(0, Math.ceil(faces.length / 2))]} direction="right" accent={accent} /></div>
@@ -304,10 +304,11 @@ function Stat({ n, suffix = '', label, muted }: { n?: number; suffix?: string; l
 function TagScene() {
   const [picked, setPicked] = useState<Tag[]>([])
   const [nope, setNope] = useState(0)
-  const toggle = (t: Tag) => {
+  const toggle = (t: Tag, e?: React.MouseEvent) => {
     if (picked.includes(t)) { setPicked(picked.filter((x) => x !== t)); return }
     if (picked.length >= 3) { setNope((n) => n + 1); try { navigator.vibrate?.([12, 40, 12]) } catch {} ; return }
     try { navigator.vibrate?.(8) } catch {}
+    if (e) burst(e.clientX, e.clientY, picked.length ? ['#FFFFFF', '#FFD23F'] : ['#141414', '#FFFFFF', '#FFD23F'])
     setPicked([...picked, t])
   }
   const lead = TAGS.find((t) => t.value === picked[0])
@@ -319,7 +320,7 @@ function TagScene() {
         {TAGS.map((t, i) => {
           const at = picked.indexOf(t.value)
           return (
-            <button key={t.value} onClick={() => toggle(t.value)} aria-pressed={at >= 0} title={t.line}
+            <button key={t.value} onClick={(e) => toggle(t.value, e)} aria-pressed={at >= 0} title={t.line}
               className={`rise tag-word font-display font-extrabold text-5xl sm:text-7xl tracking-[-0.035em] leading-[1.05] ${at >= 0 ? 'is-on' : ''}`}
               style={{ ['--d' as string]: 1 + i * 0.5, color: at === 0 ? '#141414' : at > 0 ? '#FFFFFF' : 'rgba(255,255,255,0.38)' }}>
               /{t.value}
@@ -340,13 +341,15 @@ function TagScene() {
 
 // A looping demo of the product's core moment: Val picks two people, says why,
 // and books the table. Runs only while on screen.
+// Mostly mixed pairs, one same-gender pair in the rotation: roughly who's on
+// the app, and it shows everyone is welcome without making it the whole story.
 const PAIRS: [string, string, string][] = [
   ['sloane', 'nico', 'You both said the best nights aren’t planned.'],
-  ['lena', 'tasha', 'You both want the real thing and said so out loud.'],
-  ['marcus', 'reid', 'Neither of you is in a rush. Good.'],
-  ['theo', 'kenji', 'You’re both honest about not knowing yet. That’s rare.'],
-  ['mateo', 'jules', 'One of you knows this city. One of you wants to.'],
-  ['noor', 'sienna', 'Same bookstore, same bad jokes. Trust me.'],
+  ['lena', 'reid', 'You both want the real thing, and neither of you wants to rush it.'],
+  ['ava', 'mateo', 'First time on /date, both new-ish to the city. Figure it out together.'],
+  ['sienna', 'theo', 'Same bookstore, same bad jokes. Trust me.'],
+  ['tasha', 'maya', 'You both want the real thing and said so out loud.'],
+  ['noor', 'kenji', 'You answered the Sunday question the exact same way. Nobody does that.'],
 ]
 const WHEN = ['Thursday, 7:30', 'Friday, 8:00', 'Saturday, 6:45', 'Wednesday, 7:00']
 
@@ -357,6 +360,7 @@ function ValIntro() {
   const [typed, setTyped] = useState(0)
   const [pct, setPct] = useState(0)
   const [live, setLive] = useState(false)
+  const badge = useRef<HTMLDivElement>(null)
 
   const [ha, hb, why] = PAIRS[k % PAIRS.length]
   const a = DEMO_CREW.find((d) => d.handle === ha)!
@@ -396,6 +400,9 @@ function ValIntro() {
     }, 1150))
     timers.push(setTimeout(() => {
       setStep(3)
+      const r = badge.current?.getBoundingClientRect()
+      if (r) burst(r.left + r.width / 2, r.top + r.height / 2, ['#FF3B2F', '#FF5CA8', '#FFD23F', '#141414'], 22)
+      try { navigator.vibrate?.([10, 40, 18]) } catch {}
       let n = 0
       const type = () => { n += 1; setTyped(n); if (n < line.length) timers.push(setTimeout(type, 24)) }
       type()
@@ -419,7 +426,7 @@ function ValIntro() {
             </div>
           </Link>
         ))}
-        <div className="intro-badge" aria-live="polite">
+        <div ref={badge} className="intro-badge" aria-live="polite">
           <div className="font-display font-extrabold text-3xl tabular-nums leading-none">{pct}%</div>
           <div className="text-[10px] font-bold tracking-[0.14em] uppercase mt-1">chemistry</div>
         </div>
@@ -490,18 +497,44 @@ function useMorph(scenes: { bg: string; fg: string }[]) {
       skew += (target - skew) * 0.25
       if (Math.abs(skew) < 0.02) skew = 0
       el.style.setProperty('--skew', `${skew.toFixed(2)}deg`)
+      el.style.setProperty('--hero', Math.min(1, Math.max(0, -nodes[0].getBoundingClientRect().top / vh)).toFixed(3))
       if (skew !== 0) frame = requestAnimationFrame(paint)
     }
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(paint) }
     paint()
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onScroll)
+
+    // Tilt: the phone's gyro moves the layers a little, like looking through glass.
+    // iOS asks permission, and only from a tap, so ask on the first one.
+    let tiltFrame = 0
+    const setTilt = (x: number, y: number) => {
+      if (still || tiltFrame) return
+      tiltFrame = requestAnimationFrame(() => {
+        tiltFrame = 0
+        el.style.setProperty('--tx', Math.max(-1, Math.min(1, x)).toFixed(3))
+        el.style.setProperty('--ty', Math.max(-1, Math.min(1, y)).toFixed(3))
+      })
+    }
+    const onOrient = (e: DeviceOrientationEvent) => { if (e.gamma != null && e.beta != null) setTilt(e.gamma / 25, (e.beta - 50) / 25) }
+    const onMouse = (e: PointerEvent) => { if (e.pointerType === 'mouse') setTilt((e.clientX / window.innerWidth) * 2 - 1, (e.clientY / window.innerHeight) * 2 - 1) }
+    const askGyro = () => {
+      const D = (window as unknown as { DeviceOrientationEvent?: { requestPermission?: () => Promise<string> } }).DeviceOrientationEvent
+      if (D?.requestPermission) D.requestPermission().then((r) => { if (r === 'granted') window.addEventListener('deviceorientation', onOrient) }).catch(() => {})
+    }
+    window.addEventListener('deviceorientation', onOrient)
+    window.addEventListener('pointermove', onMouse, { passive: true })
+    window.addEventListener('click', askGyro, { once: true })
     return () => {
       io.disconnect()
       clearTimeout(unEase)
       cancelAnimationFrame(frame)
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
+      window.removeEventListener('deviceorientation', onOrient)
+      window.removeEventListener('pointermove', onMouse)
+      window.removeEventListener('click', askGyro)
+      cancelAnimationFrame(tiltFrame)
       document.documentElement.classList.remove('snap')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -517,6 +550,21 @@ function useMorph(scenes: { bg: string; fg: string }[]) {
     o.classList.add('is-held')
   }
   return { root, backdrop, header, orb, active, go, glow, fg: scenes[active]?.fg }
+}
+
+// A burst of slashes from a point: taps in the hero, picked /tags, a match.
+function burst(x: number, y: number, colors: string[], n = 14) {
+  if (typeof window === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement('span')
+    const a = (Math.PI * 2 * i) / n + Math.random() * 0.5
+    const d = 70 + Math.random() * 130
+    p.className = 'burst-p'
+    p.textContent = i % 3 === 0 ? '\u2022' : '/'
+    p.style.cssText = `--x0:${x}px;--y0:${y}px;--dx:${Math.cos(a) * d}px;--dy:${Math.sin(a) * d + 40}px;--r:${(Math.random() - 0.5) * 540}deg;--s:${18 + Math.random() * 22}px;--c:${colors[i % colors.length]}`
+    p.addEventListener('animationend', () => p.remove())
+    document.body.appendChild(p)
+  }
 }
 
 function hex(c: string): [number, number, number] {
