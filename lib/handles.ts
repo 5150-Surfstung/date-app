@@ -32,6 +32,15 @@ export const TAGS: { value: CoreTag; line: string }[] = [
   { value: 'curious', line: 'First time doing this. Be cool.' },
 ]
 
+// Charleston, as slashes. Local pride spreads: "/follybeach tonight."
+export const LOCAL: { value: string; place: string }[] = [
+  { value: 'follybeach', place: 'Folly Beach' }, { value: 'kingst', place: 'King Street' }, { value: 'upperking', place: 'Upper King' },
+  { value: 'shemcreek', place: 'Shem Creek' }, { value: 'sullys', place: 'Sullivan’s Island' }, { value: 'iop', place: 'Isle of Palms' },
+  { value: 'mtpleasant', place: 'Mount Pleasant' }, { value: 'parkcircle', place: 'Park Circle' }, { value: 'westashley', place: 'West Ashley' },
+  { value: 'jamesisland', place: 'James Island' }, { value: 'danielisland', place: 'Daniel Island' }, { value: 'thebattery', place: 'The Battery' },
+  { value: 'marionsquare', place: 'Marion Square' }, { value: 'rainbowrow', place: 'Rainbow Row' }, { value: 'rooftop', place: 'Any rooftop' },
+]
+
 // Same quiet safety net as the database (date_vibe_blocked).
 const VIBE_BLOCK = /\d{5,}|http|www|\.com|\.net|cashapp|venmo|paypal|zelle|onlyfans|fansly|sugardaddy|sugarbaby|forsale|pricelist|donation|escort|pay4|payfor|teen|underage|minor|loli|schoolgirl|jailbait|nigg|faggot|fagg|tranny|retard|kike|chink|wetback|raghead|^coon|^spic$|^spick/
 

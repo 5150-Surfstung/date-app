@@ -14,6 +14,7 @@ export function AppShell({ title, children, alerts = true }: { title: string; ch
         <Link href="/" className="font-display font-extrabold text-2xl tracking-tight py-2">/date</Link>
         <nav className="flex items-center gap-1 sm:gap-3 text-sm font-semibold">
           <Link href="/pool/" className="px-2.5 py-2.5 rounded-full hover:text-ob">Pool</Link>
+          <Link href="/tonight/" className="hidden sm:inline px-2.5 py-2.5 rounded-full hover:text-ob">Tonight</Link>
           <Link href="/inbox/" className="px-2.5 py-2.5 rounded-full hover:text-ob">Inbox</Link>
           <Link href="/chat/" className="px-2.5 py-2.5 rounded-full hover:text-ob">/chat</Link>
           <Link href="/me/" className="px-2.5 py-2.5 rounded-full hover:text-ob">/me</Link>

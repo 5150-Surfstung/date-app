@@ -2,16 +2,17 @@
 
 // Your pool. Val's picks on top, then everyone who'd want you back, closest
 // first. Scroll, filter by vibe, send a /hey or send a vibe. No swiping.
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { AppShell, NeedLogin } from '../ui'
 import { authClient, useSession } from '@/lib/auth'
 import { notify } from '@/lib/val'
 import { TAGS, cleanVibe } from '@/lib/handles'
 import { rank, usePool, usePhotoUrls, type Ranked } from '@/lib/pool'
-import { TagLine, VibeInput } from '../tags'
+import { TagLine, VibeInput, LocalChips } from '../tags'
 import { ShareButton } from '../share'
 import LockScreen from '../alerts'
+import { VoiceNote, uploadVoiceHey } from '../voice-note'
 
 const SHOW = ['saturday', 'looking_for', 'life_stage'] as const
 const ASK: Record<string, string> = { saturday: 'Saturday', looking_for: 'Looking for', life_stage: 'Right now' }
@@ -24,6 +25,10 @@ export default function PoolPage() {
   const ranked = useMemo(() => (pool ? rank(pool) : []), [pool])
   const picks = useMemo(() => (pool?.picks ?? []).map((p) => ({ ...p, person: ranked.find((r) => r.handle === p.handle) })).filter((p) => p.person), [pool, ranked])
   const pickSet = new Set(picks.map((p) => p.handle))
+  // This week's Friday drop vs. the rest of Val's picks.
+  const weekAgo = Date.now() - 6 * 864e5
+  const drop = picks.filter((p) => p.kind === 'drop' && new Date(p.created_at).getTime() > weekAgo)
+  const firsts = picks.filter((p) => !drop.includes(p))
   const myLead = pool?.me?.tags?.[0] ?? null
 
   // Vibe filters: yours first, then what the pool is feeling.
@@ -46,15 +51,22 @@ export default function PoolPage() {
       <LockScreen />
       <VibeNow lead={myLead} handle={pool.me?.handle ?? null} onChange={reload} />
 
-      {picks.length > 0 && (
+      <Drop picks={drop} urls={urls} onSent={reload} />
+
+      {firsts.length > 0 && (
         <section className="mt-10">
           <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob">Val&rsquo;s picks for you</div>
-          <p className="mt-1 text-sm text-[#141414]/60">Your matchmaker picked these three. She&rsquo;ll keep an eye out for more.</p>
+          <p className="mt-1 text-sm text-[#141414]/60">Your matchmaker picked these. She&rsquo;ll keep an eye out for more.</p>
           <div className="mt-3 grid sm:grid-cols-3 gap-3">
-            {picks.map((p) => <Card key={p.handle} r={p.person!} url={urls[p.person!.photos[0]]} pick why={p.reason} onSent={reload} />)}
+            {firsts.map((p) => <Card key={p.handle} r={p.person!} url={urls[p.person!.photos[0]]} pick why={p.reason} onSent={reload} />)}
           </div>
         </section>
       )}
+
+      <Link href="/tonight/" className="mt-10 flex items-center justify-between gap-3 rounded-3xl bg-[#140A20] text-[#F6EFFF] px-5 py-4">
+        <span className="flex items-center gap-2 font-extrabold"><span className="w-2 h-2 rounded-full bg-[#FF5CA8] live-dot" /> Who&rsquo;s out tonight</span>
+        <span className="text-[#FF5CA8] font-extrabold">&rarr;</span>
+      </Link>
 
       <section className="mt-10">
         <div className="flex items-baseline justify-between gap-3">
@@ -140,6 +152,7 @@ function VibeNow({ lead, handle, onChange }: { lead: string | null; handle: stri
                 className={`rounded-full px-4 py-2 text-sm font-extrabold ${t.value === lead ? 'bg-ob text-white' : 'bg-white/10'}`}>/{t.value}</button>
             ))}
           </div>
+          <LocalChips onPick={set} active={lead} dark />
           <div className="bg-white rounded-3xl p-2 text-[#141414]"><VibeInput onAdd={set} disabled={busy} placeholder="or make your own" /></div>
         </div>
       )}
@@ -155,14 +168,19 @@ function Card({ r, url, pick, why, onSent }: { r: Ranked; url?: string; pick?: b
   const [note, setNote] = useState('')
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | string>(r.i_sent ? 'sent' : 'idle')
   const [voice, setVoice] = useState<string | null>(null)
+  const [said, setSaid] = useState<Blob | null>(null)
   const extra = usePhotoUrls(more ? r.photos.slice(1) : [])
 
   async function go() {
     setState('sending')
     const c = authClient()!
-    const { data } = vibe
-      ? await c.rpc('send_vibe', { p_to: r.handle, p_vibe: vibe, p_note: note || null })
-      : await c.rpc('send_hey', { p_to: r.handle, p_note: note || null })
+    const key = said ? await uploadVoiceHey(said) : null
+    if (said && !key) { setState('Couldn’t save your voice note. Try again.'); return }
+    const { data } = key
+      ? await c.rpc('send_hey_voice', { p_to: r.handle, p_voice: key, p_note: note || null, p_vibe: vibe })
+      : vibe
+        ? await c.rpc('send_vibe', { p_to: r.handle, p_vibe: vibe, p_note: note || null })
+        : await c.rpc('send_hey', { p_to: r.handle, p_note: note || null })
     if (data === 'ok' || data === 'dupe') {
       setState('sent'); setSend(false)
       if (data === 'ok') notify(c, { kind: 'hey', to_handle: r.handle, from_email: email })
@@ -234,9 +252,10 @@ function Card({ r, url, pick, why, onSent }: { r: Ranked; url?: string; pick?: b
             )}
             <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={280} placeholder="Add a line (optional)"
               className="border-2 border-[#141414]/15 focus:border-ob outline-none rounded-full px-4 py-2.5 text-base" />
+            <VoiceNote onChange={setSaid} />
             <div className="flex gap-2">
               <button onClick={go} disabled={state === 'sending'} className="flex-1 bg-ob text-white rounded-full px-4 py-3 text-sm font-extrabold disabled:opacity-50">
-                {state === 'sending' ? 'Sending…' : vibe ? `Send /${vibe}` : 'Send /hey'}
+                {state === 'sending' ? 'Sending…' : `Send ${vibe ? `/${vibe}` : '/hey'}${said ? ' + voice' : ''}`}
               </button>
               <button onClick={() => setSend(false)} className="rounded-full px-4 py-3 text-sm font-semibold">Cancel</button>
             </div>
@@ -245,5 +264,51 @@ function Card({ r, url, pick, why, onSent }: { r: Ranked; url?: string; pick?: b
         )}
       </div>
     </article>
+  )
+}
+
+// The Friday drop: Val's weekend picks land for everyone at 6pm Friday.
+function nextDrop() {
+  const d = new Date()
+  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 22, 0, 0))
+  const add = (5 - t.getUTCDay() + 7) % 7
+  t.setUTCDate(t.getUTCDate() + add)
+  if (t.getTime() <= Date.now()) t.setUTCDate(t.getUTCDate() + 7)
+  return t
+}
+function Countdown() {
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t) }, [])
+  const ms = Math.max(0, nextDrop().getTime() - now)
+  const d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24, m = Math.floor(ms / 6e4) % 60, sec = Math.floor(ms / 1e3) % 60
+  const cells: [number, string][] = [[d, 'days'], [h, 'hrs'], [m, 'min'], [sec, 'sec']]
+  return (
+    <div className="mt-4 grid grid-cols-4 gap-2 max-w-sm">
+      {cells.map(([n, l]) => (
+        <div key={l} className="rounded-2xl bg-white/10 py-3 text-center">
+          <div className="font-display font-extrabold text-3xl tabular-nums leading-none">{String(n).padStart(2, '0')}</div>
+          <div className="text-[11px] uppercase tracking-[0.15em] mt-1 text-white/60">{l}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+function Drop({ picks, urls, onSent }: { picks: { handle: string; reason: string | null; person?: Ranked }[]; urls: Record<string, string>; onSent: () => void }) {
+  if (picks.length) return (
+    <section className="mt-10 rounded-[28px] bg-[#141414] text-white p-5 sm:p-6">
+      <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob">The Friday drop</div>
+      <div className="mt-1 font-display font-extrabold text-3xl tracking-tight">Your weekend picks.</div>
+      <div className="mt-4 grid sm:grid-cols-3 gap-3 text-[#141414]">
+        {picks.map((p) => <Card key={p.handle} r={p.person!} url={urls[p.person!.photos[0]]} pick why={p.reason} onSent={onSent} />)}
+      </div>
+    </section>
+  )
+  return (
+    <section className="mt-10 rounded-[28px] bg-[#141414] text-white p-5 sm:p-6">
+      <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob">The Friday drop</div>
+      <div className="mt-1 font-display font-extrabold text-3xl tracking-tight">Val drops your weekend picks Friday at 6.</div>
+      <p className="mt-1 text-white/65">Everyone gets theirs at the same moment. Notifications on, so you&rsquo;re first to know.</p>
+      <Countdown />
+    </section>
   )
 }

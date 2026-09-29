@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { HANDLE_KEY, TAGS, cleanVibe } from '@/lib/handles'
-import { VibeInput } from '../tags'
+import { VibeInput, LocalChips } from '../tags'
 import { ShareButton } from '../share'
 
 export default function SharePage() {
@@ -30,6 +30,7 @@ export default function SharePage() {
             <button key={t.value} onClick={() => setVibe(t.value)} className={`rounded-full px-4 py-2 text-sm font-extrabold ${vibe === t.value ? 'bg-[#141414] text-white' : 'border-2 border-[#141414]/15'}`}>/{t.value}</button>
           ))}
         </div>
+        <div className="mt-5"><LocalChips onPick={setVibe} active={vibe} /></div>
         <div className="mt-4"><VibeInput onAdd={setVibe} placeholder="or make your own" /></div>
         <div className="mt-8">
           <ShareButton vibe={vibe} handle={handle} label="Make my card" className="bg-ob text-white rounded-full px-10 py-5 text-lg font-extrabold" />

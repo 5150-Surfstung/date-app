@@ -13,7 +13,7 @@ import { INTAKE_BUCKET } from '@/lib/supabase'
 
 type Item = {
   kind: 'hey' | 'wing'; winger?: string
-  id: string; created_at: string; note: string | null; vibe?: string | null; to_handle: string
+  id: string; created_at: string; note: string | null; vibe?: string | null; hey_voice?: string | null; to_handle: string
   from: { handle: string; name: string; tag: string | null; tags?: string[] | null; age: number | null; hood: string | null; answers: Record<string, string> | null; has_vibe: boolean; voice_key: string | null; verified: boolean; photos?: string[] }
 }
 
@@ -45,6 +45,13 @@ export default function InboxPage() {
     if (!it.from.voice_key || voices[it.id]) return
     const { data } = await authClient()!.storage.from(INTAKE_BUCKET).download(it.from.voice_key)
     if (data) setVoices({ ...voices, [it.id]: URL.createObjectURL(data) })
+  }
+
+  const [said, setSaid] = useState<Record<string, string>>({})
+  async function hearHey(it: Item) {
+    if (!it.hey_voice || said[it.id]) return
+    const { data } = await authClient()!.storage.from(INTAKE_BUCKET).download(it.hey_voice)
+    if (data) setSaid({ ...said, [it.id]: URL.createObjectURL(data) })
   }
 
   async function take(it: Item) {
@@ -90,6 +97,11 @@ export default function InboxPage() {
               <div className="mt-1 text-sm font-semibold">{f.name}{f.age ? `, ${f.age}` : ''}{f.hood ? ` · ${f.hood}` : ''}</div>
               {f.tag && <div className="text-sm text-[#141414]/60">{tagLine(f.tag)}</div>}
               {it.note && <p className="mt-3 text-base italic">&ldquo;{it.note}&rdquo;</p>}
+              {it.hey_voice && (said[it.id]
+                ? <audio src={said[it.id]} controls autoPlay className="mt-3 w-full" />
+                : <button onClick={() => hearHey(it)} className="mt-3 flex items-center gap-2 rounded-full bg-ob text-white px-5 py-3 text-sm font-extrabold">
+                    <span className="w-2.5 h-2.5 rounded-full bg-white live-dot" /> They sent a voice note. Play it
+                  </button>)}
               {takes[it.id] ? (
                 <p className="mt-3 text-base bg-[#FFF3EA] rounded-xl px-4 py-3">{takes[it.id]} <span className="text-[#141414]/50">&mdash; Val</span></p>
               ) : takes[it.id] === '' ? null : (

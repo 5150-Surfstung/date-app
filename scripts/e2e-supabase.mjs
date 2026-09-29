@@ -156,6 +156,20 @@ const share = await A.c.rpc('set_photo_share', { p: 'main' })
 const shareBad = await A.c.rpc('set_photo_share', { p: 'everyone' })
 check('photo sharing is your choice', share.data === 'ok' && shareBad.data === 'bad', `${share.data}/${shareBad.data}`)
 
+// Live map + trending: public, counts only
+const map = await anon.rpc('vibe_map')
+check('the live vibe map is public and counts only', !map.error && Array.isArray(map.data?.spots) && !JSON.stringify(map.data).includes('@'), map.error?.message)
+const trend = await anon.rpc('trending_vibes')
+check('trending slashes are public', !trend.error && Array.isArray(trend.data?.top), trend.error?.message)
+const sneakSponsor = await B.c.rpc('val_save_sponsor', { p_vibe: 'free', p_label: null, p_spot: null, p_starts: null, p_ends: new Date(Date.now() + 864e5).toISOString() })
+check('members cannot sell sponsored vibes', sneakSponsor.data === 'admin' || !!sneakSponsor.error, sneakSponsor.data)
+const sneakDrop = await anon.rpc('date_run_drop')
+check('nobody outside can trigger the Friday drop', !!sneakDrop.error)
+
+// Voice /hey: only a file from your own folder
+const badVoice = await B.c.rpc('send_hey_voice', { p_to: hA, p_voice: `${A.uid}/hey-1.webm`, p_note: null, p_vibe: null })
+check('voice /heys must be your own recording', badVoice.data === 'bad_voice', badVoice.data)
+
 // /hey and /wing as yourself
 const hey = await A.c.rpc('send_hey', { p_to: hB, p_note: 'e2e' })
 check('send /hey', hey.data === 'ok', hey.error?.message ?? hey.data)

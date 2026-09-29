@@ -3,7 +3,7 @@
 // Vibes: tap a core word or make your own. Up to three, the first leads.
 // Change them whenever. One picker for claim and /me.
 import { useEffect, useState } from 'react'
-import { TAGS, cleanVibe, vibeProblem, type Tag } from '@/lib/handles'
+import { TAGS, LOCAL, cleanVibe, vibeProblem, type Tag } from '@/lib/handles'
 import { rpc } from '@/lib/rest'
 
 export const MAX_TAGS = 3
@@ -28,7 +28,7 @@ export function VibeInput({ onAdd, placeholder = 'make your own', disabled }: { 
   const [err, setErr] = useState<string | null>(null)
   const popular = usePopularVibes()
   const v = cleanVibe(text)
-  const core = TAGS.map((t) => t.value as string)
+  const core = [...TAGS.map((t) => t.value as string), ...LOCAL.map((l) => l.value)]
   const suggest = v.length >= 1
     ? Array.from(new Set([...popular, ...core])).filter((p) => p.startsWith(v) && p !== v).slice(0, 5)
     : []
@@ -125,5 +125,20 @@ export function TagLine({ tags, tag, big }: { tags?: string[] | null; tag?: stri
       <span className={`text-ob ${big ? '' : ''}`}>/{t[0]}</span>
       {t.slice(1).map((x) => <span key={x} className="opacity-50 text-[0.7em]">/{x}</span>)}
     </span>
+  )
+}
+
+/** Charleston place slashes, one tap each. */
+export function LocalChips({ onPick, active, dark }: { onPick: (v: string) => void; active?: string | null; dark?: boolean }) {
+  return (
+    <div className="grid gap-2">
+      <div className={`text-xs tracking-[0.2em] uppercase font-semibold ${dark ? 'text-white/50' : 'text-[#141414]/50'}`}>Around Charleston</div>
+      <div className="flex flex-wrap gap-1.5">
+        {LOCAL.map((l) => (
+          <button key={l.value} type="button" onClick={() => onPick(l.value)} title={l.place}
+            className={`rounded-full px-3 py-1.5 text-sm font-extrabold ${active === l.value ? 'bg-ob text-white' : dark ? 'bg-white/10' : 'bg-[#141414]/[0.06]'}`}>/{l.value}</button>
+        ))}
+      </div>
+    </div>
   )
 }

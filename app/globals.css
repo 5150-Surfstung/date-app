@@ -246,3 +246,7 @@ img { -webkit-user-drag: none; }
   .kit-page { break-after: page; box-shadow: none; }
   .enter main > *, .enter main > * :is(.rounded-2xl, .rounded-3xl) { animation: none !important; opacity: 1 !important; transform: none !important; }
 }
+
+/* Live dot on /tonight */
+.live-dot { animation: live 1.6s ease-in-out infinite; }
+@keyframes live { 50% { opacity: .3; } }

@@ -12,7 +12,7 @@ export type PoolPerson = {
   answers: Record<string, string> | null; verified: boolean; voice_key: string | null
   photos: string[]; photo_count: number; joined: string | null; i_sent: boolean; sent_me: boolean
 }
-export type Pick = { handle: string; reason: string | null; created_at: string }
+export type Pick = { handle: string; reason: string | null; created_at: string; kind?: 'first' | 'drop' | string }
 export type Pool = {
   state: 'login' | 'no_name' | 'no_vibe' | 'pending' | 'closed' | 'open'
   me?: { handle: string; tags: string[] | null; age: number | null; hood: string | null; answers: Record<string, string> | null; photo_share: 'all' | 'main' | 'none' }

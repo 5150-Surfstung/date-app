@@ -106,6 +106,7 @@ export function SpotsTab() {
         </div>
       </section>
 
+      <Sponsored spots={spots.filter((s) => s.status === 'approved')} />
       <Reps reps={reps} onSaved={load} />
     </div>
   )
@@ -189,6 +190,58 @@ function Reps({ reps, onSaved }: { reps: Rep[]; onSaved: () => void }) {
         <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email (optional)" type="email"
           className="border-2 border-[#141414]/15 focus:border-ob outline-none rounded-full px-4 py-2.5 text-sm" />
         <Pill primary onClick={add} disabled={!code || !name}>Add rep</Pill>
+      </div>
+      {err && <p className="mt-2 text-sm text-ob">{err}</p>}
+    </section>
+  )
+}
+
+// Sponsored vibes: a venue owns a word for a night or a week. It sits on top of
+// /trending (marked Sponsored) and first in everyone's vibe suggestions.
+// Take payment however you do; this just switches it on and off.
+type Sponsor = { id: number; vibe: string; label: string | null; spot_slug: string | null; starts_at: string; ends_at: string }
+function Sponsored({ spots }: { spots: Spot[] }) {
+  const [list, setList] = useState<Sponsor[]>([])
+  const [vibe, setVibe] = useState('')
+  const [label, setLabel] = useState('')
+  const [spot, setSpot] = useState('')
+  const [days, setDays] = useState('1')
+  const [err, setErr] = useState<string | null>(null)
+  const load = () => authClient()!.rpc('val_sponsors').then(({ data }) => setList((data as Sponsor[]) ?? []))
+  useEffect(() => { load() }, [])
+  async function add() {
+    setErr(null)
+    const ends = new Date(Date.now() + Number(days) * 864e5).toISOString()
+    const { data } = await authClient()!.rpc('val_save_sponsor', { p_vibe: vibe, p_label: label || null, p_spot: spot || null, p_starts: null, p_ends: ends })
+    if (data === 'ok') { setVibe(''); setLabel(''); load() } else setErr(data === 'bad_vibe' ? 'That word isn’t allowed.' : 'Couldn’t save.')
+  }
+  async function end(id: number) { await authClient()!.rpc('val_end_sponsor', { p_id: id }); load() }
+  const live = list.filter((s) => new Date(s.ends_at).getTime() > Date.now())
+  return (
+    <section>
+      <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob">Sponsored vibes</div>
+      <p className="mt-2 text-sm text-[#141414]/60 max-w-xl">Sell a venue its word, like /tacotuesday. It goes on top of /trending, marked Sponsored, and first in everyone&rsquo;s vibe suggestions until it ends.</p>
+      <div className="mt-4 grid gap-2">
+        {live.map((s) => (
+          <div key={s.id} className="rounded-2xl border-2 border-ob p-4 flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="font-display font-extrabold text-2xl">/{s.vibe}</span>
+            <span className="text-sm">{s.label}</span>
+            <span className="text-xs text-[#141414]/50">until {new Date(s.ends_at).toLocaleString()}</span>
+            <button onClick={() => end(s.id)} className="ml-auto text-sm font-semibold underline">End now</button>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 grid sm:grid-cols-[1fr_2fr_1fr_auto_auto] gap-2">
+        <input value={vibe} onChange={(e) => setVibe(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))} placeholder="tacotuesday" className="border-2 border-[#141414]/15 focus:border-ob outline-none rounded-full px-4 py-2.5 text-sm" />
+        <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="$2 tacos for /date members, 6–9" className="border-2 border-[#141414]/15 focus:border-ob outline-none rounded-full px-4 py-2.5 text-sm" />
+        <select value={spot} onChange={(e) => setSpot(e.target.value)} className="border-2 border-[#141414]/15 rounded-full px-4 py-2.5 text-sm bg-white">
+          <option value="">No spot</option>
+          {spots.map((s) => <option key={s.slug} value={s.slug}>{s.name}</option>)}
+        </select>
+        <select value={days} onChange={(e) => setDays(e.target.value)} className="border-2 border-[#141414]/15 rounded-full px-4 py-2.5 text-sm bg-white">
+          <option value="1">1 day</option><option value="3">3 days</option><option value="7">1 week</option><option value="30">30 days</option>
+        </select>
+        <Pill primary onClick={add} disabled={!vibe}>Go live</Pill>
       </div>
       {err && <p className="mt-2 text-sm text-ob">{err}</p>}
     </section>

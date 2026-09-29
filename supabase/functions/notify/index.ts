@@ -198,6 +198,22 @@ Deno.serve(async (req) => {
     return json({ sent });
   }
 
+  if (kind === "drop") {
+    // Friday, 6pm: everyone with fresh weekend picks hears at once. Lock screen first.
+    const since = new Date(Date.now() - 3 * 3600 * 1000).toISOString();
+    const { data: rows } = await db.from("date_picks").select("email").eq("kind", "drop").is("notified_at", null).gte("created_at", since);
+    const emails = Array.from(new Set((rows ?? []).map((r: { email: string }) => r.email)));
+    let told = 0;
+    for (const e of emails) {
+      const { data: took } = await db.from("date_picks").update({ notified_at: new Date().toISOString() }).eq("email", e).eq("kind", "drop").is("notified_at", null).select("email");
+      if (!took?.length) continue;
+      await tell(e, "Your weekend picks are in", `Val here. Your weekend picks just dropped.\n\n${SITE}/pool/\n\n— Val`,
+        { title: "Your weekend picks are in", body: "Val just dropped them. Go look.", url: `${SITE}/pool/`, tag: "drop" }, "heys");
+      told++;
+    }
+    return json({ told });
+  }
+
   if (kind === "vibe_new") {
     // Someone finished their /vibe. Nobody gets in until a person approves them.
     const { data: a } = await db.from("date_applications").select("id, name, age, status").eq("id", body.id).maybeSingle();
