@@ -82,6 +82,10 @@ export const DEMO_CREW: DemoPerson[] = [
     handle: 'noor', name: 'Noor', age: 29, hood: 'Downtown', tag: 'looking', visibility: 'public',
     vibe: 'Surgical resident at MUSC. Eighty-hour weeks and still the most fun person at the table. Wants someone worth the one night off.',
   },
+  {
+    handle: 'sienna', name: 'Sienna', age: 25, hood: 'Harleston Village', tag: 'looking', visibility: 'public',
+    vibe: 'Styles shoots for a living, dresses in black on her days off. Quiet until she isn’t. Wants someone who notices things.',
+  },
 ]
 
 export function getDemo(handle: string) {
