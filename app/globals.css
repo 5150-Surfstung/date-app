@@ -94,3 +94,115 @@ img { -webkit-user-drag: none; }
 }
 
 @keyframes valbar { 0%, 100% { transform: scaleY(.35) } 50% { transform: scaleY(1) } }
+
+/* Homepage: full-screen scenes that morph into each other. */
+html.snap { scroll-snap-type: y proximity; }
+.scene { min-height: 100dvh; scroll-snap-align: start; }
+.ease-color { transition: background-color .9s ease, color .9s ease; }
+.js-reveal .rise {
+  opacity: 0;
+  transform: translateY(32px) scale(0.98);
+  filter: blur(6px);
+  transition:
+    opacity 0.8s cubic-bezier(.2,.7,.2,1) calc(var(--d, 0) * 90ms),
+    transform 0.9s cubic-bezier(.2,.7,.2,1) calc(var(--d, 0) * 90ms),
+    filter 0.8s ease calc(var(--d, 0) * 90ms);
+}
+.js-reveal [data-on] .rise, .js-reveal .rise[data-on] { opacity: 1; transform: none; filter: none; }
+/* The how-it-works section isn't a snap scene; its cards reveal on their own. */
+.js-reveal [data-scene="4"] .rise { opacity: 1; transform: none; filter: none; }
+
+/* Film grain: keeps the flat color from looking like a template. */
+.grain {
+  opacity: .07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Hero glow: drifts on its own, follows your finger once you touch. */
+.orb {
+  position: absolute; left: 0; top: 0; width: 26rem; height: 26rem; border-radius: 50%;
+  opacity: .35; filter: blur(70px); pointer-events: none;
+  transform: translate(calc(var(--x, 60vw) - 50%), calc(var(--y, 55vh) - 50%));
+  animation: drift 14s ease-in-out infinite alternate;
+  transition: transform .5s cubic-bezier(.2,.7,.2,1), background-color .9s ease;
+}
+.orb.is-held { animation: none; }
+@keyframes drift {
+  0% { translate: -18vw -8vh; } 50% { translate: 10vw 12vh; } 100% { translate: -4vw 22vh; }
+}
+
+/* Headline words slide up out of a mask, one after another. */
+.word { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .08em; margin-bottom: -.08em; }
+.word > span { display: inline-block; animation: word-up .8s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes word-up { from { transform: translateY(105%) rotate(4deg); } to { transform: none; } }
+.swap-in { animation: vibe-in .6s ease both; }
+.cycle-bar { transform-origin: left; animation: cycle 4.5s linear both; }
+@keyframes cycle { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes cue { 0%, 100% { transform: translate(-50%, 0) } 50% { transform: translate(-50%, 8px) } }
+.scroll-cue { animation: cue 1.8s ease-in-out infinite; }
+
+/* Buttons that catch the light. */
+.shine { position: relative; overflow: hidden; isolation: isolate; }
+.shine::after {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,.45) 50%, transparent 65%);
+  transform: translateX(-120%); animation: shine 3.6s ease-in-out infinite 1.2s;
+  mix-blend-mode: soft-light;
+}
+@keyframes shine { 0%, 60% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+
+/* The wall leans with swipe speed. */
+.skew { transform: skewY(var(--skew, 0deg)); will-change: transform; }
+
+/* Val's intro. */
+.intro-card {
+  position: absolute; top: 40px; width: 46%; aspect-ratio: 4 / 5; max-height: 280px; border-radius: 22px; overflow: hidden;
+  box-shadow: 0 24px 50px rgba(20,20,20,.28); background: #ddd;
+  transition: transform .9s cubic-bezier(.2,.9,.2,1.15), opacity .6s ease;
+}
+.intro-card.is-left { left: 0; transform: translateX(-130%) rotate(-24deg); opacity: 0; }
+.intro-card.is-right { right: 0; top: 64px; transform: translateX(130%) rotate(24deg); opacity: 0; }
+[data-step="1"] .intro-card, [data-step="2"] .intro-card { opacity: 1; }
+[data-step="1"] .is-left, [data-step="2"] .is-left { transform: rotate(-8deg); }
+[data-step="1"] .is-right, [data-step="2"] .is-right { transform: rotate(7deg); }
+[data-step="3"] .intro-card { opacity: 1; }
+[data-step="3"] .is-left { transform: translateX(10%) rotate(-4deg); }
+[data-step="3"] .is-right { transform: translateX(-10%) rotate(4deg); }
+.intro-badge {
+  position: absolute; left: 50%; top: 0; width: 6rem; height: 6rem; margin-left: -3rem; border-radius: 50%;
+  background: #FF3B2F; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 10px rgba(255,59,47,.22); transform: scale(0); z-index: 2;
+  transition: transform .6s cubic-bezier(.2,.9,.3,1.5);
+}
+[data-step="2"] .intro-badge, [data-step="3"] .intro-badge { transform: scale(1); }
+[data-step="3"] .intro-badge { animation: beat 1.4s ease-in-out infinite .6s; }
+@keyframes beat { 0%, 100% { box-shadow: 0 0 0 10px rgba(255,59,47,.22); } 50% { box-shadow: 0 0 0 22px rgba(255,59,47,0); } }
+.intro-bubble { transform: translateY(12px); opacity: .0; transition: transform .6s cubic-bezier(.2,.8,.2,1), opacity .5s; }
+[data-step="3"] .intro-bubble { transform: none; opacity: 1; }
+.val-dot { width: 8px; height: 8px; border-radius: 50%; background: #FF3B2F; animation: beat-dot 1.2s ease-in-out infinite; }
+@keyframes beat-dot { 50% { transform: scale(1.6); opacity: .5; } }
+.caret { animation: blink .9s steps(1) infinite; font-weight: 400; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* /tags */
+.tag-word { transition: color .3s ease, transform .35s cubic-bezier(.2,.9,.3,1.6); }
+.tag-word:active { transform: scale(.94); }
+.tag-word.is-on { transform: translateY(-2px); }
+.shake { animation: shake .4s ease both; }
+@keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+
+/* Closing: a giant outlined /date drifts behind the ask. */
+.giant {
+  position: absolute; bottom: 6vh; left: 0; white-space: nowrap; pointer-events: none;
+  font-family: var(--font-sora), system-ui, sans-serif; font-weight: 800; font-size: clamp(9rem, 32vw, 22rem);
+  letter-spacing: -0.06em; line-height: 1; color: transparent; -webkit-text-stroke: 2px currentColor; opacity: .16;
+  animation: giant 40s linear infinite;
+}
+@keyframes giant { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  html.snap { scroll-snap-type: none; }
+  .js-reveal .rise { opacity: 1; transform: none; filter: none; }
+  .intro-card, .intro-bubble, .intro-badge { opacity: 1 !important; transform: none !important; }
+  .is-right { transform: none; }
+}

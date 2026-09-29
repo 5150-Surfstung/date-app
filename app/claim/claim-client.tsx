@@ -32,6 +32,14 @@ export default function ClaimClient() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
+  // Picked /tags on the homepage? Carry them in (max 3, first leads).
+  useEffect(() => {
+    const raw = new URLSearchParams(window.location.search).get('tags')
+    if (!raw) return
+    const ok = raw.split(',').filter((t): t is Tag => TAGS.some((x) => x.value === t)).slice(0, 3)
+    if (ok.length) setTags(ok)
+  }, [])
+
   // Back from Val's link with a claim waiting? Finish it. Already have one? Say so.
   useEffect(() => {
     if (sessionLoading || !me) return

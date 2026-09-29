@@ -461,3 +461,16 @@ delete. Covered end to end in CI.
 - **Login abuse limits.** The `login` function caps 4 codes per email and 8 per IP per 10 minutes, 30 per IP per day, 250 site-wide per hour (`busy`). A hidden honeypot field gets a fake success. Cloudflare Turnstile can drop in later with a site key.
 - **Error logging.** Every uncaught error or rejection on a member's phone goes to `date_errors` via `date_log_error` (deduped, 5 per session, 300/min global cap, 30-day retention).
 - **Console: Funnel and Health tabs.** `val_funnel()` counts claimed → /vibe → approved → verified → intro → date set → date done → /second (demo and test accounts excluded), flags any step keeping under half the one before. `val_health()` shows errors in the last 24h, login codes in the last hour, and the top errors with stacks. Both are Val-only.
+
+## 10p. The homepage is one moving piece (v17)
+
+One page, six full-screen scenes, and the color behind them blends from one to the next under your finger (no hard cuts). Content rises in from a blur as each scene arrives. A film grain keeps the flat color from looking like a template.
+
+1. **Hero.** /vibes cycle on their own every 4.5s (color, headline, sub) with a progress bar, until you touch the page, scroll, or it's your own /name. The headline words slide up one at a time. A soft glow drifts, then follows your finger.
+2. **The wall.** Two rows of demo faces drift in opposite directions and lean into a fast swipe, then settle.
+3. **Watch Val work.** A loop: two people fly in, a chemistry score counts up, the cards pull together, and Val types the intro with a reason, a time and a /spot. Six pairs, all combinations (same-gender pairs included). Runs only while on screen.
+4. **Your /tags.** Tap up to three; the first leads. A fourth tap shakes and says "three max." The button carries them to /claim (`/claim?tags=a,b,c` prefills the picker).
+5. **How it works.** Four cards stack on top of each other as you scroll.
+6. **Close.** /receipts count up from zero, a giant outlined /date drifts behind "Val's ready when you are," then the /spots and footer.
+
+Everything goes still for people who turn motion off. Nothing new is installed.
