@@ -109,12 +109,13 @@ Deno.serve(async (req) => {
     // after the /vibe, again as your debriefs come in. Never for anyone else.
     const { data: hd } = await service.from("date_handles").select("*").eq("email", me).maybeSingle();
     const { data: ap } = await service.from("date_applications").select("*").eq("email", me).maybeSingle();
-    if (!hd || !ap?.answers) return json({ read: null, reason: "no_vibe" });
+    if (!ap?.answers) return json({ read: null, reason: "no_vibe" });
     const { data: latest } = await service.from("date_val_reads").select("*").eq("email", me).order("created_at", { ascending: false }).limit(1).maybeSingle();
     const { data: debriefs } = await service.from("date_debriefs").select("outcome, created_at").eq("from_email", me).order("created_at");
     const nd = debriefs?.length ?? 0;
     if (latest && nd <= latest.n_debriefs) return json({ read: latest.text, fresh: false });
-    const p = { handle: hd.handle, name: hd.name, tags: hd.tags, age: ap.age, hood: ap.neighborhood, answers: ap.answers };
+    // A /vibe is enough; the /name can come after.
+    const p = { handle: hd?.handle ?? String(ap.name ?? "").toLowerCase().replace(/[^a-z0-9]/g, "") || "you", name: hd?.name ?? ap.name, tags: hd?.tags, age: ap.age, hood: ap.neighborhood, answers: ap.answers };
     const words: Record<string, string> = { second: "wanted a second date", good_not: "good person, not my person", no_spark: "no spark in person", didnt_happen: "it didn't happen", no_show: "they didn't show" };
     const since = (debriefs ?? []).slice(latest?.n_debriefs ?? 0).map((d: { outcome: string }) => words[d.outcome] ?? d.outcome);
     let text = await say("readme", prompts.readme(p, since, latest?.text ?? null), 400);
