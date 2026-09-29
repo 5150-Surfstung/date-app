@@ -115,7 +115,8 @@ Deno.serve(async (req) => {
     const nd = debriefs?.length ?? 0;
     if (latest && nd <= latest.n_debriefs) return json({ read: latest.text, fresh: false });
     // A /vibe is enough; the /name can come after.
-    const p = { handle: hd?.handle ?? String(ap.name ?? "").toLowerCase().replace(/[^a-z0-9]/g, "") || "you", name: hd?.name ?? ap.name, tags: hd?.tags, age: ap.age, hood: ap.neighborhood, answers: ap.answers };
+    const fallback = String(ap.name ?? "").toLowerCase().replace(/[^a-z0-9]/g, "") || "you";
+    const p = { handle: hd?.handle ?? fallback, name: hd?.name ?? ap.name, tags: hd?.tags, age: ap.age, hood: ap.neighborhood, answers: ap.answers };
     const words: Record<string, string> = { second: "wanted a second date", good_not: "good person, not my person", no_spark: "no spark in person", didnt_happen: "it didn't happen", no_show: "they didn't show" };
     const since = (debriefs ?? []).slice(latest?.n_debriefs ?? 0).map((d: { outcome: string }) => words[d.outcome] ?? d.outcome);
     let text = await say("readme", prompts.readme(p, since, latest?.text ?? null), 400);
