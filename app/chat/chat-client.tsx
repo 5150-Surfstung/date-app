@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { AppShell, NeedLogin, Pill } from '../ui'
+import { TagLine } from '../tags'
 import { authClient, useSession } from '@/lib/auth'
 import { VENUES } from '@/lib/venues'
 import { getDemo, demoPhoto } from '@/lib/demo'
@@ -16,7 +17,7 @@ type Chat = {
   spot_slug: string | null; date_at: string | null; val_note: string | null; me: string
   brief: { for: string; sections: Record<string, string>; text: string } | null
   check_at: string | null; check_status: 'pending' | 'asked' | 'ok' | 'help' | null; passed_by: string | null; second_of: string | null
-  them: { handle: string; name: string; tag: string | null; email: string; age: number | null; hood: string | null; photo_key: string | null }
+  them: { handle: string; name: string; tag: string | null; tags?: string[] | null; email: string; age: number | null; hood: string | null; photo_key: string | null }
   my_count: number; their_count: number; debriefed: boolean
 }
 type Msg = { id: string; created_at: string; from_email: string; body: string }
@@ -66,7 +67,7 @@ export default function ChatClient() {
               <button key={c.id} onClick={() => setActive(c.id)}
                 className="text-left border-2 border-[#141414]/10 hover:border-ob rounded-2xl p-5 flex items-center justify-between gap-4 transition-colors">
                 <div>
-                  <div className="font-display font-extrabold text-2xl tracking-tight">/{c.them.handle} {c.them.tag && <span className="text-ob">/{c.them.tag}</span>} {c.second_of && <span className="ml-2 text-xs font-extrabold tracking-[0.15em] uppercase bg-ob text-white rounded-full px-2 py-0.5 align-middle">/second</span>}</div>
+                  <div className="font-display font-extrabold text-2xl tracking-tight">/{c.them.handle} <TagLine tags={c.them.tags} tag={c.them.tag} /> {c.second_of && <span className="ml-2 text-xs font-extrabold tracking-[0.15em] uppercase bg-ob text-white rounded-full px-2 py-0.5 align-middle">/second</span>}</div>
                   <div className="text-sm font-semibold mt-0.5">{c.them.name}{c.them.age ? `, ${c.them.age}` : ''}</div>
                 </div>
                 <Status c={c} />
@@ -222,7 +223,7 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
           )}
         </div>
         <div>
-          <div className="font-display font-extrabold text-3xl tracking-tight">/{chat.them.handle} {chat.them.tag && <span className="text-ob">/{chat.them.tag}</span>}</div>
+          <div className="font-display font-extrabold text-3xl tracking-tight">/{chat.them.handle} <TagLine tags={chat.them.tags} tag={chat.them.tag} /></div>
           <div className="text-sm font-semibold mt-0.5">{chat.them.name}{chat.them.age ? `, ${chat.them.age}` : ''}{chat.them.hood ? ` · ${chat.them.hood}` : ''}</div>
         </div>
         {chat.status === 'open' && <Clock closesAt={chat.closes_at} />}

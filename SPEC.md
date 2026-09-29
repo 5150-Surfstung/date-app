@@ -376,3 +376,14 @@ from Val. Val can lift the bench from the console.
 
 **Welcome.** Claiming a /name sends one email: it's yours, your founding
 number, the one step left (your /vibe), and your badge link.
+
+## 10k. Three /tags (v12)
+
+Up to three of the eight words, never more. The first one leads: biggest on
+the badge, the /hey page and /me, and weighted most by Val. `tag` stays as the
+lead; `tags` is the set (a trigger keeps them in sync, cleans case and repeats,
+and refuses a fourth word or a made-up one). One picker (`app/tags.tsx`) on
+claim and /me: tap in order, numbered chips, "make lead", a gentle stop at
+three. Engine: leads carry 60% of tag chemistry, the best match across both
+sets 40%; a shared second word is a reason and can soften a lead clash. Val's
+manual and brain read the whole set, lead first.

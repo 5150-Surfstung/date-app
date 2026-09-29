@@ -8,8 +8,9 @@ import { authClient, useSession } from '@/lib/auth'
 import { normalizeHandle, tagLine } from '@/lib/handles'
 import { VAL, notify } from '@/lib/val'
 import { SignIn } from '../gate'
+import { TagLine } from '../tags'
 
-type Wall = { taken: boolean; open?: boolean; name?: string; tag?: string | null; verified?: boolean }
+type Wall = { taken: boolean; open?: boolean; name?: string; tag?: string | null; tags?: string[] | null; verified?: boolean }
 
 export default function AtClient({ handle: handleProp }: { handle?: string } = {}) {
   const params = useSearchParams()
@@ -138,7 +139,7 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
             <div>
               <div className="text-xs tracking-[0.2em] uppercase font-extrabold text-ob mb-3">On /date</div>
               <h1 className="font-display font-extrabold text-5xl sm:text-7xl leading-[0.95] tracking-[-0.03em] break-all">
-                /{handle}{wall.tag && <span className="block text-3xl sm:text-5xl mt-2 text-ob">/{wall.tag}</span>}
+                /{handle}{wall.tag && <span className="block text-3xl sm:text-5xl mt-2"><TagLine tags={wall.tags} tag={wall.tag} /></span>}
               </h1>
               <p className="mt-3 text-lg text-[#141414]/70 font-medium">{wall.name}{wall.tag ? ` · ${tagLine(wall.tag)}` : ''}</p>
             </div>

@@ -54,7 +54,9 @@ function person(p: Record<string, unknown>) {
   const a = (p.answers ?? {}) as Record<string, string>;
   return [
     `/${p.handle} — ${p.name}${p.age ? `, ${p.age}` : ""}${p.hood ? `, ${p.hood}` : ""}`,
-    p.tag ? `/tag: /${p.tag}` : "",
+    Array.isArray(p.tags) && (p.tags as string[]).length
+      ? `/tags (lead first): ${(p.tags as string[]).map((t) => `/${t}`).join(" ")}`
+      : p.tag ? `/tags: /${p.tag}` : "",
     p.identity ? `${p.identity}, seeking ${p.seeking ?? "everyone"}` : "",
     a.conflict_impulse ? `Conflict: ${a.conflict_impulse}` : "",
     a.pull_away ? `When someone pulls away: ${a.pull_away}` : "",
@@ -128,7 +130,7 @@ Suggested /spot: ${spot}`,
     const load = async (h: string) => {
       const { data: hd } = await service.from("date_handles").select("*").eq("handle", h).maybeSingle();
       const { data: ap } = await service.from("date_applications").select("*").eq("email", hd?.email ?? "").maybeSingle();
-      return { ...hd, age: ap?.age, hood: ap?.neighborhood, identity: ap?.identity, seeking: ap?.seeking, answers: ap?.answers };
+      return { ...hd, tags: hd?.tags, age: ap?.age, hood: ap?.neighborhood, identity: ap?.identity, seeking: ap?.seeking, answers: ap?.answers };
     };
     const [reader, other] = await Promise.all([load(forHandle), load(otherHandle)]);
     const { data: venue } = chat.spot_slug

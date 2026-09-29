@@ -7,6 +7,8 @@ export type Person = {
   handle: string
   name: string
   tag: Tag | null
+  /** Up to three, lead first. Falls back to [tag]. */
+  tags?: Tag[] | null
   email: string
   visibility: string
   age?: number | null
@@ -44,6 +46,35 @@ const TAG: Record<string, number> = {
 function tagFit(a?: Tag | null, b?: Tag | null) {
   if (!a || !b) return .5
   return TAG[`${a}|${b}`] ?? TAG[`${b}|${a}`] ?? .4
+}
+
+export const MAX_TAGS = 3
+export function tagsOf(p: { tag?: Tag | null; tags?: Tag[] | null }): Tag[] {
+  const t = (p.tags?.length ? p.tags : p.tag ? [p.tag] : []).filter(Boolean) as Tag[]
+  return Array.from(new Set(t)).slice(0, MAX_TAGS)
+}
+
+// Three words, read the way a person would: the leads carry 60%, the best
+// match anywhere across both sets carries 40%. A shared word is a reason; a
+// clash between leads is a flag unless something else lines up.
+export function tagChemistry(a: Tag[], b: Tag[]) {
+  if (!a.length || !b.length) return { fit: .5, reasons: [] as string[], flags: [] as string[] }
+  const lead = tagFit(a[0], b[0])
+  let best = 0, bestPair: [Tag, Tag] = [a[0], b[0]]
+  for (const x of a) for (const y of b) { const f = tagFit(x, y); if (f > best) { best = f; bestPair = [x, y] } }
+  const fit = .6 * lead + .4 * best
+  const shared = a.filter((t) => b.includes(t))
+  const reasons: string[] = []
+  const flags: string[] = []
+  if (a[0] === b[0]) reasons.push(`Both lead with /${a[0]}.`)
+  else if (lead >= .8) reasons.push(`/${a[0]} and /${b[0]} pull the same direction.`)
+  const extra = shared.filter((t) => !(t === a[0] && t === b[0]))
+  if (extra.length) reasons.push(`Both ${extra.map((t) => `/${t}`).join(' and ')}.`)
+  if (lead <= .2) {
+    if (best >= .8) flags.push(`Leads differ (/${a[0]}, /${b[0]}), but ${bestPair[0] === bestPair[1] ? `both are /${bestPair[0]}` : `/${bestPair[0]} and /${bestPair[1]} line up`}.`)
+    else flags.push(`/${a[0]} and /${b[0]} want different things.`)
+  }
+  return { fit, reasons, flags }
 }
 
 // Charleston clusters. Same cluster = easy first date.
@@ -110,14 +141,11 @@ export function scorePair(a: Person, b: Person, signals: Signal[], heys: Hey[], 
   const flags: string[] = []
   let score = 0
 
-  // 1. /tag chemistry — 35
-  const tf = tagFit(a.tag, b.tag)
-  score += 35 * tf
-  if (a.tag && b.tag) {
-    if (a.tag === b.tag) reasons.push(`Both /${a.tag}.`)
-    else if (tf >= .8) reasons.push(`/${a.tag} and /${b.tag} pull the same direction.`)
-    else if (tf <= .2) flags.push(`/${a.tag} and /${b.tag} want different things.`)
-  }
+  // 1. /tag chemistry — 35. Up to three words each, lead first.
+  const tc = tagChemistry(tagsOf(a), tagsOf(b))
+  score += 35 * tc.fit
+  reasons.push(...tc.reasons)
+  flags.push(...tc.flags)
 
   // 2. The eight answers — 30
   const A = a.answers ?? {}, B = b.answers ?? {}

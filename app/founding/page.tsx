@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getSupabase } from '@/lib/supabase'
 
-type F = { n: number; handle: string; tag: string | null }
+type F = { n: number; handle: string; tag: string | null; tags?: string[] | null }
 
 export default function FoundingPage() {
   const [list, setList] = useState<F[] | null>(null)
@@ -25,7 +25,7 @@ export default function FoundingPage() {
             <Link key={f.n} href={`/${f.handle}`} className="flex items-baseline gap-3 border-b border-white/10 py-2 hover:border-ob">
               <span className="font-display font-extrabold text-2xl tabular-nums text-ob w-14">#{String(f.n).padStart(3, '0')}</span>
               <span className="font-display font-extrabold text-xl tracking-tight truncate">/{f.handle}</span>
-              {f.tag && <span className="text-xs text-white/50">/{f.tag}</span>}
+              {(f.tags?.length ? f.tags : f.tag ? [f.tag] : []).length > 0 && <span className="text-xs text-white/50 truncate">{(f.tags?.length ? f.tags : [f.tag]).map((t) => `/${t}`).join(' ')}</span>}
             </Link>
           ))}
           {list && list.length === 0 && <p className="text-sm text-white/60 col-span-full">Nobody yet. #001 is open.</p>}

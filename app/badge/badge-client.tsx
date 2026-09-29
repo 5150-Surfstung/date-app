@@ -12,12 +12,12 @@ export default function BadgeClient() {
   const params = useSearchParams()
   const handle = normalizeHandle(params.get('h') ?? '')
   const [qr, setQr] = useState<string>('')
-  const [tag, setTag] = useState<string | null>(null)
+  const [tags, setTags] = useState<string[]>([])
   const [founding, setFounding] = useState<number | null>(null)
 
   useEffect(() => {
     if (!handle) return
-    getSupabase()?.rpc('handle_wall', { p_handle: handle }).then(({ data }) => { setTag(data?.tag ?? null); setFounding(data?.founding ?? null) })
+    getSupabase()?.rpc('handle_wall', { p_handle: handle }).then(({ data }) => { setTags(data?.tags?.length ? data.tags : data?.tag ? [data.tag] : []); setFounding(data?.founding ?? null) })
     QRCode.toDataURL(heyUrl(handle), {
       margin: 0, width: 512, color: { dark: '#FF3B2F', light: '#FFFFFF' },
     }).then(setQr)
@@ -37,7 +37,7 @@ export default function BadgeClient() {
             style={{ fontSize: handle.length > 8 ? 48 : 64 }}>
             /{handle || 'name'}
           </div>
-          {tag && <div className="font-display font-extrabold text-3xl tracking-tight mt-2 opacity-70">/{tag}</div>}
+          {tags.length > 0 && <div className="font-display font-extrabold tracking-tight mt-2"><span className="text-3xl">/{tags[0]}</span>{tags.slice(1).map((t) => <span key={t} className="text-xl opacity-60 ml-2">/{t}</span>)}</div>}
           <div className="mt-auto flex items-end justify-between gap-4">
             <div>
               <div className="font-extrabold text-lg leading-tight">Send me a /hey.</div>

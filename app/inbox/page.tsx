@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AppShell, NeedLogin, Pill } from '../ui'
+import { TagLine } from '../tags'
 import { authClient, useSession } from '@/lib/auth'
 import { tagLine } from '@/lib/handles'
 import { QUESTIONS } from '@/lib/questions'
@@ -12,7 +13,7 @@ import { INTAKE_BUCKET } from '@/lib/supabase'
 type Item = {
   kind: 'hey' | 'wing'; winger?: string
   id: string; created_at: string; note: string | null; to_handle: string
-  from: { handle: string; name: string; tag: string | null; age: number | null; hood: string | null; answers: Record<string, string> | null; has_vibe: boolean; voice_key: string | null; verified: boolean }
+  from: { handle: string; name: string; tag: string | null; tags?: string[] | null; age: number | null; hood: string | null; answers: Record<string, string> | null; has_vibe: boolean; voice_key: string | null; verified: boolean }
 }
 
 export default function InboxPage() {
@@ -75,7 +76,7 @@ export default function InboxPage() {
               )}
               <div className="flex items-baseline justify-between gap-3">
                 <div className="font-display font-extrabold text-2xl tracking-tight">
-                  /{f.handle} {f.tag && <span className="text-ob">/{f.tag}</span>}
+                  /{f.handle} <TagLine tags={f.tags} tag={f.tag} />
                 </div>
                 <div className="text-xs text-[#141414]/50">{new Date(it.created_at).toLocaleDateString()}</div>
               </div>

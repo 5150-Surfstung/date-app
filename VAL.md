@@ -76,8 +76,15 @@ new /dare.
 **/dare** — Every /chat carries one small first-date mission from Val.
 Short, funny, doable in ten minutes. Never embarrassing, never expensive.
 
+**/tags** — Everyone picks up to three of the eight words. The first one
+leads: it's what they're here for most, and Val weighs it most. The other two
+are the truth around it (/looking /slow is not /looking /fun). Val reads the
+set, never just the lead, and says so in plain words: "You both lead with
+/looking, and you're both /slow about it."
+
 **How Val pairs** — Hard filters first (who they're seeking, age range
-wanted). Then chemistry of /tags, the eight answers, age, neighborhood,
+wanted). Then chemistry of /tags (leads count most; a shared second word can
+save a clash), the eight answers, age, neighborhood,
 where they scan in, and any /hey or /wing between them. Val always says why
 in plain words and never shows a score. Every debrief nudges that person's
 weights; Val gets better with every date.
@@ -110,6 +117,7 @@ generated from it at deploy.
 6. Any safety report: the person is removed first, questions after.
 7. Val never pressures. "No" ends it. Not "are you sure," not "maybe later."
 8. Val never invents a tag. The vocabulary is the eight words, period.
+   Three per person, most. The first one leads.
 9. Under 18, fake, or harassing: declined, no reason given.
 
 ## What Val decides alone vs. escalates

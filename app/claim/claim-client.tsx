@@ -9,9 +9,10 @@ import {
   normalizeHandle, type Tag,
 } from '@/lib/handles'
 import { SignIn } from '../gate'
+import { TagPicker, TagLine } from '../tags'
 
 const PENDING = 'date:pending-claim'
-type Pending = { handle: string; name: string; tag: Tag | null; priv: boolean }
+type Pending = { handle: string; name: string; tags: Tag[]; priv: boolean }
 import { DEMO_CREW } from '@/lib/demo'
 import { VAL, notify } from '@/lib/val'
 
@@ -24,7 +25,7 @@ export default function ClaimClient() {
   const [gate, setGate] = useState(false)
   const [already, setAlready] = useState<string | null>(null)
   const [handle, setHandle] = useState('')
-  const [tag, setTag] = useState<Tag | null>(null)
+  const [tags, setTags] = useState<Tag[]>([])
   const [priv, setPriv] = useState(false)
   const [avail, setAvail] = useState<Avail>('idle')
   const [busy, setBusy] = useState(false)
@@ -39,7 +40,7 @@ export default function ClaimClient() {
       let p: Pending | null = null
       try { p = JSON.parse(localStorage.getItem(PENDING) ?? 'null') } catch {}
       if (p) {
-        setHandle(p.handle); setName(p.name); setTag(p.tag); setPriv(p.priv); setTerms(true)
+        setHandle(p.handle); setName(p.name); setTags(p.tags ?? []); setPriv(p.priv); setTerms(true)
         claim(p)
       }
     })
@@ -64,7 +65,7 @@ export default function ClaimClient() {
   const canClaim = name.trim() && terms && avail === 'open' && !busy
 
   function start() {
-    const p: Pending = { handle, name: name.trim(), tag, priv }
+    const p: Pending = { handle, name: name.trim(), tags, priv }
     if (me) { claim(p); return }
     try { localStorage.setItem(PENDING, JSON.stringify(p)) } catch {}
     setGate(true)
@@ -77,7 +78,7 @@ export default function ClaimClient() {
       const supabase = authClient()
       if (!supabase) throw new Error('Not configured yet.')
       const { data, error } = await supabase.rpc('claim_handle', {
-        p_handle: p.handle, p_name: p.name, p_tag: p.tag, p_private: p.priv, p_terms: true,
+        p_handle: p.handle, p_name: p.name, p_tag: p.tags?.[0] ?? null, p_private: p.priv, p_terms: true, p_tags: p.tags ?? [],
       })
       if (error) throw new Error('Something went wrong. Try again.')
       const msgs: Record<string, string> = {
@@ -136,7 +137,7 @@ export default function ClaimClient() {
     return (
       <Shell>
         <h1 className="font-display font-extrabold text-6xl sm:text-7xl leading-[0.95] tracking-[-0.03em] break-all">
-          /{handle}{tag && <span className="block text-4xl sm:text-5xl mt-2 text-ob">/{tag}</span>}
+          /{handle}{tags.length > 0 && <span className="block text-4xl sm:text-5xl mt-2"><TagLine tags={tags} /></span>}
         </h1>
         <p className="mt-6 text-xl sm:text-2xl font-medium leading-snug max-w-lg">
           {VAL.claimed(handle)} <span className="text-[#141414]/70">{VAL.sign}</span>
@@ -193,19 +194,8 @@ export default function ClaimClient() {
 
 
         <div className="grid gap-2">
-          <span className="text-xs tracking-[0.18em] uppercase text-[#141414]/70">Your /tag &mdash; what you&rsquo;re here for</span>
-          <div className="flex flex-wrap gap-2">
-            {TAGS.map((t) => (
-              <button key={t.value} onClick={() => setTag(tag === t.value ? null : t.value)}
-                title={t.line}
-                className={`px-4 py-2.5 border-2 rounded-full text-base font-extrabold transition-colors ${tag === t.value ? 'bg-ob text-white border-white' : 'border-[#141414]/15 hover:border-[#141414]'}`}>
-                /{t.value}
-              </button>
-            ))}
-          </div>
-          <span className="text-sm text-[#141414]/70 min-h-5">
-            {tag ? TAGS.find((t) => t.value === tag)!.line : 'Optional. Change it any time.'}
-          </span>
+          <span className="text-xs tracking-[0.18em] uppercase text-[#141414]/70">Your /tags &mdash; what you&rsquo;re here for</span>
+          <TagPicker value={tags} onChange={setTags} />
         </div>
 
         <button onClick={() => setPriv(!priv)}

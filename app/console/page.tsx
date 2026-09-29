@@ -8,6 +8,7 @@ import { VENUES } from '@/lib/venues'
 import { QUESTIONS } from '@/lib/questions'
 import { askVal, notify } from '@/lib/val'
 import System from './system'
+import { TagLine } from '../tags'
 
 type Console = {
   handles: (Person & { founding: number | null; created_at: string; app_id: string | null; photo_keys: string[] | null; voice_key: string | null; verified: boolean; benched?: boolean; strikes?: number })[]
@@ -111,9 +112,9 @@ export default function ConsolePage() {
               <div key={key} className="border-2 border-[#141414]/10 rounded-2xl p-5 grid md:grid-cols-[1fr_auto] gap-4">
                 <div>
                   <div className="flex items-baseline gap-3 flex-wrap">
-                    <span className="font-display font-extrabold text-2xl tracking-tight">/{p.a.handle} <span className="text-ob">/{p.a.tag}</span></span>
+                    <span className="font-display font-extrabold text-2xl tracking-tight">/{p.a.handle} <TagLine tags={p.a.tags} tag={p.a.tag} /></span>
                     <span className="text-[#141414]/40">+</span>
-                    <span className="font-display font-extrabold text-2xl tracking-tight">/{p.b.handle} <span className="text-ob">/{p.b.tag}</span></span>
+                    <span className="font-display font-extrabold text-2xl tracking-tight">/{p.b.handle} <TagLine tags={p.b.tags} tag={p.b.tag} /></span>
                   </div>
                   <div className="mt-2 h-1.5 rounded-full bg-[#141414]/10 max-w-xs"><div className="h-full rounded-full bg-ob" style={{ width: `${p.score}%` }} /></div>
                   <ul className="mt-3 text-sm grid gap-0.5">
@@ -187,7 +188,7 @@ export default function ConsolePage() {
           {data.handles.map((h) => (
             <details key={h.handle} className="border-2 border-[#141414]/10 rounded-2xl p-4">
               <summary className="cursor-pointer flex flex-wrap items-baseline gap-3">
-                <span className="font-display font-extrabold text-xl">/{h.handle} {h.tag && <span className="text-ob">/{h.tag}</span>}</span>
+                <span className="font-display font-extrabold text-xl">/{h.handle} <TagLine tags={h.tags} tag={h.tag} /></span>
                 <span className="text-sm font-semibold">{h.name}{h.age ? `, ${h.age}` : ''}{h.hood ? ` · ${h.hood}` : ''}</span>
                 {h.founding && <span className="text-xs font-extrabold text-ob">#{String(h.founding).padStart(3, '0')}</span>}
                 {(h.strikes ?? 0) > 0 && <span className={`text-xs font-extrabold uppercase tracking-[0.12em] rounded-full px-2.5 py-0.5 ${h.benched ? 'bg-ob text-white' : 'bg-[#141414]/8'}`}>{h.benched ? 'Benched' : `${h.strikes} strike`}</span>}

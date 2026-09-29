@@ -6,7 +6,8 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { AppShell, NeedLogin } from '../ui'
 import { authClient } from '@/lib/auth'
-import { TAGS, type Tag } from '@/lib/handles'
+import { type Tag } from '@/lib/handles'
+import { TagPicker, TagLine } from '../tags'
 import { useHome, usePhotos, type Home } from '@/lib/home'
 
 const pad = (n: number) => String(n).padStart(3, '0')
@@ -40,9 +41,10 @@ export default function MePage() {
   const h = home.handle
   const s = standing(home)
   const priv = h.visibility === 'private'
-  async function setTag(tag: Tag | null, p: boolean) {
+  const myTags = ((h.tags?.length ? h.tags : h.tag ? [h.tag] : []) as Tag[])
+  async function saveTags(tags: Tag[], p: boolean) {
     setSaving(true)
-    await authClient()!.rpc('set_tag', { p_tag: tag, p_private: p })
+    await authClient()!.rpc('set_tags', { p_tags: tags, p_private: p })
     await reload(); setSaving(false)
   }
   const steps = ['/name', '/vibe', 'Verified', 'Intros']
@@ -54,7 +56,7 @@ export default function MePage() {
         <div className="min-w-0">
           <h1 className="font-display font-extrabold text-[clamp(3rem,11vw,5.5rem)] leading-[0.9] tracking-[-0.04em] break-all">/{h.handle}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {h.tag && <span className="font-display font-extrabold text-2xl text-ob">/{h.tag}</span>}
+            {myTags.length > 0 && <span className="font-display font-extrabold text-2xl"><TagLine tags={myTags} /></span>}
             {h.founding && <span className="text-xs font-extrabold tracking-[0.14em] uppercase border-2 border-[#141414] rounded-full px-3 py-1">Founding #{pad(h.founding)}</span>}
             {home.vibe?.verified && <span className="text-xs font-extrabold tracking-[0.14em] uppercase bg-[#141414] text-white rounded-full px-3 py-1">Verified</span>}
             {priv && <span className="text-xs font-extrabold tracking-[0.14em] uppercase bg-[#141414]/8 rounded-full px-3 py-1">Private</span>}
@@ -108,15 +110,9 @@ export default function MePage() {
 
       {/* /tag */}
       <section className="mt-10">
-        <Eyebrow>Your /tag &mdash; change it any time</Eyebrow>
-        <div className="flex flex-wrap gap-2">
-          {TAGS.map((t) => (
-            <button key={t.value} disabled={saving} onClick={() => setTag(h.tag === t.value ? null : t.value, priv)} title={t.line}
-              className={`px-4 py-2.5 border-2 rounded-full text-sm font-extrabold transition-colors ${h.tag === t.value ? 'bg-ob text-white border-ob' : 'border-[#141414]/15 hover:border-[#141414]'}`}>/{t.value}</button>
-          ))}
-        </div>
-        <p className="mt-2 text-sm text-[#141414]/55">{h.tag ? TAGS.find((t) => t.value === h.tag)?.line : 'No tag. Pick the word that says what you’re here for.'}</p>
-        <button disabled={saving} onClick={() => setTag(h.tag, !priv)}
+        <Eyebrow>Your /tags &mdash; up to three, change them any time</Eyebrow>
+        <TagPicker value={myTags} onChange={(t) => saveTags(t, priv)} disabled={saving} />
+        <button disabled={saving} onClick={() => saveTags(myTags, !priv)}
           className={`mt-4 flex items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left ${priv ? 'border-[#141414] bg-[#141414] text-white' : 'border-[#141414]/15'}`}>
           <span className={`w-10 h-6 rounded-full relative shrink-0 ${priv ? 'bg-ob' : 'bg-[#141414]/15'}`}><span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${priv ? 'left-5' : 'left-1'}`} /></span>
           <span><span className="block font-extrabold text-sm">Private</span><span className={`block text-xs ${priv ? 'text-white/60' : 'text-[#141414]/50'}`}>Your /name shows nothing. Only Val introduces you.</span></span>

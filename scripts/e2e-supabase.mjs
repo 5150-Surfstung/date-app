@@ -87,6 +87,15 @@ const wA = await anon.rpc('handle_wall', { p_handle: hA })
 const wB = await anon.rpc('handle_wall', { p_handle: hB })
 check('set_tag changes only mine', wA.data?.tag === 'slow' && wB.data?.tag === 'open', `${wA.data?.tag}/${wB.data?.tag}`)
 
+// Up to three /tags, lead first
+const three = await A.c.rpc('set_tags', { p_tags: ['slow', 'looking', 'fun'], p_private: false })
+const four = await A.c.rpc('set_tags', { p_tags: ['slow', 'looking', 'fun', 'open'], p_private: false })
+const junk = await A.c.rpc('set_tags', { p_tags: ['wild'], p_private: false })
+const w3 = await anon.rpc('handle_wall', { p_handle: hA })
+check('three /tags, lead first', three.data === 'ok' && w3.data?.tag === 'slow' && w3.data?.tags?.join() === 'slow,looking,fun', JSON.stringify(w3.data?.tags))
+check('four /tags refused', four.data === 'bad', four.data)
+check('made-up /tag refused', junk.data === 'bad', junk.data)
+
 // /hey and /wing as yourself
 const hey = await A.c.rpc('send_hey', { p_to: hB, p_note: 'e2e' })
 check('send /hey', hey.data === 'ok', hey.error?.message ?? hey.data)
