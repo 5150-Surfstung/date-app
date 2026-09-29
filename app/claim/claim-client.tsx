@@ -3,18 +3,26 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getSupabase } from '@/lib/supabase'
+import { authClient, useSession } from '@/lib/auth'
 import {
-  HANDLE_RE, RESERVED, TAGS, EMAIL_KEY, HANDLE_KEY,
+  HANDLE_RE, RESERVED, TAGS, HANDLE_KEY,
   normalizeHandle, type Tag,
 } from '@/lib/handles'
+import { SignIn } from '../gate'
+
+const PENDING = 'date:pending-claim'
+type Pending = { handle: string; name: string; tag: Tag | null; priv: boolean }
 import { DEMO_CREW } from '@/lib/demo'
 import { VAL } from '@/lib/val'
 
 type Avail = 'idle' | 'checking' | 'open' | 'taken' | 'reserved' | 'bad'
 
 export default function ClaimClient() {
+  const { email: me, loading: sessionLoading } = useSession()
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const [terms, setTerms] = useState(false)
+  const [gate, setGate] = useState(false)
+  const [already, setAlready] = useState<string | null>(null)
   const [handle, setHandle] = useState('')
   const [tag, setTag] = useState<Tag | null>(null)
   const [priv, setPriv] = useState(false)
@@ -23,12 +31,20 @@ export default function ClaimClient() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
+  // Back from Val's link with a claim waiting? Finish it. Already have one? Say so.
   useEffect(() => {
-    try {
-      const e = localStorage.getItem(EMAIL_KEY)
-      if (e) setEmail(e)
-    } catch {}
-  }, [])
+    if (sessionLoading || !me) return
+    authClient()?.rpc('my_home').then(({ data }) => {
+      if (data?.handle?.handle) { setAlready(data.handle.handle); return }
+      let p: Pending | null = null
+      try { p = JSON.parse(localStorage.getItem(PENDING) ?? 'null') } catch {}
+      if (p) {
+        setHandle(p.handle); setName(p.name); setTag(p.tag); setPriv(p.priv); setTerms(true)
+        claim(p)
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [me, sessionLoading])
 
   // Live availability, debounced.
   useEffect(() => {
@@ -45,30 +61,36 @@ export default function ClaimClient() {
     return () => clearTimeout(t)
   }, [handle])
 
-  const emailValid = /.+@.+\..+/.test(email)
-  const canClaim = name.trim() && emailValid && avail === 'open' && !busy
+  const canClaim = name.trim() && terms && avail === 'open' && !busy
 
-  async function claim() {
+  function start() {
+    const p: Pending = { handle, name: name.trim(), tag, priv }
+    if (me) { claim(p); return }
+    try { localStorage.setItem(PENDING, JSON.stringify(p)) } catch {}
+    setGate(true)
+  }
+
+  async function claim(p: Pending) {
     setBusy(true)
     setError(null)
     try {
-      const supabase = getSupabase()
+      const supabase = authClient()
       if (!supabase) throw new Error('Not configured yet.')
       const { data, error } = await supabase.rpc('claim_handle', {
-        p_handle: handle, p_email: email, p_name: name, p_tag: tag, p_private: priv,
+        p_handle: p.handle, p_name: p.name, p_tag: p.tag, p_private: p.priv, p_terms: true,
       })
       if (error) throw new Error('Something went wrong. Try again.')
       const msgs: Record<string, string> = {
-        taken: `/${handle} just got taken. Try another.`,
-        email_taken: 'That email already has a /name.',
+        taken: `/${p.handle} just got taken. Try another.`,
+        email_taken: 'This email already has a /name.',
+        login: 'Sign in first.',
+        terms: 'Tick the box first.',
         reserved: 'That one’s reserved.',
         bad: 'Letters, numbers, underscores. 3 to 20 characters.',
       }
+      try { localStorage.removeItem(PENDING) } catch {}
       if (data !== 'ok') throw new Error(msgs[data] ?? 'Something went wrong.')
-      try {
-        localStorage.setItem(EMAIL_KEY, email.trim().toLowerCase())
-        localStorage.setItem(HANDLE_KEY, handle)
-      } catch {}
+      try { localStorage.setItem(HANDLE_KEY, p.handle) } catch {}
       setDone(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.')
@@ -84,6 +106,29 @@ export default function ClaimClient() {
     taken: `/${handle} is taken.`,
     reserved: 'That one’s reserved.',
     bad: 'Letters, numbers, underscores. 3 to 20 characters.',
+  }
+
+  if (already && !done) {
+    return (
+      <Shell>
+        <div className="text-xs tracking-[0.2em] uppercase font-medium mb-3">You&rsquo;re already on</div>
+        <h1 className="font-display font-extrabold text-6xl sm:text-7xl leading-[0.95] tracking-[-0.03em] break-all">/{already}</h1>
+        <p className="mt-6 text-xl text-chalk-2 font-medium">One /name per person. It&rsquo;s yours.</p>
+        <Link href="/me/" className="inline-block mt-8 bg-white text-ob text-base font-extrabold rounded-full px-9 py-4">Go to /me</Link>
+      </Shell>
+    )
+  }
+
+  if (gate && !me) {
+    return (
+      <Shell>
+        <div className="text-xs tracking-[0.2em] uppercase font-medium mb-3">Last step</div>
+        <h1 className="font-display font-extrabold text-5xl sm:text-7xl leading-[0.95] tracking-[-0.03em] break-all">/{handle} is held.</h1>
+        <p className="mt-6 text-xl text-chalk-2 font-medium leading-snug max-w-lg">Your /name is tied to your email so nobody can pose as you. Val sends a link; tap it and /{handle} is yours.</p>
+        <div className="mt-8"><SignIn cta={`Claim /${handle}`} /></div>
+        <button onClick={() => setGate(false)} className="tap mt-6 text-sm text-chalk-3 underline underline-offset-4">Change something</button>
+      </Shell>
+    )
   }
 
   if (done) {
@@ -145,11 +190,6 @@ export default function ClaimClient() {
             className="bg-ob-1 border-2 border-ob-3 rounded-xl focus:border-gold outline-none px-4 py-3 text-base" />
         </label>
 
-        <label className="grid gap-1.5">
-          <span className="text-xs tracking-[0.18em] uppercase text-chalk-2">Email</span>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-            className="bg-ob-1 border-2 border-ob-3 rounded-xl focus:border-gold outline-none px-4 py-3 text-base" />
-        </label>
 
         <div className="grid gap-2">
           <span className="text-xs tracking-[0.18em] uppercase text-chalk-2">Your /tag &mdash; what you&rsquo;re here for</span>
@@ -173,7 +213,13 @@ export default function ClaimClient() {
           <div className="text-sm text-chalk-2 mt-0.5">Your /name shows nothing. Only matchmaker intros reach you.</div>
         </button>
 
-        <button disabled={!canClaim} onClick={claim}
+        <label className="flex items-start gap-3 cursor-pointer select-none py-1">
+          <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-1 w-5 h-5 accent-white shrink-0" />
+          <span className="text-sm text-chalk-2 leading-snug">I&rsquo;m 18 or older and I agree to the <Link href="/terms/" className="underline text-chalk">Terms</Link> and <Link href="/privacy/" className="underline text-chalk">Privacy</Link>.</span>
+        </label>
+
+        {me && <p className="text-sm text-chalk-3 -mb-2">Claiming as {me}.</p>}
+        <button disabled={!canClaim} onClick={start}
           className="bg-white text-ob text-base font-extrabold rounded-full px-10 py-4 hover:scale-[1.02] transition-transform disabled:opacity-30 mt-2">
           {busy ? 'Claiming…' : `Claim /${handle || 'name'}`}
         </button>

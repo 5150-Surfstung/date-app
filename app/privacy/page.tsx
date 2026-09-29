@@ -14,7 +14,9 @@ export default function Privacy() {
         <p><b>Val.</b> Val is our matchmaker &mdash; software plus a human. Your /vibe is read by Val to make introductions. It is not sold, not used for ads, and not shared with anyone outside /date.</p>
         <p><b>Debriefs.</b> What you tell Val after a date is private. It is never shown to the other person.</p>
         <p><b>Reports.</b> If you report someone, Val sees it. They don&rsquo;t.</p>
-        <p><b>Deleting.</b> Email hello@surfstung.com from the address on your /name and everything &mdash; answers, photos, voice, /heys, /chats &mdash; is deleted.</p>
+        <p><b>Your copy.</b> /me &rarr; Settings &rarr; Download my data gives you everything /date holds about you, in one file, any time.</p>
+        <p><b>Deleting.</b> /me &rarr; Settings &rarr; Leave /date deletes your /name, answers, photos, voice, /heys and /chats immediately. Reports other members filed about you are kept, detached from your /name, so Val can keep people safe. Or email hello@surfstung.com and a person does it for you.</p>
+        <p><b>Email.</b> Every email from Val has a one-tap stop. Safety check-ins you asked for always come through.</p>
         <p><b>Where it lives.</b> Supabase (database and files, US) and Vercel (the site). Email is sent by Resend.</p>
         <p><b>Age.</b> 18 and over. No exceptions.</p>
       </article>

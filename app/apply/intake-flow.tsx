@@ -1,10 +1,12 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { QUESTIONS } from '@/lib/questions'
-import { getSupabase, APPLICATIONS_TABLE, INTAKE_BUCKET } from '@/lib/supabase'
+import { APPLICATIONS_TABLE, INTAKE_BUCKET } from '@/lib/supabase'
+import { authClient, useSession } from '@/lib/auth'
+import { SignIn } from '../gate'
 import { VAL } from '@/lib/val'
 
 const MIN_PHOTOS = 3
@@ -40,6 +42,8 @@ export default function IntakeFlow() {
   const params = useSearchParams()
   const venue = params.get('v') ?? undefined
 
+  const { session, email: me, loading: sessionLoading } = useSession()
+  const [hasVibe, setHasVibe] = useState<boolean | null>(null)
   const [step, setStep] = useState(0)
   const [basics, setBasics] = useState<Basics>(EMPTY_BASICS)
   const [answers, setAnswers] = useState<Record<string, string>>({})
@@ -48,6 +52,12 @@ export default function IntakeFlow() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!me) return
+    setBasics((b) => ({ ...b, email: me }))
+    authClient()?.rpc('my_home').then(({ data }) => setHasVibe(Boolean(data?.vibe)))
+  }, [me])
 
   const progress = Math.round((step / (TOTAL_STEPS - 1)) * 100)
 
@@ -69,10 +79,11 @@ export default function IntakeFlow() {
     setSubmitting(true)
     setError(null)
     try {
-      const supabase = getSupabase()
-      if (!supabase) throw new Error('Submissions are not configured yet.')
+      const supabase = authClient()
+      if (!supabase || !session) throw new Error('Sign in first.')
 
-      const id = crypto.randomUUID()
+      // Your /vibe lives under your own user id; only you can write there.
+      const id = session.user.id
 
       const photoKeys: string[] = []
       for (let i = 0; i < photos.length; i++) {
@@ -81,7 +92,7 @@ export default function IntakeFlow() {
         const key = `${id}/photo-${i}.${ext}`
         const { error: upErr } = await supabase.storage
           .from(INTAKE_BUCKET)
-          .upload(key, p, { contentType: p.type || 'image/jpeg' })
+          .upload(key, p, { contentType: p.type || 'image/jpeg', upsert: true })
         if (upErr) throw new Error('Photo upload failed. Try again.')
         photoKeys.push(key)
       }
@@ -92,7 +103,7 @@ export default function IntakeFlow() {
         voiceKey = `${id}/voice-note.${ext}`
         const { error: vErr } = await supabase.storage
           .from(INTAKE_BUCKET)
-          .upload(voiceKey, voiceBlob, { contentType: voiceBlob.type || 'audio/webm' })
+          .upload(voiceKey, voiceBlob, { contentType: voiceBlob.type || 'audio/webm', upsert: true })
         if (vErr) throw new Error('Voice upload failed. Try again.')
       }
 
@@ -101,7 +112,7 @@ export default function IntakeFlow() {
         venue_slug: venue ?? null,
         name: basics.name.trim(),
         age: Number(basics.age),
-        email: basics.email.trim().toLowerCase(),
+        email: me,
         phone: basics.phone.trim() || null,
         neighborhood: basics.neighborhood.trim() || null,
         identity: basics.identity,
@@ -116,7 +127,7 @@ export default function IntakeFlow() {
       if (insErr) {
         throw new Error(
           insErr.code === '23505'
-            ? 'This email has already applied.'
+            ? 'You already have a /vibe. Edit it from /me.'
             : 'Could not save your application. Try again.'
         )
       }
@@ -150,6 +161,34 @@ export default function IntakeFlow() {
     )
   }
 
+  if (!sessionLoading && !me) {
+    return (
+      <Shell progress={0}>
+        <div className="flex-1 flex flex-col justify-center max-w-lg">
+          <div className="text-xs tracking-[0.2em] uppercase font-medium mb-3">Your /vibe</div>
+          <h1 className="font-display font-extrabold text-5xl sm:text-6xl tracking-[-0.03em] leading-[0.95] [text-wrap:balance]">Eight questions, your photos, sixty seconds of you.</h1>
+          <p className="mt-5 text-xl text-chalk-2 font-medium leading-snug">It starts with your email, so your /vibe is only ever yours. Val sends a link; you land right back here.</p>
+          <div className="mt-8"><SignIn cta="Start my /vibe" /></div>
+        </div>
+      </Shell>
+    )
+  }
+
+  if (hasVibe) {
+    return (
+      <Shell progress={100}>
+        <div className="flex-1 flex flex-col justify-center max-w-lg">
+          <h1 className="font-display font-extrabold text-5xl tracking-[-0.03em] leading-tight">Your /vibe is already in.</h1>
+          <p className="mt-5 text-xl text-chalk-2 font-medium">Change anything, any time. Val reads the newest version.</p>
+          <div className="mt-8 flex flex-col sm:flex-row gap-3">
+            <Link href="/me/edit/" className="bg-white text-ob font-extrabold rounded-full px-8 py-4 text-center">Edit my /vibe</Link>
+            <Link href="/me/" className="border-2 border-white font-extrabold rounded-full px-8 py-4 text-center">Go to /me</Link>
+          </div>
+        </div>
+      </Shell>
+    )
+  }
+
   return (
     <Shell progress={progress}>
       {step === 0 && (
@@ -178,12 +217,7 @@ export default function IntakeFlow() {
                 onChange={(v) => setBasics({ ...basics, neighborhood: v })}
               />
             </div>
-            <Field
-              label="Email"
-              type="email"
-              value={basics.email}
-              onChange={(v) => setBasics({ ...basics, email: v })}
-            />
+            <p className="text-sm text-chalk-3">Signed in as {me}.</p>
             <Field
               label="Phone (optional)"
               type="tel"

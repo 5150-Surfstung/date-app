@@ -3,16 +3,16 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import type { Venue } from '@/lib/venues'
-import { getSupabase, SIGNALS_TABLE } from '@/lib/supabase'
-import { EMAIL_KEY, HANDLE_KEY } from '@/lib/handles'
+import { getSupabase } from '@/lib/supabase'
+import { authClient, useSession } from '@/lib/auth'
 import { VAL } from '@/lib/val'
+import { SignIn } from '../../gate'
 
 // /night mode: the room as a live pool. Nobody sees who's here — only how
 // many. Val makes the intros.
 export default function NightClient({ venue }: { venue: Venue }) {
   const [count, setCount] = useState<number | null>(null)
-  const [email, setEmail] = useState('')
-  const [handle, setHandle] = useState<string | null>(null)
+  const { email: me, loading: sessionLoading } = useSession()
   const [stage, setStage] = useState<'door' | 'in' | 'noticed'>('door')
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
@@ -24,25 +24,18 @@ export default function NightClient({ venue }: { venue: Venue }) {
     setCount((data as number) ?? 0)
   }
   useEffect(() => {
-    try { setEmail(localStorage.getItem(EMAIL_KEY) ?? ''); setHandle(localStorage.getItem(HANDLE_KEY)) } catch {}
     refresh(); const t = setInterval(refresh, 15000); return () => clearInterval(t)
   }, [venue.slug])
 
-  const emailValid = /.+@.+\..+/.test(email)
-
+  // Scan-in also flips your /name to /tonight until midnight (server side).
   async function scanIn() {
     setBusy(true)
-    const s = getSupabase()
-    if (!s) return
-    await s.from(SIGNALS_TABLE).insert({ kind: 'checkin', venue_slug: venue.slug, email: email.trim().toLowerCase(), note: 'night' })
-    // Tonight-only for the night: your /name goes dark at midnight unless you change it back.
-    if (handle) await s.rpc('set_tag', { p_handle: handle, p_email: email.trim().toLowerCase(), p_tag: 'tonight', p_private: false })
-    try { localStorage.setItem(EMAIL_KEY, email.trim().toLowerCase()) } catch {}
+    await authClient()?.rpc('date_signal', { p_kind: 'checkin', p_venue: venue.slug, p_note: 'night' })
     setBusy(false); setStage('in'); refresh()
   }
   async function noticed() {
     setBusy(true)
-    await getSupabase()?.from(SIGNALS_TABLE).insert({ kind: 'notice', venue_slug: venue.slug, email: email.trim().toLowerCase(), note: note.trim() })
+    await authClient()?.rpc('date_signal', { p_kind: 'notice', p_venue: venue.slug, p_note: note.trim() })
     setBusy(false); setStage('noticed')
   }
 
@@ -69,11 +62,13 @@ export default function NightClient({ venue }: { venue: Venue }) {
         {stage === 'door' && (
           <div className="flex flex-col gap-3 max-w-md">
             <p className="text-xl font-medium leading-snug">Scan in at the door. Your /name goes /tonight &mdash; give it out freely, it&rsquo;s gone at midnight.</p>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="The email on your /name"
-              className="bg-white/5 border-2 border-white/20 rounded-xl focus:border-[#FF5CA8] outline-none px-4 py-3 text-base placeholder:text-white/40" />
-            <button disabled={!emailValid || busy} onClick={scanIn} className="bg-[#FF5CA8] text-[#140A20] text-base font-extrabold rounded-full px-10 py-4 disabled:opacity-30">
+            {!me && !sessionLoading ? (
+              <SignIn night cta="I'm here" pitch="The email on your /name. Tap Val's link and you're in the room." />
+            ) : (
+            <button disabled={!me || busy} onClick={scanIn} className="bg-[#FF5CA8] text-[#140A20] text-base font-extrabold rounded-full px-10 py-4 disabled:opacity-30">
               {busy ? 'One sec\u2026' : 'I\u2019m here'}
             </button>
+            )}
             <p className="text-sm text-[#F6EFFF]/60">No /name? <Link href={`/claim/`} className="underline text-[#F6EFFF]">Claim one</Link> &mdash; thirty seconds at the door.</p>
           </div>
         )}

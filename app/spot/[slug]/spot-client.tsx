@@ -1,45 +1,29 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import type { Venue } from '@/lib/venues'
-import { getSupabase, SIGNALS_TABLE } from '@/lib/supabase'
+import { authClient, useSession } from '@/lib/auth'
 import { VAL } from '@/lib/val'
-
-const EMAIL_KEY = 'date:email'
+import { SignIn } from '../../gate'
 
 type Stage = 'scan' | 'in' | 'noticed'
 
 export default function SpotClient({ venue }: { venue: Venue }) {
-  const [email, setEmail] = useState('')
+  const { email: me, loading: sessionLoading } = useSession()
   const [stage, setStage] = useState<Stage>('scan')
   const [note, setNote] = useState('')
   const [rsvped, setRsvped] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(EMAIL_KEY)
-      if (saved) setEmail(saved)
-    } catch {}
-  }, [])
-
-  const emailValid = /.+@.+\..+/.test(email)
+  const emailValid = Boolean(me)
 
   async function signal(kind: 'checkin' | 'notice' | 'rsvp', text?: string) {
-    const supabase = getSupabase()
+    const supabase = authClient()
     if (!supabase) throw new Error('Not configured yet.')
-    const { error } = await supabase.from(SIGNALS_TABLE).insert({
-      kind,
-      venue_slug: venue.slug,
-      email: email.trim().toLowerCase(),
-      note: text ?? null,
-    })
-    if (error) throw new Error('Something went wrong. Try again.')
-    try {
-      localStorage.setItem(EMAIL_KEY, email.trim().toLowerCase())
-    } catch {}
+    const { data, error } = await supabase.rpc('date_signal', { p_kind: kind, p_venue: venue.slug, p_note: text ?? null })
+    if (error || data !== 'ok') throw new Error(data === 'limit' ? 'Easy. Try again in a bit.' : 'Something went wrong. Try again.')
   }
 
   async function run(fn: () => Promise<void>) {
@@ -83,17 +67,9 @@ export default function SpotClient({ venue }: { venue: Venue }) {
               it&rsquo;s mutual, we introduce you. Nobody has to walk over.
             </p>
             <div className="flex flex-col gap-3 max-w-md">
-              <label className="grid gap-1.5">
-                <span className="text-xs tracking-[0.18em] uppercase text-chalk-2">
-                  The email on your /vibe
-                </span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-ob-1 border-2 border-ob-3 rounded-xl focus:border-gold outline-none px-4 py-3 text-base"
-                />
-              </label>
+              {!me && !sessionLoading ? (
+                <SignIn cta="Scan me in" pitch="The email on your /vibe. Val sends a link; tap it and you're scanned in." />
+              ) : (
               <button
                 disabled={!emailValid || busy}
                 onClick={() => run(async () => { await signal('checkin'); setStage('in') })}
@@ -101,6 +77,7 @@ export default function SpotClient({ venue }: { venue: Venue }) {
               >
                 {busy ? 'One sec…' : 'Scan in'}
               </button>
+              )}
               <p className="text-sm text-chalk-3">
                 Not on /date yet?{' '}
                 <Link href={`/apply?v=${venue.slug}`} className="underline font-semibold text-chalk">
@@ -172,7 +149,7 @@ export default function SpotClient({ venue }: { venue: Venue }) {
               </button>
             )}
             {!emailValid && (
-              <p className="mt-2 text-xs text-chalk-3">Enter your email above to RSVP.</p>
+              <p className="mt-2 text-xs text-chalk-3">Sign in above to RSVP.</p>
             )}
           </div>
         )}

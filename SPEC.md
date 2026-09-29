@@ -323,3 +323,35 @@ make room under the free tier's two-active-project cap.
 - Vercel env and the GitHub workflow point at the new URL and anon key.
 - Still the owner's: Auth → URL Configuration (Site URL and redirect list)
   on the new project, and the Anthropic key.
+
+## 10i. Identity-bound, and the member side (v10)
+
+**Security.** No database function takes an email as proof of identity any
+more. Claim, /hey, /wing, tag, check-ins and the /vibe all act as the signed-in
+account (`date_me()`); the anonymous key can read the public wall, receipts
+and founding list, file a report, and nothing else. Media lives under the
+member's own user id and only they can write there. Limits: 10 /heys a day,
+5 /wings a week, 20 check-ins an hour. Claiming records the 18+ and terms
+acceptance.
+
+**One way in.** `app/gate.tsx` puts Val's sign-in link inline wherever it's
+needed, and brings you back to the exact page. Claiming a /name without
+being signed in holds it, sends the link, and finishes the claim on return.
+
+**/me is home.** Where you stand (a four-step track: /name, /vibe, verified,
+intros) with Val's line for each stage; what's waiting; open chats; intros
+this season; /tag and privacy; your /vibe at a glance.
+
+**/me/edit.** Photos (add, remove, reorder, three minimum), a new voice note,
+the basics and all eight answers. Age and email stay fixed; they're how Val
+verifies you.
+
+**/me/settings.** Email switches (heys, chats, morning-after; safety always
+on), blocked list with unblock, talk to a person, download my data, delete
+my account (type DELETE; media removed first, then every row, then the login).
+
+**Email.** Every switchable email carries a one-tap stop (`/unsub/?t=`) and a
+List-Unsubscribe header.
+
+**Tests.** CI signs in two throwaway accounts (confined to test.invalid) and
+proves each can act only as itself, end to end through delete.

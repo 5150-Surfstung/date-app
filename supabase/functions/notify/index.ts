@@ -70,13 +70,23 @@ const json = (body: unknown, status = 200) =>
 const SITE = Deno.env.get("SITE_URL") ?? "https://date-surfstung-systems.vercel.app";
 const from = async () => (await secret("NOTIFY_FROM")) || "Val <onboarding@resend.dev>";
 
-async function send(to: string, subject: string, text: string) {
+type Kind = "heys" | "chats" | "dates" | null;
+
+// One email. `kind` is the member's switchable category; null = safety or
+// system mail, which always goes. Every member email carries a one-tap stop.
+async function send(to: string, subject: string, text: string, kind: Kind = null) {
   const key = await secret("RESEND_API_KEY");
   if (!key) return false;
+  const { data: h } = await db.from("date_handles").select("email_prefs, unsub_token").eq("email", to).maybeSingle();
+  if (kind && h?.email_prefs && h.email_prefs[kind] === false) return false;
+  const stop = h?.unsub_token ? `${SITE}/unsub/?t=${h.unsub_token}${kind ? `&k=${kind}` : ""}` : null;
+  const footer = `\n\n—\nEmail settings: ${SITE}/me/settings/${stop && kind ? `\nStop these: ${stop}` : ""}`;
+  const headers: Record<string, string> = {};
+  if (stop && kind) { headers["List-Unsubscribe"] = `<${stop}>`; }
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: await from(), to, subject, text }),
+    body: JSON.stringify({ from: await from(), to, subject, text: text + (h ? footer : ""), headers }),
   });
   return r.ok;
 }
@@ -119,7 +129,7 @@ Deno.serve(async (req) => {
     const { data: from } = await db.from("date_handles").select("*").eq("email", h.from_email).maybeSingle();
     if (!to || !from) return json({ skipped: "missing" });
     const ok = await send(to.email, `/${from.handle} sent you a /hey`,
-      `${to.name} —\n\n/${from.handle}${from.tag ? ` /${from.tag}` : ""} sent you a /hey.${h.note ? ` Their note: "${h.note}"` : ""}\n\nTheir /vibe is waiting in your inbox. Yes opens a /chat. No is silent — they never know.\n\n${SITE}/inbox/\n\n— Val`);
+      `${to.name} —\n\n/${from.handle}${from.tag ? ` /${from.tag}` : ""} sent you a /hey.${h.note ? ` Their note: "${h.note}"` : ""}\n\nTheir /vibe is waiting in your inbox. Yes opens a /chat. No is silent — they never know.\n\n${SITE}/inbox/\n\n— Val`, "heys");
     const pushed = await push(to.email, { title: `/${from.handle} sent you a /hey`, body: "Their /vibe is in your inbox. Yes opens a /chat. No is silent.", url: `${SITE}/inbox/`, tag: "hey" });
     await db.from("date_heys").update({ notified_at: new Date().toISOString() }).eq("id", h.id);
     return json({ sent: ok, pushed });
@@ -135,7 +145,7 @@ Deno.serve(async (req) => {
     const ok = await send(toEmail, `/${winger?.handle ?? "a friend"} thinks you should meet /${w.subject_handle}`,
       w.to_handle
         ? `/${winger?.handle} passed you a /name: /${w.subject_handle}.${w.note ? ` "${w.note}"` : ""}\n\nHave a look. If you're into it, send the /hey — it's still theirs to say yes.\n\n${SITE}/inbox/\n\n— Val`
-        : `/${winger?.handle} is on /date, a matchmaking thing in Charleston, and thinks you should meet /${w.subject_handle}.${w.note ? ` "${w.note}"` : ""}\n\nClaim a /name (thirty seconds) and I'll show you.\n\n${SITE}/claim/\n\n— Val`);
+        : `/${winger?.handle} is on /date, a matchmaking thing in Charleston, and thinks you should meet /${w.subject_handle}.${w.note ? ` "${w.note}"` : ""}\n\nClaim a /name (thirty seconds) and I'll show you.\n\n${SITE}/claim/\n\n— Val`, w.to_handle ? "heys" : null);
     const pushed = w.to_handle ? await push(toEmail, { title: `/${winger?.handle ?? "a friend"} thinks you should meet /${w.subject_handle}`, body: "Have a look. It's still theirs to say yes.", url: `${SITE}/inbox/`, tag: "wing" }) : 0;
     await db.from("date_wings").update({ notified_at: new Date().toISOString() }).eq("id", w.id);
     return json({ sent: ok, pushed });
@@ -145,8 +155,8 @@ Deno.serve(async (req) => {
     const { data: c } = await db.from("date_chats").select("*").eq("id", body.id).is("notified_at", null).maybeSingle();
     if (!c) return json({ skipped: "none" });
     const results = await Promise.all([
-      send(c.a_email, `You and /${c.b_handle} — forty-eight hours`, `${c.val_note ?? "You both said yes."}\n\n${SITE}/chat/?c=${c.id}\n\n— Val`),
-      send(c.b_email, `You and /${c.a_handle} — forty-eight hours`, `${c.val_note ?? "You both said yes."}\n\n${SITE}/chat/?c=${c.id}\n\n— Val`),
+      send(c.a_email, `You and /${c.b_handle} — forty-eight hours`, `${c.val_note ?? "You both said yes."}\n\n${SITE}/chat/?c=${c.id}\n\n— Val`, "chats"),
+      send(c.b_email, `You and /${c.a_handle} — forty-eight hours`, `${c.val_note ?? "You both said yes."}\n\n${SITE}/chat/?c=${c.id}\n\n— Val`, "chats"),
     ]);
     await Promise.all([
       push(c.a_email, { title: `You and /${c.b_handle}`, body: "You both said yes. Forty-eight hours to pick a time.", url: `${SITE}/chat/?c=${c.id}`, tag: `chat-${c.id}` }),
@@ -192,7 +202,7 @@ Deno.serve(async (req) => {
     for (const c of done ?? []) {
       await db.from("date_chats").update({ debrief_asked_at: nowIso }).eq("id", c.id);
       for (const [email, other] of [[c.a_email, c.b_handle], [c.b_email, c.a_handle]]) {
-        await send(email, `Worth a /second with /${other}?`, `Morning. How was it with /${other}?\n\nTell me here — it's private, they never see it. If you both say /second, I'll book it.\n\n${SITE}/chat/?c=${c.id}\n\n— Val`);
+        await send(email, `Worth a /second with /${other}?`, `Morning. How was it with /${other}?\n\nTell me here — it's private, they never see it. If you both say /second, I'll book it.\n\n${SITE}/chat/?c=${c.id}\n\n— Val`, "dates");
         await push(email, { title: `Worth a /second with /${other}?`, body: "Morning. Tell me here. They never see it.", url: `${SITE}/chat/?c=${c.id}`, tag: `second-${c.id}` });
       }
       results.debriefs++;
