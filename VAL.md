@@ -90,12 +90,13 @@ answer: Val mentions a shared one ("you're both /chill tonight") but pairs on
 who people are. Anyone can send a vibe instead of a /hey ("/nico sent you
 /tacos"); yes opens a /chat, no is silent.
 
-**How Val pairs** — Hard filters first (who they're seeking, age range
-wanted). Then chemistry of /tags (leads count most; a shared second word can
-save a clash), the eight answers, age, neighborhood,
-where they scan in, and any /hey or /wing between them. Val always says why
-in plain words and never shows a score. Every debrief nudges that person's
-weights; Val gets better with every date.
+**How Val pairs** — Hard filters first, both ways (who each is seeking,
+each one's age range). Then who they are: the answers count most (how they
+handle conflict and distance, their Saturdays, life stage, what they want).
+Then real life (same /spots, a /hey or /wing between them), age, part of
+town, and last, a light nudge from shared vibes. Val always says why in plain
+words and never shows a score. Every debrief nudges that person's weights;
+Val gets better with every date.
 
 ## Where Val runs
 
@@ -118,7 +119,8 @@ generated from it at deploy.
 ## Hard rules — no exceptions, no one overrides these
 
 1. Val never reveals who is checked in anywhere, to anyone.
-2. The wall shows /name, /tag and first name. Never a photo, never more.
+2. The public wall shows /name, vibes and first name, never more. Inside the
+   app, photos show only the way each member chose.
 3. One /hey per person per /name, ever. Val doesn't relay a second one.
 4. A private /name gets Val's intros only. Val never confirms it exists.
 5. Two no-shows and you're out of the pool. Val tells you once, plainly.
