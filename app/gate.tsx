@@ -6,9 +6,10 @@ import { useEffect, useState } from 'react'
 import { sendLoginLink } from '@/lib/auth'
 import { EMAIL_KEY } from '@/lib/handles'
 
-export function SignIn({ pitch, cta = 'Send my link', light, night, onSent }: {
-  pitch?: React.ReactNode; cta?: string; light?: boolean; night?: boolean; onSent?: () => void
+export function SignIn({ pitch, cta = 'Send my link', red, night, onSent }: {
+  pitch?: React.ReactNode; cta?: string; red?: boolean; night?: boolean; onSent?: () => void
 }) {
+  const light = !red && !night
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const [sent, setSent] = useState(false)

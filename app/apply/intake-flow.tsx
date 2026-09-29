@@ -146,13 +146,13 @@ export default function IntakeFlow() {
           <h1 className="font-display font-extrabold text-5xl tracking-[-0.03em] leading-tight [text-wrap:balance]">
             Your /vibe is in the pool.
           </h1>
-          <p className="mt-6 text-2xl font-medium text-chalk-2 leading-snug">{VAL.applied} <span className="text-chalk-3">{VAL.sign}</span></p>
-          <p className="mt-6 text-sm text-chalk-3 tracking-wide leading-relaxed">
+          <p className="mt-6 text-2xl font-medium text-[#141414]/70 leading-snug">{VAL.applied} <span className="text-[#141414]/50">{VAL.sign}</span></p>
+          <p className="mt-6 text-sm text-[#141414]/50 tracking-wide leading-relaxed">
             Profiles under 80% don&rsquo;t receive matches. Yours is complete.
           </p>
           <Link
             href="/claim"
-            className="mt-10 self-start bg-white text-ob text-base font-extrabold rounded-full px-9 py-4 hover:scale-[1.02] transition-transform"
+            className="mt-10 self-start bg-ob text-white text-base font-extrabold rounded-full px-9 py-4 hover:scale-[1.02] transition-transform"
           >
             Now claim your /name
           </Link>
@@ -165,9 +165,9 @@ export default function IntakeFlow() {
     return (
       <Shell progress={0}>
         <div className="flex-1 flex flex-col justify-center max-w-lg">
-          <div className="text-xs tracking-[0.2em] uppercase font-medium mb-3">Your /vibe</div>
+          <div className="text-xs tracking-[0.2em] uppercase font-extrabold text-ob mb-3">Your /vibe</div>
           <h1 className="font-display font-extrabold text-5xl sm:text-6xl tracking-[-0.03em] leading-[0.95] [text-wrap:balance]">Eight questions, your photos, sixty seconds of you.</h1>
-          <p className="mt-5 text-xl text-chalk-2 font-medium leading-snug">It starts with your email, so your /vibe is only ever yours. Val sends a link; you land right back here.</p>
+          <p className="mt-5 text-xl text-[#141414]/70 font-medium leading-snug">It starts with your email, so your /vibe is only ever yours. Val sends a link; you land right back here.</p>
           <div className="mt-8"><SignIn cta="Start my /vibe" /></div>
         </div>
       </Shell>
@@ -179,10 +179,10 @@ export default function IntakeFlow() {
       <Shell progress={100}>
         <div className="flex-1 flex flex-col justify-center max-w-lg">
           <h1 className="font-display font-extrabold text-5xl tracking-[-0.03em] leading-tight">Your /vibe is already in.</h1>
-          <p className="mt-5 text-xl text-chalk-2 font-medium">Change anything, any time. Val reads the newest version.</p>
+          <p className="mt-5 text-xl text-[#141414]/70 font-medium">Change anything, any time. Val reads the newest version.</p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3">
-            <Link href="/me/edit/" className="bg-white text-ob font-extrabold rounded-full px-8 py-4 text-center">Edit my /vibe</Link>
-            <Link href="/me/" className="border-2 border-white font-extrabold rounded-full px-8 py-4 text-center">Go to /me</Link>
+            <Link href="/me/edit/" className="bg-ob text-white font-extrabold rounded-full px-8 py-4 text-center">Edit my /vibe</Link>
+            <Link href="/me/" className="border-2 border-[#141414] font-extrabold rounded-full px-8 py-4 text-center">Go to /me</Link>
           </div>
         </div>
       </Shell>
@@ -217,7 +217,7 @@ export default function IntakeFlow() {
                 onChange={(v) => setBasics({ ...basics, neighborhood: v })}
               />
             </div>
-            <p className="text-sm text-chalk-3">Signed in as {me}.</p>
+            <p className="text-sm text-[#141414]/50">Signed in as {me}.</p>
             <Field
               label="Phone (optional)"
               type="tel"
@@ -241,7 +241,7 @@ export default function IntakeFlow() {
               <Field label="Age to" type="number" value={answers.age_max ?? ''} onChange={(v) => setAnswers({ ...answers, age_max: v })} />
             </div>
             {Number(basics.age) > 0 && Number(basics.age) < 18 && (
-              <p className="text-sm text-gold">
+              <p className="text-sm text-ob">
                 /date is for adults — 18 and over.
               </p>
             )}
@@ -296,18 +296,18 @@ function Shell({
   children: React.ReactNode
 }) {
   return (
-    <main className="min-h-dvh flex flex-col px-6 sm:px-10 pb-10">
+    <main className="page min-h-dvh flex flex-col bg-[#FFF3EA] text-[#141414] px-6 sm:px-10 pb-10">
       <header className="flex items-center justify-between pt-8 pb-6">
-        <Link href="/" className="font-display font-extrabold text-gold text-3xl tracking-tight">
+        <Link href="/" className="font-display font-extrabold text-3xl tracking-tight">
           /date
         </Link>
-        <span className="text-sm tracking-[0.22em] uppercase text-chalk-3">
+        <span className="text-sm tracking-[0.22em] uppercase text-[#141414]/50">
           Your /vibe
         </span>
       </header>
-      <div className="h-px bg-ob-3 relative mb-10">
+      <div className="h-1 rounded-full bg-[#141414]/10 relative overflow-hidden mb-10">
         <div
-          className="absolute inset-y-0 left-0 bg-gold transition-all duration-500"
+          className="absolute inset-y-0 left-0 bg-ob rounded-full transition-all duration-500"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -333,7 +333,7 @@ function StepFrame({
 }) {
   return (
     <div className="flex-1 flex flex-col max-w-xl">
-      <div className="text-xs tracking-[0.2em] uppercase text-chalk-3 mb-3">
+      <div className="text-xs tracking-[0.2em] uppercase text-[#141414]/50 mb-3">
         {eyebrow}
       </div>
       <h1 className="font-display font-extrabold text-4xl sm:text-5xl leading-[1.05] tracking-[-0.03em] [text-wrap:balance] mb-8">
@@ -344,7 +344,7 @@ function StepFrame({
         {onBack && (
           <button
             onClick={onBack}
-            className="text-sm tracking-[0.16em] uppercase text-chalk-3 hover:text-chalk-2"
+            className="text-sm tracking-[0.16em] uppercase text-[#141414]/50 hover:text-[#141414]/70"
           >
             Back
           </button>
@@ -352,7 +352,7 @@ function StepFrame({
         <button
           onClick={onNext}
           disabled={!onNext}
-          className="bg-white text-ob text-base font-extrabold rounded-full px-10 py-4 hover:scale-[1.02] transition-transform disabled:opacity-30 disabled:cursor-not-allowed"
+          className="bg-ob text-white text-base font-extrabold rounded-full px-10 py-4 hover:scale-[1.02] transition-transform disabled:opacity-30 disabled:cursor-not-allowed"
         >
           {nextLabel}
         </button>
@@ -394,16 +394,16 @@ function QuestionStep({
                 onClick={() => onChange(opt)}
                 className={`flex items-start gap-3 text-left px-5 py-4 border-2 rounded-2xl transition-colors ${
                   selected
-                    ? 'border-gold bg-gold-faint'
-                    : 'border-ob-3 hover:border-ob-4 hover:bg-ob-2'
+                    ? 'border-ob bg-ob/5'
+                    : 'border-[#141414]/15 hover:border-[#141414]/40 hover:bg-white'
                 }`}
               >
                 <span
                   className={`mt-1 h-[11px] w-[11px] rounded-full border shrink-0 ${
-                    selected ? 'border-gold bg-gold' : 'border-chalk-3'
+                    selected ? 'border-ob bg-ob' : 'border-[#141414]/30'
                   }`}
                 />
-                <span className="text-base text-chalk-2 leading-relaxed">
+                <span className="text-base text-[#141414]/70 leading-relaxed">
                   {opt}
                 </span>
               </button>
@@ -416,7 +416,7 @@ function QuestionStep({
           onChange={(e) => onChange(e.target.value)}
           placeholder={q.placeholder}
           rows={4}
-          className="w-full max-w-md bg-ob-1 border-2 border-ob-3 rounded-xl focus:border-gold outline-none px-4 py-3.5 text-base text-chalk leading-relaxed placeholder:text-chalk-3/60 resize-none"
+          className="w-full max-w-md bg-white border-2 border-[#141414]/12 rounded-xl focus:border-ob outline-none px-4 py-3.5 text-base text-[#141414] leading-relaxed placeholder:text-[#141414]/35/60 resize-none"
         />
       )}
     </StepFrame>
@@ -453,7 +453,7 @@ function PhotoStep({
       onBack={onBack}
       onNext={onNext}
     >
-      <p className="text-base text-chalk-3 leading-relaxed max-w-md mb-6">
+      <p className="text-base text-[#141414]/50 leading-relaxed max-w-md mb-6">
         {MIN_PHOTOS} to {MAX_PHOTOS} photos. Doing things you actually do, in
         places you actually go. They stay locked until your match is ready — the
         story comes first.
@@ -468,13 +468,13 @@ function PhotoStep({
       />
       <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 max-w-md">
         {previews.map((src, i) => (
-          <div key={i} className="relative aspect-square border-2 border-ob-3 rounded-xl overflow-hidden">
+          <div key={i} className="relative aspect-square border-2 border-[#141414]/15 rounded-xl overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={src} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
             <button
               onClick={() => setPhotos(photos.filter((_, j) => j !== i))}
               aria-label={`Remove photo ${i + 1}`}
-              className="absolute top-1 right-1 h-5 w-5 bg-ob/80 text-chalk-2 text-sm leading-5"
+              className="absolute top-1 right-1 h-5 w-5 bg-ob/80 text-[#141414]/70 text-sm leading-5"
             >
               ×
             </button>
@@ -483,14 +483,14 @@ function PhotoStep({
         {photos.length < MAX_PHOTOS && (
           <button
             onClick={() => inputRef.current?.click()}
-            className="aspect-square border-2 border-dashed border-ob-4 rounded-xl text-chalk-3 text-2xl font-light hover:border-gold hover:text-gold transition-colors"
+            className="aspect-square border-2 border-dashed border-[#141414]/25 rounded-xl text-[#141414]/50 text-2xl font-light hover:border-ob hover:text-ob transition-colors"
             aria-label="Add photos"
           >
             +
           </button>
         )}
       </div>
-      <p className="mt-4 text-sm text-chalk-3 tracking-wide">
+      <p className="mt-4 text-sm text-[#141414]/50 tracking-wide">
         {photos.length} of {MIN_PHOTOS} minimum
       </p>
     </StepFrame>
@@ -562,7 +562,7 @@ function VoiceStep({
       onNext={onSubmit}
       nextLabel={submitting ? "Submitting…" : "Send my /vibe"}
     >
-      <p className="text-base text-chalk-3 leading-relaxed max-w-md mb-8">
+      <p className="text-base text-[#141414]/50 leading-relaxed max-w-md mb-8">
         Talk about anything — your week, the thing you can&rsquo;t stop thinking
         about, what a good Sunday sounds like. Your match hears this before they
         see a single photo. It&rsquo;s the most honest thing in your profile, and
@@ -570,7 +570,7 @@ function VoiceStep({
       </p>
 
       {unsupported ? (
-        <p className="text-base text-gold max-w-md">
+        <p className="text-base text-ob max-w-md">
           We couldn&rsquo;t reach your microphone. Allow mic access, or finish
           this step later from the link in your email.
         </p>
@@ -579,7 +579,7 @@ function VoiceStep({
           {!recording && !voiceBlob && (
             <button
               onClick={start}
-              className="h-20 w-20 rounded-full border border-gold text-gold text-xs tracking-[0.14em] uppercase hover:bg-gold-faint transition-colors"
+              className="h-20 w-20 rounded-full border-2 border-ob text-ob text-xs tracking-[0.14em] uppercase hover:bg-[#141414]/5 transition-colors"
             >
               Record
             </button>
@@ -588,11 +588,11 @@ function VoiceStep({
             <>
               <button
                 onClick={stop}
-                className="h-20 w-20 rounded-full border border-gold bg-gold-faint text-gold text-xs tracking-[0.14em] uppercase"
+                className="h-20 w-20 rounded-full border-2 border-ob bg-ob text-white text-xs tracking-[0.14em] uppercase"
               >
                 Stop
               </button>
-              <span className="text-lg text-chalk tabular-nums">
+              <span className="text-lg text-[#141414] tabular-nums">
                 0:{String(seconds).padStart(2, '0')} / 1:00
               </span>
             </>
@@ -602,7 +602,7 @@ function VoiceStep({
               <audio controls src={audioUrl ?? undefined} className="max-w-xs" />
               <button
                 onClick={() => setVoiceBlob(null)}
-                className="self-start text-sm tracking-[0.16em] uppercase text-chalk-3 hover:text-chalk-2"
+                className="self-start text-sm tracking-[0.16em] uppercase text-[#141414]/50 hover:text-[#141414]/70"
               >
                 Re-record
               </button>
@@ -611,7 +611,7 @@ function VoiceStep({
         </div>
       )}
 
-      {error && <p className="mt-6 text-base text-gold max-w-md">{error}</p>}
+      {error && <p className="mt-6 text-base text-ob max-w-md">{error}</p>}
     </StepFrame>
   )
 }
@@ -631,14 +631,14 @@ function Field({
 }) {
   return (
     <label className="grid gap-1.5">
-      <span className="text-xs tracking-[0.18em] uppercase text-chalk-3">
+      <span className="text-xs tracking-[0.18em] uppercase text-[#141414]/50">
         {label}
       </span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-ob-1 border-2 border-ob-3 rounded-xl focus:border-gold outline-none px-4 py-3 text-base text-chalk"
+        className="bg-white border-2 border-[#141414]/12 rounded-xl focus:border-ob outline-none px-4 py-3 text-base text-[#141414]"
       />
     </label>
   )
@@ -657,7 +657,7 @@ function ChoiceRow({
 }) {
   return (
     <div className="grid gap-1.5">
-      <span className="text-xs tracking-[0.18em] uppercase text-chalk-3">
+      <span className="text-xs tracking-[0.18em] uppercase text-[#141414]/50">
         {label}
       </span>
       <div className="flex gap-2">
@@ -667,8 +667,8 @@ function ChoiceRow({
             onClick={() => onChange(opt)}
             className={`px-5 py-2.5 border-2 rounded-full text-sm transition-colors ${
               value === opt
-                ? 'border-gold bg-gold-faint text-chalk'
-                : 'border-ob-3 text-chalk-2 hover:border-ob-4'
+                ? 'border-ob bg-ob/5 text-[#141414]'
+                : 'border-[#141414]/15 text-[#141414]/70 hover:border-[#141414]/40'
             }`}
           >
             {opt}

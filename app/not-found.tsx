@@ -18,7 +18,7 @@ export default function NotFound() {
   }, [])
 
   return (
-    <main className="min-h-dvh flex flex-col px-6 sm:px-12 pb-12">
+    <main className="page min-h-dvh flex flex-col bg-[#FFF3EA] text-[#141414] px-6 sm:px-12 pb-12">
       <header className="pt-8 pb-10">
         <Link href="/" className="font-display font-extrabold text-3xl tracking-tight">/date</Link>
       </header>

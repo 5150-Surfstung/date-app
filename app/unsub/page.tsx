@@ -23,21 +23,21 @@ function Unsub() {
   useEffect(() => { if (/^[0-9a-f-]{36}$/i.test(t)) run(k); else setState('bad') }, [t, k])
 
   return (
-    <main className="min-h-dvh flex flex-col px-6 sm:px-12 py-8">
+    <main className="page min-h-dvh flex flex-col bg-[#FFF3EA] text-[#141414] px-6 sm:px-12 py-8">
       <Link href="/" className="self-start font-display font-extrabold text-3xl tracking-tight">/date</Link>
       <div className="my-auto max-w-md">
         {state === 'working' && <h1 className="font-display font-extrabold text-5xl tracking-[-0.03em]">One sec…</h1>}
         {state === 'bad' && <>
           <h1 className="font-display font-extrabold text-5xl tracking-[-0.03em] leading-[0.95]">That link didn&rsquo;t work.</h1>
-          <p className="mt-4 text-lg text-chalk-2">Sign in and change your email settings directly.</p>
-          <Link href="/me/settings/" className="inline-block mt-6 bg-white text-ob rounded-full px-7 py-3.5 font-extrabold">Email settings</Link>
+          <p className="mt-4 text-lg text-[#141414]/70">Sign in and change your email settings directly.</p>
+          <Link href="/me/settings/" className="inline-block mt-6 bg-ob text-white rounded-full px-7 py-3.5 font-extrabold">Email settings</Link>
         </>}
         {state === 'ok' && <>
           <h1 className="font-display font-extrabold text-5xl tracking-[-0.03em] leading-[0.95]">Done.</h1>
-          <p className="mt-4 text-lg text-chalk-2">No more {LABEL[kind]}. Safety check-ins still come through, always. &mdash; Val</p>
+          <p className="mt-4 text-lg text-[#141414]/70">No more {LABEL[kind]}. Safety check-ins still come through, always. &mdash; Val</p>
           <div className="mt-6 flex flex-wrap gap-3">
-            {kind !== 'all' && <button onClick={() => run('all')} className="border-2 border-white rounded-full px-6 py-3 font-extrabold">Stop all of them</button>}
-            <Link href="/me/settings/" className="bg-white text-ob rounded-full px-6 py-3 font-extrabold">Email settings</Link>
+            {kind !== 'all' && <button onClick={() => run('all')} className="border-2 border-[#141414] rounded-full px-6 py-3 font-extrabold">Stop all of them</button>}
+            <Link href="/me/settings/" className="bg-ob text-white rounded-full px-6 py-3 font-extrabold">Email settings</Link>
           </div>
         </>}
       </div>

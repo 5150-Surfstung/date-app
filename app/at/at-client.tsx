@@ -89,10 +89,10 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
   }
 
   return (
-    <main className="min-h-dvh flex flex-col px-6 sm:px-12 pb-12">
+    <main className="page min-h-dvh flex flex-col bg-[#FFF3EA] text-[#141414] px-6 sm:px-12 pb-12">
       <header className="flex items-center justify-between pt-8 pb-10">
         <Link href="/" className="font-display font-extrabold text-3xl tracking-tight">/date</Link>
-        <span className="text-xs sm:text-sm tracking-[0.2em] uppercase text-chalk-2 font-medium">/hey</span>
+        <span className="text-xs sm:text-sm tracking-[0.2em] uppercase text-ob font-extrabold">/hey</span>
       </header>
 
       <section className="max-w-xl flex flex-col gap-8">
@@ -100,8 +100,8 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
         {wall === null && slow && (
           <div>
             <p className="text-xl font-medium">Can&rsquo;t reach Val right now.</p>
-            <p className="mt-2 text-chalk-3">Check your signal and try again.</p>
-            <button onClick={() => { setSlow(false); setTries((n) => n + 1) }} className="mt-5 bg-white text-ob rounded-full px-7 py-3.5 font-extrabold">Try again</button>
+            <p className="mt-2 text-[#141414]/50">Check your signal and try again.</p>
+            <button onClick={() => { setSlow(false); setTries((n) => n + 1) }} className="mt-5 bg-ob text-white rounded-full px-7 py-3.5 font-extrabold">Try again</button>
           </div>
         )}
 
@@ -114,7 +114,7 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
               Nobody has this /name{handle ? ' yet' : ''}.
             </p>
             {handle && (
-              <Link href="/claim" className="bg-white text-ob text-base font-extrabold rounded-full px-9 py-4 self-start hover:scale-[1.02] transition-transform">
+              <Link href="/claim" className="bg-ob text-white text-base font-extrabold rounded-full px-9 py-4 self-start hover:scale-[1.02] transition-transform">
                 Claim /{handle}
               </Link>
             )}
@@ -125,9 +125,9 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
           <>
             <h1 className="font-display font-extrabold text-5xl sm:text-7xl leading-[0.95] tracking-[-0.03em] break-all">/{handle}</h1>
             <p className="text-xl sm:text-2xl font-medium leading-snug">
-              {VAL.privateWall} <span className="text-chalk-2">{VAL.sign}</span>
+              {VAL.privateWall} <span className="text-[#141414]/70">{VAL.sign}</span>
             </p>
-            <Link href="/apply" className="border-2 border-white text-base font-extrabold rounded-full px-9 py-4 self-start hover:bg-gold-faint transition-colors">
+            <Link href="/apply" className="border-2 border-[#141414] text-base font-extrabold rounded-full px-9 py-4 self-start hover:bg-[#141414]/5 transition-colors">
               Get your /vibe
             </Link>
           </>
@@ -136,16 +136,16 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
         {wall && wall.taken && wall.open && (
           <>
             <div>
-              <div className="text-xs tracking-[0.2em] uppercase font-medium mb-3">On /date</div>
+              <div className="text-xs tracking-[0.2em] uppercase font-extrabold text-ob mb-3">On /date</div>
               <h1 className="font-display font-extrabold text-5xl sm:text-7xl leading-[0.95] tracking-[-0.03em] break-all">
-                /{handle}{wall.tag && <span className="block text-3xl sm:text-5xl mt-2 text-chalk-2">/{wall.tag}</span>}
+                /{handle}{wall.tag && <span className="block text-3xl sm:text-5xl mt-2 text-ob">/{wall.tag}</span>}
               </h1>
-              <p className="mt-3 text-lg text-chalk-2 font-medium">{wall.name}{wall.tag ? ` · ${tagLine(wall.tag)}` : ''}</p>
+              <p className="mt-3 text-lg text-[#141414]/70 font-medium">{wall.name}{wall.tag ? ` · ${tagLine(wall.tag)}` : ''}</p>
             </div>
 
             {result === 'sent' ? (
               <p className="text-xl sm:text-2xl font-medium leading-snug">
-                {VAL.heySent(wall.name ?? handle)} <span className="text-chalk-2">{VAL.sign}</span>
+                {VAL.heySent(wall.name ?? handle)} <span className="text-[#141414]/70">{VAL.sign}</span>
               </p>
             ) : (
               <>
@@ -157,40 +157,40 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
                 {!signedIn && !sessionLoading ? (
                   <div className="flex flex-col gap-3">
                     <SignIn pitch={<>Sign in with the email on your /name. Val brings you straight back here to send it.</>} cta="Sign in" />
-                    <p className="text-sm text-chalk-3">No /name yet? <Link href="/claim" className="underline font-semibold text-chalk">Claim yours</Link> &mdash; thirty seconds.</p>
+                    <p className="text-sm text-[#141414]/50">No /name yet? <Link href="/claim" className="underline font-semibold text-[#141414]">Claim yours</Link> &mdash; thirty seconds.</p>
                   </div>
                 ) : (
                 <div className="flex flex-col gap-3 max-w-md">
-                  <p className="text-sm text-chalk-3">Sending as {me}.</p>
+                  <p className="text-sm text-[#141414]/50">Sending as {me}.</p>
                   <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2}
                     placeholder="Optional. One line. Where you met, what you noticed."
-                    className="bg-ob-1 border-2 border-ob-3 rounded-xl focus:border-gold outline-none px-4 py-3 text-base placeholder:text-chalk-3 resize-none" />
+                    className="bg-white border-2 border-[#141414]/12 rounded-xl focus:border-ob outline-none px-4 py-3 text-base placeholder:text-[#141414]/35 resize-none" />
                   <button disabled={!signedIn || busy} onClick={sendHey}
-                    className="bg-white text-ob text-base font-extrabold rounded-full px-10 py-4 hover:scale-[1.02] transition-transform disabled:opacity-30">
+                    className="bg-ob text-white text-base font-extrabold rounded-full px-10 py-4 hover:scale-[1.02] transition-transform disabled:opacity-30">
                     {busy ? 'Sending…' : 'Send a /hey'}
                   </button>
                   {error && <p className="text-base font-semibold">{error}</p>}
                 </div>
                 )}
 
-                <div className="border-2 border-white/40 rounded-2xl p-5 max-w-md mt-2">
+                <div className="border-2 border-[#141414]/15 rounded-2xl p-5 max-w-md mt-2">
                   <div className="text-xs tracking-[0.2em] uppercase font-semibold mb-1">Not for you? /wing them.</div>
                   {wingResult ? (
-                    <p className="text-base font-medium">{wingResult === 'invited' ? 'Sent. Your friend isn\u2019t on /date yet \u2014 Val will invite them.' : `Sent. Val will show your friend /${handle}. If they\u2019re into it, they send the /hey.`} <span className="text-chalk-2">{VAL.sign}</span></p>
+                    <p className="text-base font-medium">{wingResult === 'invited' ? 'Sent. Your friend isn\u2019t on /date yet \u2014 Val will invite them.' : `Sent. Val will show your friend /${handle}. If they\u2019re into it, they send the /hey.`} <span className="text-[#141414]/70">{VAL.sign}</span></p>
                   ) : !wing ? (
                     <>
-                      <p className="text-sm text-chalk-2">Know who {wall.name} is right for? Pass the /name to a friend. They only see this page. Saying yes is theirs.</p>
-                      <button onClick={() => setWing(true)} className="mt-3 border-2 border-white rounded-full px-5 py-2.5 text-sm font-extrabold hover:bg-white hover:text-ob transition-colors">I know who</button>
+                      <p className="text-sm text-[#141414]/70">Know who {wall.name} is right for? Pass the /name to a friend. They only see this page. Saying yes is theirs.</p>
+                      <button onClick={() => setWing(true)} className="mt-3 border-2 border-[#141414] rounded-full px-5 py-2.5 text-sm font-extrabold hover:bg-[#141414] hover:text-white transition-colors">I know who</button>
                     </>
                   ) : (
                     <div className="flex flex-col gap-2">
                       <input value={friend} onChange={(e) => setFriend(e.target.value)} placeholder="Friend's /name or email"
-                        className="bg-ob-1 border-2 border-ob-3 rounded-xl focus:border-gold outline-none px-4 py-3 text-base placeholder:text-chalk-3" />
+                        className="bg-white border-2 border-[#141414]/12 rounded-xl focus:border-ob outline-none px-4 py-3 text-base placeholder:text-[#141414]/35" />
                       <input value={wingNote} onChange={(e) => setWingNote(e.target.value)} placeholder="Why them (optional)"
-                        className="bg-ob-1 border-2 border-ob-3 rounded-xl focus:border-gold outline-none px-4 py-3 text-base placeholder:text-chalk-3" />
+                        className="bg-white border-2 border-[#141414]/12 rounded-xl focus:border-ob outline-none px-4 py-3 text-base placeholder:text-[#141414]/35" />
                       <button disabled={!signedIn || !friend.trim() || busy} onClick={sendWing}
-                        className="bg-white text-ob text-base font-extrabold rounded-full px-8 py-3 hover:scale-[1.02] transition-transform disabled:opacity-30 self-start">Send the /wing</button>
-                      {!signedIn && <p className="text-xs text-chalk-3">Sign in above first.</p>}
+                        className="bg-ob text-white text-base font-extrabold rounded-full px-8 py-3 hover:scale-[1.02] transition-transform disabled:opacity-30 self-start">Send the /wing</button>
+                      {!signedIn && <p className="text-xs text-[#141414]/50">Sign in above first.</p>}
                     </div>
                   )}
                 </div>
@@ -215,12 +215,12 @@ function ReportLink({ handle, me }: { handle: string; me: string | null }) {
     await (me ? authClient() : getSupabase())?.rpc('report_handle', { p_handle: handle, p_reason: reason || 'report', p_details: null, p_reporter_email: me ?? email, p_chat: null })
     setDone(true)
   }
-  if (done) return <p className="text-sm text-chalk-3 mt-4">Got it. Val sees it, they don&rsquo;t. {me ? 'They can\u2019t reach you any more. ' : ''}&mdash; Val</p>
+  if (done) return <p className="text-sm text-[#141414]/50 mt-4">Got it. Val sees it, they don&rsquo;t. {me ? 'They can\u2019t reach you any more. ' : ''}&mdash; Val</p>
   return !open ? (
-    <button onClick={() => setOpen(true)} className="text-xs text-chalk-3 underline underline-offset-4 self-start mt-4">Report this /name</button>
+    <button onClick={() => setOpen(true)} className="text-xs text-[#141414]/50 underline underline-offset-4 self-start mt-4">Report this /name</button>
   ) : (
     <div className="flex flex-col gap-2 max-w-md mt-4">
-      <select value={reason} onChange={(e) => setReason(e.target.value)} className="bg-ob-1 border-2 border-ob-3 rounded-xl px-4 py-3 text-base">
+      <select value={reason} onChange={(e) => setReason(e.target.value)} className="bg-white border-2 border-[#141414]/12 rounded-xl px-4 py-3 text-base">
         <option value="">Why?</option>
         <option>Not who they say they are</option>
         <option>Harassing or pressuring</option>
@@ -228,8 +228,8 @@ function ReportLink({ handle, me }: { handle: string; me: string | null }) {
         <option>Something else felt off</option>
       </select>
       {!me && <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Your email, so Val can follow up"
-        className="bg-ob-1 border-2 border-ob-3 rounded-xl focus:border-white outline-none px-4 py-3 text-base placeholder:text-chalk-3" />}
-      <button disabled={!reason || (!me && !/.+@.+\..+/.test(email))} onClick={send} className="bg-white text-ob text-sm font-extrabold rounded-full px-6 py-3 self-start disabled:opacity-30">Send to Val</button>
+        className="bg-white border-2 border-[#141414]/12 rounded-xl focus:border-ob outline-none px-4 py-3 text-base placeholder:text-[#141414]/35" />}
+      <button disabled={!reason || (!me && !/.+@.+\..+/.test(email))} onClick={send} className="bg-ob text-white text-sm font-extrabold rounded-full px-6 py-3 self-start disabled:opacity-30">Send to Val</button>
     </div>
   )
 }
