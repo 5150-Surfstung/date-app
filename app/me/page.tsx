@@ -9,6 +9,7 @@ import { authClient } from '@/lib/auth'
 import { type Tag } from '@/lib/handles'
 import { TagPicker, TagLine } from '../tags'
 import { useHome, usePhotos, type Home } from '@/lib/home'
+import { useRead } from '@/lib/read'
 
 const pad = (n: number) => String(n).padStart(3, '0')
 
@@ -28,6 +29,7 @@ export default function MePage() {
   const { email, loading, home, reload } = useHome()
   const [saving, setSaving] = useState(false)
   const photos = usePhotos(home?.vibe?.photo_keys?.slice(0, 3))
+  const { state: read } = useRead()
 
   if (loading) return <AppShell title="You"><Skeleton /></AppShell>
   if (!email) return <AppShell title="You"><NeedLogin /></AppShell>
@@ -83,6 +85,17 @@ export default function MePage() {
         <p className="mt-3 text-base sm:text-lg text-white/70 max-w-xl leading-relaxed">{s.line}</p>
         {s.cta && <Link href={s.cta.href} className="inline-block mt-6 bg-ob text-white rounded-full px-7 py-3.5 font-extrabold">{s.cta.label}</Link>}
       </section>
+
+      {/* Val's read on you */}
+      {home.vibe && (
+        <Link href="/me/read/" className="mt-4 block rounded-[28px] bg-ob text-white p-6 sm:p-8 hover:brightness-105 transition">
+          <div className="text-xs tracking-[0.2em] uppercase font-extrabold text-white/80">Val&rsquo;s read on you</div>
+          <p className="mt-3 font-display font-extrabold text-xl sm:text-2xl leading-snug [text-wrap:balance]">
+            {read?.read ? read.read.text.replace(/\s*—\s*Val\.?\s*$/, '') : 'Reading you. Twice, like always.'}
+          </p>
+          <div className="mt-3 text-sm font-semibold text-white/80">{read?.read ? 'See it, share it →' : '…'}</div>
+        </Link>
+      )}
 
       {/* The numbers that matter */}
       <section className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">

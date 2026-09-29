@@ -9,6 +9,7 @@ import { authClient, useSession } from '@/lib/auth'
 import { SignIn } from '../gate'
 import ValInterview from './val-interview'
 import { VAL } from '@/lib/val'
+import { ValReadCard } from './val-read-card'
 
 const MIN_PHOTOS = 3
 const MAX_PHOTOS = 10
@@ -149,9 +150,7 @@ export default function IntakeFlow() {
             Your /vibe is in the pool.
           </h1>
           <p className="mt-6 text-2xl font-medium text-[#141414]/70 leading-snug">{VAL.applied} <span className="text-[#141414]/50">{VAL.sign}</span></p>
-          <p className="mt-6 text-sm text-[#141414]/50 tracking-wide leading-relaxed">
-            Profiles under 80% don&rsquo;t receive matches. Yours is complete.
-          </p>
+          <ValReadCard />
           <Link
             href="/claim"
             className="mt-10 self-start bg-ob text-white text-base font-extrabold rounded-full px-9 py-4 hover:scale-[1.02] transition-transform"

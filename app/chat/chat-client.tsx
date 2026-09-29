@@ -9,6 +9,7 @@ import { TagLine } from '../tags'
 import { authClient, useSession } from '@/lib/auth'
 import { useSpots } from '@/lib/venues'
 import { SpotIdeas } from './spot-ideas'
+import { refreshRead } from '@/lib/read'
 import { getDemo, demoPhoto } from '@/lib/demo'
 import { dareFor } from '@/lib/dares'
 import { INTAKE_BUCKET } from '@/lib/supabase'
@@ -199,6 +200,7 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
     setDebrief(outcome)
     await authClient()!.rpc('submit_debrief', { p_chat: chat.id, p_outcome: outcome })
     onChange()
+    refreshRead() // Val rewrites her read of you as your dates teach her
   }
 
   const venue = spots?.find((v) => v.slug === (chat.spot_slug ?? spot))

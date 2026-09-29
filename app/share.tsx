@@ -8,12 +8,12 @@ import QRCode from 'qrcode'
 import { heyUrl, siteUrl } from '@/lib/handles'
 import { vibeFor } from '@/lib/vibes'
 
-type Kind = 'mine' | 'got' | 'couple'
+type Kind = 'mine' | 'got' | 'couple' | 'read'
 export type Couple = { a: string; b: string; spot?: string | null }
 const W = 1080, H = 1920
 
-async function draw(canvas: HTMLCanvasElement, vibe: string, handle: string | null, kind: Kind, couple?: Couple) {
-  const t = vibeFor(kind === 'couple' ? 'looking' : vibe)
+async function draw(canvas: HTMLCanvasElement, vibe: string, handle: string | null, kind: Kind, couple?: Couple, read?: string) {
+  const t = vibeFor(kind === 'couple' || kind === 'read' ? 'looking' : vibe)
   const ctx = canvas.getContext('2d')!
   canvas.width = W; canvas.height = H
   // The site's display face, whatever name next/font gave it.
@@ -30,8 +30,35 @@ async function draw(canvas: HTMLCanvasElement, vibe: string, handle: string | nu
   ctx.font = `800 88px ${face}`; ctx.fillText('/date', 90, 190)
 
   ctx.globalAlpha = 0.7; ctx.font = `700 46px ${face}`
-  ctx.fillText((kind === 'couple' ? 'WE MET ON /DATE' : kind === 'got' ? 'SOMEONE SENT ME' : 'MY VIBE TONIGHT').split('').join(' '), 90, 720)
+  ctx.fillText((kind === 'read' ? 'MY MATCHMAKER SAYS' : kind === 'couple' ? 'WE MET ON /DATE' : kind === 'got' ? 'SOMEONE SENT ME' : 'MY VIBE TONIGHT').split('').join(' '), 90, 720)
   ctx.globalAlpha = 1
+
+  if (kind === 'read' && read) {
+    // Val's read, as big as it fits above the QR.
+    const body = read.replace(/\s*—\s*Val\.?\s*$/, '').trim()
+    let fs = 84, lines: string[] = []
+    do {
+      fs -= 4
+      ctx.font = `800 ${fs}px ${face}`
+      lines = wrapLines(ctx, body, W - 180)
+    } while (lines.length * fs * 1.12 > H - 560 - 60 - 800 && fs > 36)
+    ctx.fillStyle = t.fg
+    let y = 800
+    for (const l of lines) { ctx.fillText(l, 90, y); y += fs * 1.12 }
+    ctx.globalAlpha = 0.9; ctx.font = `800 ${Math.max(44, fs - 16)}px ${face}`
+    ctx.fillText('— Val', 90, y + 24); ctx.globalAlpha = 1
+    const qrR = await QRCode.toDataURL(handle ? heyUrl(handle) : `${siteUrl()}/claim/`, { width: 360, margin: 1, color: { dark: '#141414', light: '#FFFFFF' } })
+    const imr = new Image(); imr.src = qrR; await imr.decode()
+    const qx = 90, qy = H - 560, qs = 400
+    ctx.fillStyle = '#FFFFFF'; roundRect(ctx, qx, qy, qs, qs, 36); ctx.fill()
+    ctx.drawImage(imr, qx + 20, qy + 20, qs - 40, qs - 40)
+    ctx.fillStyle = t.fg; ctx.font = `800 56px ${face}`
+    ctx.fillText(handle ? `/${handle}` : 'Get yours.', qx + qs + 50, qy + 150)
+    ctx.globalAlpha = 0.75; ctx.font = `600 40px ${face}`
+    wrap(ctx, 'Val reads you in sixty seconds. Scan to get yours.', qx + qs + 50, qy + 220, W - (qx + qs + 50) - 70, 52)
+    ctx.globalAlpha = 1
+    return
+  }
 
   if (kind === 'couple' && couple) {
     // Two /names, stacked, as big as they fit.
@@ -86,6 +113,15 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r)
   ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath()
 }
+function wrapLines(ctx: CanvasRenderingContext2D, text: string, max: number) {
+  const out: string[] = []; let line = ''
+  for (const w of text.split(' ')) {
+    const test = line ? `${line} ${w}` : w
+    if (ctx.measureText(test).width > max && line) { out.push(line); line = w } else line = test
+  }
+  if (line) out.push(line)
+  return out
+}
 function wrap(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, max: number, lh: number) {
   let line = ''
   for (const w of text.split(' ')) {
@@ -95,19 +131,19 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, x: number, y: number,
   if (line) ctx.fillText(line, x, y)
 }
 
-export function ShareButton({ vibe, handle, kind = 'mine', label, className, couple }: { vibe: string; handle: string | null; kind?: Kind; label?: string; className?: string; couple?: Couple }) {
+export function ShareButton({ vibe, handle, kind = 'mine', label, className, couple, read }: { vibe: string; handle: string | null; kind?: Kind; label?: string; className?: string; couple?: Couple; read?: string }) {
   const [open, setOpen] = useState(false)
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} className={className ?? 'rounded-full border-2 border-current px-5 py-2.5 text-sm font-extrabold'}>
         {label ?? (kind === 'got' ? 'Share it' : 'Share my vibe')}
       </button>
-      {open && <ShareSheet vibe={vibe} handle={handle} kind={kind} couple={couple} onClose={() => setOpen(false)} />}
+      {open && <ShareSheet vibe={vibe} handle={handle} kind={kind} couple={couple} read={read} onClose={() => setOpen(false)} />}
     </>
   )
 }
 
-function ShareSheet({ vibe, handle, kind, couple, onClose }: { vibe: string; handle: string | null; kind: Kind; couple?: Couple; onClose: () => void }) {
+function ShareSheet({ vibe, handle, kind, couple, read, onClose }: { vibe: string; handle: string | null; kind: Kind; couple?: Couple; read?: string; onClose: () => void }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const [blob, setBlob] = useState<Blob | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
@@ -115,8 +151,8 @@ function ShareSheet({ vibe, handle, kind, couple, onClose }: { vibe: string; han
   useEffect(() => {
     const c = ref.current
     if (!c) return
-    draw(c, vibe, handle, kind, couple).then(() => c.toBlob((b) => setBlob(b), 'image/png'))
-  }, [vibe, handle, kind, couple])
+    draw(c, vibe, handle, kind, couple, read).then(() => c.toBlob((b) => setBlob(b), 'image/png'))
+  }, [vibe, handle, kind, couple, read])
 
   const file = blob ? new File([blob], `date-${vibe}.png`, { type: 'image/png' }) : null
   const canShare = typeof navigator !== 'undefined' && !!file && !!navigator.canShare?.({ files: [file] })
@@ -124,7 +160,7 @@ function ShareSheet({ vibe, handle, kind, couple, onClose }: { vibe: string; han
   async function share() {
     if (!file) return
     try {
-      await navigator.share({ files: [file], text: kind === 'couple' && couple ? `/${couple.a} + /${couple.b}. We met on /date.` : kind === 'got' ? `Someone sent me /${vibe} on /date` : `My vibe tonight: /${vibe}` })
+      await navigator.share({ files: [file], text: kind === 'read' ? 'My matchmaker read me in sixty seconds. /date, Charleston.' : kind === 'couple' && couple ? `/${couple.a} + /${couple.b}. We met on /date.` : kind === 'got' ? `Someone sent me /${vibe} on /date` : `My vibe tonight: /${vibe}` })
       onClose()
     } catch { /* they closed the sheet */ }
   }

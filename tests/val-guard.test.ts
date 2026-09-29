@@ -1,5 +1,5 @@
 // Val's guardrails. Run: npx tsx tests/val-guard.test.ts
-import { polish, violations } from '../supabase/functions/val/prompts'
+import { polish, violations, templateRead } from '../supabase/functions/val/prompts'
 
 let fail = 0
 const t = (name: string, ok: boolean, got?: unknown) => { if (!ok) fail++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok ? '' : `  → ${JSON.stringify(got)}`}`) }
@@ -18,6 +18,15 @@ t('"they" is fine', !violations(polish('They cook on a night off, which tells yo
 t('missing a name caught', violations(polish('You two should meet.'), 'intro', ['Maya', 'Theo']).includes('missing:Maya'))
 t('too long caught', violations(polish(Array(120).fill('word').join(' ')), 'preview').some((v) => v.startsWith('long')))
 t('empty caught', violations(polish(''), 'intro').includes('empty'))
+
+
+// Val's Read without her brain: the template must pass her own rules too.
+const who = { handle: 'maya', name: 'Maya', answers: { conflict_impulse: 'I want to address it immediately — tension feels worse than the conversation', saturday: 'Slow morning, one good plan, home by ten', looking_for: 'A serious relationship, open to where it goes', misread: 'Cold at first.' } }
+const tr = templateRead(who)
+t('template read passes the guardrails', violations(tr, 'readme').length === 0 && tr.endsWith('— Val'), `${tr} :: ${violations(tr, 'readme').join(',')}`)
+const tr2 = templateRead(who, ['no_spark', 'no_spark'])
+t('template read updates after debriefs', /Since then/.test(tr2) && violations(tr2, 'readme').length === 0, tr2)
+t('template read with nothing still says something', violations(templateRead({ handle: 'x', name: 'X' }), 'readme').length === 0)
 
 console.log(`\n${fail ? 'FAILED' : 'All guardrails hold.'}`)
 process.exit(fail ? 1 : 0)

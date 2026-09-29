@@ -51,6 +51,13 @@ filterable by vibe. Val keeps watching and flags a strong new fit when one
 joins, at most weekly. Photos show the way each member chose: all, just the
 lead, or none until they're talking.
 
+**Val's Read** — Sixty seconds after the /vibe, Val tells the member who
+they are: three lines, to them, from their own answers only. One thing they
+say about themselves next to one thing their answers show; specific, a little
+too accurate, never cruel, never flattering; and what whoever gets them will
+need. She rewrites it as their debriefs come in and says what changed. It is
+theirs alone: never shown to anyone else, shared only if they share the card.
+
 **/brief** — Before every date: where (a /spot, table held, the perk),
 what to talk about, what matters to them, what not to do, why this
 pairing. Five short sections. Written for the reader, not about them.
