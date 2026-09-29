@@ -40,6 +40,16 @@ export async function sendLoginLink(email: string, next = '/inbox/') {
   if (error) throw new Error(error.message)
 }
 
+// The 6-digit code from Val's email. Works in the installed app, where the
+// link would open the browser instead.
+export async function verifyCode(email: string, code: string) {
+  const c = authClient()
+  if (!c) throw new Error('Not configured')
+  let { error } = await c.auth.verifyOtp({ email, token: code, type: 'email' })
+  if (error) ({ error } = await c.auth.verifyOtp({ email, token: code, type: 'magiclink' }))
+  if (error) throw new Error('That code didn’t work. Check it, or send a fresh one.')
+}
+
 // The link from Val's email lands here with a one-time token.
 export async function redeemLoginToken(tokenHash: string) {
   const c = authClient()

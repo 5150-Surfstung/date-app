@@ -86,7 +86,7 @@ async function send(to: string, subject: string, text: string, kind: Kind = null
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: await from(), to, subject, text: text + (h ? footer : ""), headers }),
+    body: JSON.stringify({ from: await from(), to, reply_to: "hello@surfstung.com", subject, text: text + (h ? footer : ""), headers }),
   });
   return r.ok;
 }
@@ -119,6 +119,23 @@ Deno.serve(async (req) => {
     }
     const sent = await send(me, "Val, checking the line", `If you can read this, email works.\n\n${SITE}/status/\n\n— Val`);
     return json({ sent });
+  }
+
+  if (kind === "welcome") {
+    // Right after a claim. Once per member; the caller must be that member.
+    const auth = req.headers.get("Authorization") ?? "";
+    const { data: { user } } = await createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: auth } },
+    }).auth.getUser();
+    const me = user?.email?.toLowerCase();
+    if (!me) return json({ error: "login" }, 401);
+    const { data: h } = await db.from("date_handles").select("*").eq("email", me).is("welcomed_at", null).maybeSingle();
+    if (!h) return json({ skipped: "none" });
+    await db.from("date_handles").update({ welcomed_at: new Date().toISOString() }).eq("email", me);
+    const num = h.founding_number ? ` You're founding member #${String(h.founding_number).padStart(3, "0")}. Season I is free.` : "";
+    const ok = await send(me, `/${h.handle} is yours`,
+      `${h.name} —\n\n/${h.handle}${h.tag ? ` /${h.tag}` : ""} is yours.${num}\n\nGive it out instead of your number. Anyone with it can send you a /hey. I show you their /vibe first; they hear nothing until you say yes.\n\nOne thing left: your /vibe. Eight questions, three photos, sixty seconds of your voice. It's how I find your person.\n${SITE}/apply/\n\nYour badge, with your QR: ${SITE}/badge/?h=${h.handle}\n\n— Val`);
+    return json({ sent: ok });
   }
 
   if (kind === "hey") {
@@ -181,14 +198,15 @@ Deno.serve(async (req) => {
   }
 
   if (kind === "clock") {
-    // Called every minute by pg_cron. Two jobs, both idempotent.
+    // Called every minute by pg_cron. Every job is idempotent: each claims its row first.
     const nowIso = new Date().toISOString();
     const results: Record<string, number> = { checks: 0, debriefs: 0 };
 
     // 1. Check-ins that are due: "All good?"
     const { data: due } = await db.from("date_chats").select("*").eq("check_status", "pending").lte("check_at", nowIso).limit(50);
     for (const c of due ?? []) {
-      await db.from("date_chats").update({ check_status: "asked" }).eq("id", c.id);
+      const { data: took } = await db.from("date_chats").update({ check_status: "asked" }).eq("id", c.id).eq("check_status", "pending").select("id");
+      if (!took?.length) continue;
       for (const [email, other] of [[c.a_email, c.b_handle], [c.b_email, c.a_handle]]) {
         await send(email, "All good?", `Checking in like you asked. You're out with /${other}.\n\nAll good: ${SITE}/chat/?c=${c.id}&check=ok\nGet me out: ${SITE}/chat/?c=${c.id}&check=help\n\nTap the second one and I'll give you a reason to leave. — Val`);
         await push(email, { title: "All good?", body: `You're out with /${other}. Tap if you need a way out.`, url: `${SITE}/chat/?c=${c.id}`, tag: `check-${c.id}` });
@@ -200,12 +218,46 @@ Deno.serve(async (req) => {
     const twelveHoursAgo = new Date(Date.now() - 12 * 3600 * 1000).toISOString();
     const { data: done } = await db.from("date_chats").select("*").eq("status", "date_set").is("debrief_asked_at", null).lte("date_at", twelveHoursAgo).limit(50);
     for (const c of done ?? []) {
-      await db.from("date_chats").update({ debrief_asked_at: nowIso }).eq("id", c.id);
+      const { data: took } = await db.from("date_chats").update({ debrief_asked_at: nowIso }).eq("id", c.id).is("debrief_asked_at", null).select("id");
+      if (!took?.length) continue;
       for (const [email, other] of [[c.a_email, c.b_handle], [c.b_email, c.a_handle]]) {
         await send(email, `Worth a /second with /${other}?`, `Morning. How was it with /${other}?\n\nTell me here — it's private, they never see it. If you both say /second, I'll book it.\n\n${SITE}/chat/?c=${c.id}\n\n— Val`, "dates");
         await push(email, { title: `Worth a /second with /${other}?`, body: "Morning. Tell me here. They never see it.", url: `${SITE}/chat/?c=${c.id}`, tag: `second-${c.id}` });
       }
       results.debriefs++;
+    }
+    // 3. The 48-hour clock. One nudge at 24 hours, a warm close at 48.
+    results.nudges = 0; results.closes = 0; results.benched = 0;
+    const dayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const { data: slow } = await db.from("date_chats").select("*").eq("status", "open").is("nudged_at", null).lte("created_at", dayAgo).gt("closes_at", nowIso).limit(50);
+    for (const c of slow ?? []) {
+      const { data: took } = await db.from("date_chats").update({ nudged_at: nowIso }).eq("id", c.id).is("nudged_at", null).select("id");
+      if (!took?.length) continue;
+      await db.from("date_messages").insert({ chat_id: c.id, from_email: "val", body: "Twenty-four hours left. Pick a time and I'll hold the table. — Val" });
+      for (const [email, other] of [[c.a_email, c.b_handle], [c.b_email, c.a_handle]]) {
+        await send(email, `24 hours left with /${other}`, `Halfway there. Pick a time with /${other} and I'll hold the table. At forty-eight hours the /chat closes, no hard feelings.\n\n${SITE}/chat/?c=${c.id}\n\n— Val`, "chats");
+        await push(email, { title: `24 hours left with /${other}`, body: "Pick a time and I'll hold the table.", url: `${SITE}/chat/?c=${c.id}`, tag: `chat-${c.id}` });
+      }
+      results.nudges++;
+    }
+    const { data: expired } = await db.from("date_chats").select("*").eq("status", "open").lte("closes_at", nowIso).limit(50);
+    for (const c of expired ?? []) {
+      const { data: took } = await db.from("date_chats").update({ status: "closed", closed_notified_at: nowIso }).eq("id", c.id).eq("status", "open").select("id");
+      if (!took?.length) continue;
+      await db.from("date_messages").insert({ chat_id: c.id, from_email: "val", body: "Time's up on this one. No hard feelings either way. I'm already looking. — Val" });
+      for (const [email, other] of [[c.a_email, c.b_handle], [c.b_email, c.a_handle]]) {
+        await send(email, `Closed: you and /${other}`, `Forty-eight hours came and went, so I closed it. No hard feelings either way. I'm already looking for your next one.\n\n— Val`, "chats");
+      }
+      results.closes++;
+    }
+
+    // 4. Two no-shows: tell them once, plainly.
+    const { data: benched } = await db.from("date_handles").select("*").not("benched_at", "is", null).is("benched_notified_at", null).limit(50);
+    for (const h of benched ?? []) {
+      const { data: took } = await db.from("date_handles").update({ benched_notified_at: nowIso }).eq("email", h.email).is("benched_notified_at", null).select("email");
+      if (!took?.length) continue;
+      await send(h.email, "About your last two /dates", `${h.name} —\n\nTwo people waited for you and you didn't come. That's two, and I can't keep you in the pool. Your /name is private for now.\n\nIf I've got this wrong, reply and a person will look at it.\n\n— Val`);
+      results.benched++;
     }
     return json(results);
   }

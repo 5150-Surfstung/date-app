@@ -3,7 +3,7 @@
 // The one way in. Anywhere /date needs to know it's really you, this sits
 // inline: an email, Val's link, and you land back exactly where you were.
 import { useEffect, useState } from 'react'
-import { sendLoginLink } from '@/lib/auth'
+import { sendLoginLink, verifyCode } from '@/lib/auth'
 import { EMAIL_KEY } from '@/lib/handles'
 
 export function SignIn({ pitch, cta = 'Send my link', red, night, onSent }: {
@@ -14,7 +14,19 @@ export function SignIn({ pitch, cta = 'Send my link', red, night, onSent }: {
   const [busy, setBusy] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [code, setCode] = useState('')
+  const [checking, setChecking] = useState(false)
+  const [wait, setWait] = useState(0)
   useEffect(() => { try { setEmail(localStorage.getItem(EMAIL_KEY) ?? '') } catch {} }, [])
+  useEffect(() => { if (wait <= 0) return; const t = setTimeout(() => setWait(wait - 1), 1000); return () => clearTimeout(t) }, [wait])
+  useEffect(() => { if (code.length === 6 && !checking) check(code) }, [code]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function check(c: string) {
+    setChecking(true); setError(null)
+    try { await verifyCode(email.trim().toLowerCase(), c) }   // session listeners take it from here
+    catch (err) { setError(err instanceof Error ? err.message : 'That code didn’t work.'); setCode('') }
+    finally { setChecking(false) }
+  }
 
   const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
   async function go() {
@@ -23,7 +35,7 @@ export function SignIn({ pitch, cta = 'Send my link', red, night, onSent }: {
     try {
       try { localStorage.setItem(EMAIL_KEY, e) } catch {}
       await sendLoginLink(e, location.pathname + location.search)
-      setSent(true); onSent?.()
+      setSent(true); setWait(30); setCode(''); onSent?.()
     } catch (err) { setError(err instanceof Error ? err.message : 'Something went wrong.') }
     finally { setBusy(false) }
   }
@@ -39,9 +51,29 @@ export function SignIn({ pitch, cta = 'Send my link', red, night, onSent }: {
 
   if (sent) return (
     <div className="max-w-md">
-      <div className="font-display font-extrabold text-3xl tracking-tight">Check your email.</div>
-      <p className={`mt-2 text-base ${muted}`}>Val sent a link to <b className={strong}>{email.trim()}</b>. Tap it and you land right back here, signed in.</p>
-      <button onClick={() => setSent(false)} className={`tap mt-3 text-sm font-semibold underline underline-offset-4 ${muted}`}>Use a different email</button>
+      <div className="font-display font-extrabold text-3xl tracking-tight">Enter the code.</div>
+      <p className={`mt-2 text-base ${muted}`}>Val sent a 6-digit code to <b className={strong}>{email.trim()}</b>. Not there in a minute? Check Spam and Promotions.</p>
+      <label className="relative block mt-4">
+        <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+          inputMode="numeric" autoComplete="one-time-code" autoFocus aria-label="6-digit code" disabled={checking}
+          className="absolute inset-0 w-full h-full opacity-0 text-[16px]" />
+        <div className="grid grid-cols-6 gap-2 pointer-events-none" aria-hidden>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className={`h-16 rounded-2xl grid place-items-center font-display font-extrabold text-3xl tabular-nums border-2 ${field} ${i === code.length && !checking ? (night ? '!border-[#FF5CA8]' : light ? '!border-ob' : '!border-white') : ''}`}>
+              {code[i] ?? ''}
+            </div>
+          ))}
+        </div>
+      </label>
+      {checking && <p className={`mt-3 text-sm font-semibold ${muted}`}>Checking…</p>}
+      {error && <p className="mt-3 text-sm font-semibold text-ob">{error}</p>}
+      <div className={`mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm font-semibold ${muted}`}>
+        <button onClick={() => { if (wait <= 0) go() }} disabled={wait > 0 || busy} className="tap underline underline-offset-4 disabled:no-underline">
+          {wait > 0 ? `Send again in ${wait}s` : busy ? 'Sending…' : 'Send a new code'}
+        </button>
+        <button onClick={() => { setSent(false); setError(null) }} className="tap underline underline-offset-4">Different email</button>
+      </div>
+      <p className={`mt-3 text-xs ${muted}`}>The email also has a one-tap link, if you&rsquo;re reading it on this phone.</p>
     </div>
   )
   return (
@@ -56,7 +88,7 @@ export function SignIn({ pitch, cta = 'Send my link', red, night, onSent }: {
         </button>
       </form>
       {error && <p className="mt-2 text-sm font-semibold">{error}</p>}
-      <p className={`mt-2 text-xs ${muted}`}>No password. One tap from your inbox.</p>
+      <p className={`mt-2 text-xs ${muted}`}>No password. Val emails you a 6-digit code.</p>
     </div>
   )
 }

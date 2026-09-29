@@ -355,3 +355,24 @@ List-Unsubscribe header.
 
 **Tests.** CI signs in two throwaway accounts (confined to test.invalid) and
 proves each can act only as itself, end to end through delete.
+
+## 10j. Codes, the clock, no-shows, welcome (v11)
+
+**Sign-in by code.** Val's email carries a 6-digit code (subject line
+"123456 is your /date code", branded HTML plus plain text) and a one-tap link
+as backup. The code works inside the installed app, where a link would open
+the browser; phones autofill it. Resend after 30 seconds, 4 per 10 minutes.
+Replies go to hello@surfstung.com.
+
+**The chat clock** (every minute, each job claims its row first so nothing
+double-sends): 24 hours in with no date set, Val nudges both in the chat,
+by email and on the lock screen; at 48 hours she closes it warmly with a
+note. Opening /chat no longer closes chats silently.
+
+**No-shows.** Debrief has "They didn't show." It's a strike against the
+other person, unless both say it about each other (then nothing counts). Two
+strikes: out of the pool, /name private, no /heys either way, one plain email
+from Val. Val can lift the bench from the console.
+
+**Welcome.** Claiming a /name sends one email: it's yours, your founding
+number, the one step left (your /vibe), and your badge link.

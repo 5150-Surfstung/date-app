@@ -13,7 +13,7 @@ import { SignIn } from '../gate'
 const PENDING = 'date:pending-claim'
 type Pending = { handle: string; name: string; tag: Tag | null; priv: boolean }
 import { DEMO_CREW } from '@/lib/demo'
-import { VAL } from '@/lib/val'
+import { VAL, notify } from '@/lib/val'
 
 type Avail = 'idle' | 'checking' | 'open' | 'taken' | 'reserved' | 'bad'
 
@@ -91,6 +91,7 @@ export default function ClaimClient() {
       try { localStorage.removeItem(PENDING) } catch {}
       if (data !== 'ok') throw new Error(msgs[data] ?? 'Something went wrong.')
       try { localStorage.setItem(HANDLE_KEY, p.handle) } catch {}
+      notify(authClient(), { kind: 'welcome' })
       setDone(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.')

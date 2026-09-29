@@ -13,6 +13,7 @@ const pad = (n: number) => String(n).padStart(3, '0')
 
 function standing(home: Home): { step: number; head: string; line: string; cta?: { href: string; label: string } } {
   const v = home.vibe
+  if (home.handle?.benched) return { step: 1, head: 'You’re out of the pool for now.', line: 'Two people waited for you and you didn’t come. Your /name is private and I’ve stopped pairing you. If I’ve got it wrong, talk to a person. — Val', cta: { href: '/me/settings/', label: 'Talk to a person' } }
   if (!v) return { step: 1, head: 'Val can’t match you yet.', line: 'Your /name is live, but matches come from your /vibe: eight questions, three photos, sixty seconds of your voice. About five minutes.', cta: { href: '/apply/', label: 'Finish my /vibe' } }
   if (v.status === 'rejected') return { step: 1, head: 'Not this season.', line: 'Thanks for trusting me with your /vibe. — Val' }
   if (v.status === 'waitlisted') return { step: 2, head: 'You’re on the waitlist.', line: 'Your /vibe is good. I’m balancing the pool before I open more spots. You’ll hear from me first. — Val' }

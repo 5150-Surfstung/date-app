@@ -10,7 +10,7 @@ import { askVal, notify } from '@/lib/val'
 import System from './system'
 
 type Console = {
-  handles: (Person & { founding: number | null; created_at: string; app_id: string | null; photo_keys: string[] | null; voice_key: string | null; verified: boolean })[]
+  handles: (Person & { founding: number | null; created_at: string; app_id: string | null; photo_keys: string[] | null; voice_key: string | null; verified: boolean; benched?: boolean; strikes?: number })[]
   applications: any[]; heys: any[]; wings: any[]; chats: any[]; signals: any[]; debriefs: any[]; weights: any[]; reports: any[]
 }
 
@@ -190,10 +190,17 @@ export default function ConsolePage() {
                 <span className="font-display font-extrabold text-xl">/{h.handle} {h.tag && <span className="text-ob">/{h.tag}</span>}</span>
                 <span className="text-sm font-semibold">{h.name}{h.age ? `, ${h.age}` : ''}{h.hood ? ` · ${h.hood}` : ''}</span>
                 {h.founding && <span className="text-xs font-extrabold text-ob">#{String(h.founding).padStart(3, '0')}</span>}
+                {(h.strikes ?? 0) > 0 && <span className={`text-xs font-extrabold uppercase tracking-[0.12em] rounded-full px-2.5 py-0.5 ${h.benched ? 'bg-ob text-white' : 'bg-[#141414]/8'}`}>{h.benched ? 'Benched' : `${h.strikes} strike`}</span>}
                 <span className="ml-auto text-xs uppercase tracking-[0.15em] text-[#141414]/50">{h.app_status ?? 'no /vibe'} &middot; {h.visibility}</span>
               </summary>
               <div className="mt-4 text-sm grid gap-2">
                 <div className="text-[#141414]/60">{h.email} &middot; {h.identity ?? '?'} seeking {h.seeking ?? '?'}</div>
+                {h.benched && (
+                  <div className="flex flex-wrap items-center gap-3 bg-ob/5 rounded-xl p-3">
+                    <span className="font-semibold">Two no-shows. Out of the pool, /name private.</span>
+                    <Pill onClick={async () => { await authClient()!.rpc('unbench', { p_handle: h.handle }); load() }}>Lift the bench</Pill>
+                  </div>
+                )}
                 {reads[h.handle] ? (
                   <div className="bg-[#FFF3EA] rounded-xl p-3 text-base">{reads[h.handle]}</div>
                 ) : (

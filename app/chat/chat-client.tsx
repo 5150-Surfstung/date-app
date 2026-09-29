@@ -337,7 +337,8 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
               <Pill primary onClick={() => sendDebrief('second')}>I want a second date</Pill>
               <Pill onClick={() => sendDebrief('good_not')}>Good person, not my person</Pill>
               <Pill onClick={() => sendDebrief('no_spark')}>No spark in person</Pill>
-              <Pill onClick={() => sendDebrief('didnt_happen')}>It didn&rsquo;t happen</Pill>
+              <Pill onClick={() => sendDebrief('didnt_happen')}>We didn&rsquo;t make it</Pill>
+              <Pill onClick={() => sendDebrief('no_show')}>They didn&rsquo;t show</Pill>
             </div>
           </div>
         )}
