@@ -282,6 +282,7 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
             )}
           </div>
         )}
+        <Swap chat={chat} />
         {chat.status !== 'closed' && (
           <button onClick={pass} className="text-xs text-[#141414]/40 underline underline-offset-4 self-start">/pass &mdash; good person, not my person</button>
         )}
@@ -377,6 +378,76 @@ function ReportBlock({ chat, onDone }: { chat: Chat; onDone: () => void }) {
         <Pill primary onClick={send} disabled={!reason}>Report and block</Pill>
         <Pill onClick={() => setOpen(false)}>Cancel</Pill>
       </div>
+    </div>
+  )
+}
+
+// Swap numbers. Both tap or nobody sees anything; one side offering is
+// invisible to the other. The database enforces it, not this screen.
+type SwapState = { available: boolean; swapped: boolean; mine: { phone: string | null; instagram: string | null } | null; theirs: { phone: string | null; instagram: string | null } | null }
+function Swap({ chat }: { chat: Chat }) {
+  const [s, setS] = useState<SwapState | null>(null)
+  const [open, setOpen] = useState(false)
+  const [phone, setPhone] = useState('')
+  const [ig, setIg] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const load = async () => { const { data } = await authClient()!.rpc('my_swap', { p_chat: chat.id }); setS(data as SwapState) }
+  useEffect(() => { load(); const t = setInterval(load, 20000); return () => clearInterval(t) }, [chat.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  if (!s || (!s.available && !s.swapped)) return null
+
+  async function offer() {
+    setBusy(true); setErr(null)
+    const { data } = await authClient()!.rpc('offer_swap', { p_chat: chat.id, p_phone: phone, p_instagram: ig })
+    const msg: Record<string, string> = { bad_phone: 'That phone number doesn’t look right.', bad_instagram: 'That Instagram handle doesn’t look right.', empty: 'Add a number or an Instagram.', closed: 'This one can’t swap.', not_yet: 'Set the date first.' }
+    if (data === 'swapped') notify(authClient(), { kind: 'swap', id: chat.id })
+    if (data !== 'waiting' && data !== 'swapped') setErr(msg[data as string] ?? 'Something went wrong.')
+    else setOpen(false)
+    await load(); setBusy(false)
+  }
+  async function withdraw() { await authClient()!.rpc('withdraw_swap', { p_chat: chat.id }); setPhone(''); setIg(''); load() }
+  const digits = (p: string) => p.replace(/[^0-9+]/g, '')
+  const pretty = (p: string) => { const d = p.replace(/\D/g, '').slice(-10); return d.length === 10 ? `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}` : p }
+
+  return (
+    <div className={`rounded-2xl p-4 border-2 ${s.swapped ? 'border-ob bg-ob text-white' : 'border-[#141414]'}`}>
+      <div className={`text-xs tracking-[0.15em] uppercase font-semibold ${s.swapped ? 'text-white/80' : 'text-ob'}`}>Swap numbers</div>
+      {s.swapped && s.theirs ? (
+        <div className="mt-2 grid gap-2">
+          <div className="font-display font-extrabold text-xl">You both said yes.</div>
+          {s.theirs.phone && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-display font-extrabold text-lg tabular-nums">{pretty(s.theirs.phone)}</span>
+              <a href={`sms:${digits(s.theirs.phone)}`} className="bg-white text-ob rounded-full px-4 py-2 text-sm font-extrabold">Text</a>
+              <a href={`tel:${digits(s.theirs.phone)}`} className="border-2 border-white rounded-full px-4 py-2 text-sm font-extrabold">Call</a>
+            </div>
+          )}
+          {s.theirs.instagram && <a href={`https://instagram.com/${s.theirs.instagram}`} target="_blank" rel="noopener noreferrer" className="font-extrabold underline underline-offset-4 py-1">@{s.theirs.instagram}</a>}
+          <p className="text-xs text-white/70">From here it&rsquo;s yours. Val&rsquo;s still here if you need her, and /check still works.</p>
+        </div>
+      ) : s.mine ? (
+        <div className="mt-2 grid gap-2">
+          <p className="text-sm">You&rsquo;re sharing {[s.mine.phone && pretty(s.mine.phone), s.mine.instagram && `@${s.mine.instagram}`].filter(Boolean).join(' and ')}. If they tap too, you both see each other&rsquo;s. If not, they never know you offered.</p>
+          <button onClick={withdraw} className="tap text-xs font-bold text-[#141414]/50 underline underline-offset-4 self-start">Take it back</button>
+        </div>
+      ) : !open ? (
+        <div className="mt-2 grid gap-2">
+          <p className="text-sm text-[#141414]/70">Nobody sees anything until you both tap. If only you do, they never know.</p>
+          <Pill primary onClick={() => setOpen(true)}>Swap numbers</Pill>
+        </div>
+      ) : (
+        <div className="mt-2 grid gap-2">
+          <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" autoComplete="tel" placeholder="Your phone (optional)"
+            className="border-2 border-[#141414]/15 focus:border-ob outline-none rounded-full px-4 py-2.5 bg-white" />
+          <input value={ig} onChange={(e) => setIg(e.target.value)} autoCapitalize="none" autoCorrect="off" placeholder="Your Instagram (optional)"
+            className="border-2 border-[#141414]/15 focus:border-ob outline-none rounded-full px-4 py-2.5 bg-white" />
+          {err && <p className="text-sm font-semibold text-ob">{err}</p>}
+          <div className="flex gap-2 flex-wrap">
+            <Pill primary onClick={offer} disabled={busy || (!phone.trim() && !ig.trim())}>{busy ? 'One sec…' : 'Share if they do'}</Pill>
+            <Pill onClick={() => { setOpen(false); setErr(null) }}>Not now</Pill>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -131,6 +131,20 @@ check('send a message', !msg.error, msg.error?.message)
 const fake = await A.c.from('date_messages').insert({ chat_id: yes.data, from_email: B.email, body: 'spoof' })
 check('cannot message as the other person', Boolean(fake.error))
 
+// Swap numbers: both tap or nobody sees anything.
+const early = await A.c.rpc('offer_swap', { p_chat: yes.data, p_phone: '8435550100', p_instagram: null })
+check('no swap before a date is set', early.data === 'not_yet', early.data)
+await A.c.rpc('set_date', { p_chat: yes.data, p_spot: 'golden-hour', p_at: new Date(Date.now() + 86400000).toISOString() })
+const badPhone = await A.c.rpc('offer_swap', { p_chat: yes.data, p_phone: '12', p_instagram: null })
+check('bad phone refused', badPhone.data === 'bad_phone', badPhone.data)
+const offerA = await A.c.rpc('offer_swap', { p_chat: yes.data, p_phone: '(843) 555-0100', p_instagram: null })
+const peek = await B.c.rpc('my_swap', { p_chat: yes.data })
+check('one side offering stays invisible', offerA.data === 'waiting' && peek.data?.theirs === null && peek.data?.swapped === false, JSON.stringify(peek.data))
+const offerB = await B.c.rpc('offer_swap', { p_chat: yes.data, p_phone: null, p_instagram: '@e2e.b' })
+const seenA = await A.c.rpc('my_swap', { p_chat: yes.data })
+const seenB = await B.c.rpc('my_swap', { p_chat: yes.data })
+check('both tap → both see', offerB.data === 'swapped' && seenA.data?.theirs?.instagram === 'e2e.b' && seenB.data?.theirs?.phone === '8435550100', JSON.stringify([seenA.data?.theirs, seenB.data?.theirs]))
+
 // Home, edit, prefs, export
 const home = await A.c.rpc('my_home')
 check('home: where you stand', home.data?.handle?.handle === hA && home.data?.vibe?.status === 'pending_review' && home.data?.open_chats === 1, JSON.stringify(home.data?.open_chats))

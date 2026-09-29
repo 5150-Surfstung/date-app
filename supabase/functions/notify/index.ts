@@ -154,6 +154,19 @@ Deno.serve(async (req) => {
     return json({ ok: true });
   }
 
+  if (kind === "swap") {
+    // Both tapped "swap numbers". Once, to both. The numbers stay in the app, not the email.
+    const { data: c } = await db.from("date_chats").select("*").eq("id", body.id).not("swapped_at", "is", null).is("swap_notified_at", null).maybeSingle();
+    if (!c) return json({ skipped: "none" });
+    const { data: took } = await db.from("date_chats").update({ swap_notified_at: new Date().toISOString() }).eq("id", c.id).is("swap_notified_at", null).select("id");
+    if (!took?.length) return json({ skipped: "dupe" });
+    for (const [email, other] of [[c.a_email, c.b_handle], [c.b_email, c.a_handle]]) {
+      await send(email, `You and /${other} swapped numbers`, `You both said yes to that too. It's in your /chat.\n\n${SITE}/chat/?c=${c.id}\n\nFrom here it's yours. I'm still here if you need me. — Val`, "chats");
+      await push(email, { title: `You and /${other} swapped numbers`, body: "It's in your /chat.", url: `${SITE}/chat/?c=${c.id}`, tag: `swap-${c.id}` });
+    }
+    return json({ ok: true });
+  }
+
   if (kind === "hey") {
     const { data: h } = await db.from("date_heys").select("*").eq("to_handle", body.to_handle).eq("from_email", String(body.from_email).toLowerCase())
       .is("notified_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle();

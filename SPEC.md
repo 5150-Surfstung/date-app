@@ -440,3 +440,16 @@ puts her through real scenarios (straight, gay, nonbinary intros, a /wing,
 a brief, clear and vague voice answers) whenever her key is set.
 
 **Login codes** size to the project's setting (6 or 8 digits).
+
+## 10n. Swap numbers (v15)
+
+In a /chat once a date is set. Each person taps "Swap numbers" and chooses
+what to share (phone and/or Instagram). Nothing is visible to anyone until
+both have tapped; one side offering is invisible to the other, so there's no
+pressure and no awkwardness. Either can take it back before the reveal. A
+block, a report, or a removal on either side kills the reveal even after
+both tapped. On the reveal: tap to text, call, or open Instagram; Val sends
+both a one-line note (the numbers stay in the app, never in email).
+Enforced in the database (`offer_swap`, `withdraw_swap`, `my_swap`;
+`date_swaps` has no policies). Included in the data export, removed on
+delete. Covered end to end in CI.
