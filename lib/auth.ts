@@ -27,12 +27,25 @@ export function useSession() {
   return { session, loading, email: session?.user.email?.toLowerCase() ?? null }
 }
 
-export async function sendLoginLink(email: string) {
+// Val mails the link herself (the `login` function), pointing straight at
+// /login/?th=…; Supabase's own mailer is only the fallback.
+export async function sendLoginLink(email: string, next = '/inbox/') {
   const c = authClient()
   if (!c) throw new Error('Not configured')
-  const redirect = typeof window !== 'undefined' ? `${window.location.origin}/inbox/` : undefined
+  const { data, error: fnError } = await c.functions.invoke('login', { body: { email, next } })
+  if (!fnError && data?.sent) return
+  if ((data as { error?: string } | null)?.error === 'slow') throw new Error('Three links in ten minutes. Check your email, or try again shortly.')
+  const redirect = typeof window !== 'undefined' ? `${window.location.origin}${next}` : undefined
   const { error } = await c.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect, shouldCreateUser: true } })
   if (error) throw new Error(error.message)
+}
+
+// The link from Val's email lands here with a one-time token.
+export async function redeemLoginToken(tokenHash: string) {
+  const c = authClient()
+  if (!c) throw new Error('Not configured')
+  const { error } = await c.auth.verifyOtp({ token_hash: tokenHash, type: 'magiclink' })
+  if (error) throw new Error('That link is used or expired. Send a fresh one.')
 }
 
 export async function signOut() {

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AppShell } from '../ui'
-import { sendLoginLink, useSession } from '@/lib/auth'
+import { redeemLoginToken, sendLoginLink, useSession } from '@/lib/auth'
 import Link from 'next/link'
 
 export default function LoginPage() {
@@ -11,6 +11,19 @@ export default function LoginPage() {
   const [sent, setSent] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [redeeming, setRedeeming] = useState(false)
+
+  // Tapped the link in Val's email: /login/?th=…&next=…
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search)
+    const th = q.get('th')
+    if (!th) return
+    const next = q.get('next') || '/inbox/'
+    setRedeeming(true)
+    redeemLoginToken(th)
+      .then(() => location.replace(next.startsWith('/') && !next.startsWith('//') ? next : '/inbox/'))
+      .catch((e) => { setError(e instanceof Error ? e.message : 'That link didn\u2019t work.'); setRedeeming(false); history.replaceState(null, '', '/login/') })
+  }, [])
 
   async function go() {
     setBusy(true); setError(null)
@@ -21,7 +34,9 @@ export default function LoginPage() {
 
   return (
     <AppShell title="Log in">
-      {me ? (
+      {redeeming ? (
+        <div className="max-w-md"><h1 className="font-display font-extrabold text-4xl tracking-tight">Letting you in…</h1></div>
+      ) : me ? (
         <div className="max-w-md">
           <h1 className="font-display font-extrabold text-4xl tracking-tight">You&rsquo;re in as {me}.</h1>
           <div className="mt-6 flex gap-3">
