@@ -344,15 +344,15 @@ function TagScene() {
 // and books the table. Runs only while on screen.
 // Mostly mixed pairs, one same-gender pair in the rotation: roughly who's on
 // the app, and it shows everyone is welcome without making it the whole story.
-const PAIRS: [string, string, string][] = [
-  ['sloane', 'nico', 'You both said the best nights aren’t planned.'],
-  ['lena', 'reid', 'You both want the real thing, and neither of you wants to rush it.'],
-  ['ava', 'mateo', 'First time on /date, both new-ish to the city. Figure it out together.'],
-  ['sienna', 'theo', 'Same bookstore, same bad jokes. Trust me.'],
-  ['tasha', 'maya', 'You both want the real thing and said so out loud.'],
-  ['noor', 'kenji', 'You answered the Sunday question the exact same way. Nobody does that.'],
+// [a, b, why Val paired them, the date]. No venue names until real /spots sign on.
+const PAIRS: [string, string, string, string][] = [
+  ['sloane', 'nico', 'You both said the best nights aren’t planned.', 'So I only planned the start: Friday, 8:00, a rooftop, then wherever.'],
+  ['lena', 'reid', 'You both want the real thing, and neither of you wants to rush it.', 'Sunday morning, a slow walk through the park, coffee in hand. That’s it.'],
+  ['ava', 'mateo', 'First time on /date, both new-ish to the city.', 'Saturday, 11:00, the farmers market. Figure it out together.'],
+  ['sienna', 'theo', 'Same taste in books, same bad jokes. Trust me.', 'Thursday, 7:00, trivia night. You’re on the same team.'],
+  ['tasha', 'maya', 'You both want the real thing and said so out loud.', 'Wednesday, 6:30, a pottery class. Hands busy, talking easy.'],
+  ['noor', 'kenji', 'You answered the Sunday question the exact same way. Nobody does that.', 'Saturday, 8:00 a.m., a gym class, then breakfast. Loser buys.'],
 ]
-const WHEN = ['Thursday, 7:30', 'Friday, 8:00', 'Saturday, 6:45', 'Wednesday, 7:00']
 
 function ValIntro() {
   const ref = useRef<HTMLDivElement>(null)
@@ -363,11 +363,10 @@ function ValIntro() {
   const [live, setLive] = useState(false)
   const badge = useRef<HTMLDivElement>(null)
 
-  const [ha, hb, why] = PAIRS[k % PAIRS.length]
+  const [ha, hb, why, plan] = PAIRS[k % PAIRS.length]
   const a = DEMO_CREW.find((d) => d.handle === ha)!
   const b = DEMO_CREW.find((d) => d.handle === hb)!
-  const venue = VENUES[k % VENUES.length]
-  const line = `/${a.handle}, meet /${b.handle}. ${why} ${WHEN[k % WHEN.length]} at ${venue.name}. I’ve got the table.`
+  const line = `/${a.handle}, meet /${b.handle}. ${why} ${plan}`
   const target = 86 + ((ha.length * 7 + hb.length * 3 + k) % 12)
 
   useEffect(() => {
@@ -440,7 +439,7 @@ function ValIntro() {
           {line.slice(0, typed)}<span className={`caret ${step === 3 && typed < line.length ? '' : 'opacity-0'}`}>|</span>
         </p>
       </div>
-      <p className="mt-3 text-xs text-[#141414]/45">Demo crew, real flow. Every intro comes with a reason and a table.</p>
+      <p className="mt-3 text-xs text-[#141414]/45">Demo crew, real flow. Every intro comes with a reason and a plan.</p>
     </div>
   )
 }
