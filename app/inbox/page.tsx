@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { MissedClaims } from './missed-claims'
 import { ShareButton } from '../share'
 import Link from 'next/link'
 import { AppShell, NeedLogin, Pill } from '../ui'
@@ -66,6 +67,7 @@ export default function InboxPage() {
 
   return (
     <AppShell title="Your /heys">
+      <MissedClaims />
       <h1 className="font-display font-extrabold text-4xl tracking-tight">
         {items === null ? '…' : items.length === 0 ? 'Quiet for now.' : `${items.length} waiting.`}
       </h1>

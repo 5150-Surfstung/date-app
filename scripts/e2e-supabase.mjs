@@ -237,9 +237,42 @@ const backA = await A.c.rpc('back_on_the_market')
 const backB = await B.c.rpc('back_on_the_market')
 check('back on the market works', backA.data === 'ok' && backB.data === 'ok')
 
+// /missed: only people who were there, around the same time; anonymous until both say yes
+const mSpot = { name: `E2E Missed ${runId}`, kind: 'bar', contact_name: 'Tess', contact_email: `e2e-${runId}-missed@test.invalid`, standards_ok: true }
+await anon.rpc('date_spot_apply', { p: mSpot })
+const mSlug = `e2e-missed-${runId}`
+const mApproved = await anon.rpc('e2e_approve_spot', { p_slug: mSlug })
+check('test spot approved (test helper only)', mApproved.data === 'ok', mApproved.data)
+const feedAway = await A.c.rpc('missed_feed', { p_spot: mSlug })
+check('no feed unless you checked in', feedAway.data?.state === 'not_here', JSON.stringify(feedAway.data))
+const postAway = await A.c.rpc('post_missed', { p_spot: mSlug, p_you: 'Green jacket', p_me: null })
+check('cannot post unless you were there', postAway.data === 'not_here', postAway.data)
+await A.c.rpc('date_signal', { p_kind: 'checkin', p_venue: mSlug, p_note: null })
+const rude = await A.c.rpc('post_missed', { p_spot: mSlug, p_you: 'nice legs by the bar', p_me: null })
+check('no body talk', rude.data === 'words', rude.data)
+const posted = await A.c.rpc('post_missed', { p_spot: mSlug, p_you: 'Green jacket, laughed at the bartender joke', p_me: 'Blue hat' })
+check('post a missed connection', posted.data === 'ok', posted.data)
+const againMissed = await A.c.rpc('post_missed', { p_spot: mSlug, p_you: 'Someone else entirely', p_me: null })
+check('one a night', againMissed.data === 'one_a_night', againMissed.data)
+const feedBAway = await B.c.rpc('missed_feed', { p_spot: mSlug })
+check('others who were not there see nothing', feedBAway.data?.state === 'not_here')
+await B.c.rpc('date_signal', { p_kind: 'checkin', p_venue: mSlug, p_note: null })
+const feedB = await B.c.rpc('missed_feed', { p_spot: mSlug })
+const thePost = (feedB.data?.posts ?? [])[0]
+check('people who were there see it, with no name', !!thePost && !JSON.stringify(feedB.data).includes(hA) && !JSON.stringify(feedB.data).includes('@'), JSON.stringify(feedB.data))
+const claimed = await B.c.rpc('claim_missed', { p_id: thePost?.id })
+check('"that was me"', claimed.data === 'ok', claimed.data)
+const claimsA = await A.c.rpc('my_missed_claims')
+const theClaim = (claimsA.data ?? [])[0]
+check('the poster sees who, with their /vibe card', theClaim?.from?.handle === hB, JSON.stringify(claimsA.data))
+const sneakAnswer = await B.c.rpc('answer_missed_claim', { p_claim: theClaim?.claim, p_yes: true })
+check('only the poster can answer', sneakAnswer.data === 'not_yours', sneakAnswer.data)
+const opened = await A.c.rpc('answer_missed_claim', { p_claim: theClaim?.claim, p_yes: true })
+check('both yes opens a /chat', typeof opened.data === 'string' && opened.data.length > 20, opened.data)
+
 // Home, edit, prefs, export
 const home = await A.c.rpc('my_home')
-check('home: where you stand', home.data?.handle?.handle === hA && home.data?.vibe?.status === 'approved' && home.data?.open_chats === 1, JSON.stringify(home.data?.open_chats))
+check('home: where you stand', home.data?.handle?.handle === hA && home.data?.vibe?.status === 'approved' && home.data?.open_chats >= 1, JSON.stringify(home.data?.open_chats))
 const edit = await A.c.rpc('update_my_vibe', { p_neighborhood: 'Downtown', p_identity: null, p_seeking: 'Everyone', p_answers: { e2e: 'edited' }, p_photo_keys: [`${A.uid}/photo-0.txt`], p_voice_key: null })
 check('edit /vibe', edit.data === 'ok', edit.error?.message ?? edit.data)
 const badEdit = await A.c.rpc('update_my_vibe', { p_neighborhood: null, p_identity: null, p_seeking: null, p_answers: null, p_photo_keys: [`${B.uid}/x.jpg`], p_voice_key: null })

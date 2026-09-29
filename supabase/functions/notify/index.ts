@@ -198,6 +198,17 @@ Deno.serve(async (req) => {
     return json({ sent });
   }
 
+  if (kind === "missed") {
+    // Someone said "that was me" to a /missed note. Tell the poster; still anonymous in the alert.
+    const { data: c } = await db.from("date_missed_claims").select("*, date_missed(email, spot_slug)").eq("id", body.id).is("notified_at", null).maybeSingle();
+    if (!c) return json({ skipped: "none" });
+    await db.from("date_missed_claims").update({ notified_at: new Date().toISOString() }).eq("id", c.id);
+    const poster = (c as { date_missed: { email: string } }).date_missed.email;
+    await tell(poster, "Someone says that was them", `Your /missed note got an answer: someone who was there says that was them.\n\nSee who, and say yes or no. No is silent.\n${SITE}/inbox/\n\n— Val`,
+      { title: "Someone says that was them", body: "Your /missed note got an answer.", url: `${SITE}/inbox/`, tag: `missed-${c.id}` }, "heys");
+    return json({ ok: true });
+  }
+
   if (kind === "found") {
     // One of them tapped "We found each other". Tell the other, gently.
     const { data: k } = await db.from("date_couples").select("*").eq("id", body.id).maybeSingle();

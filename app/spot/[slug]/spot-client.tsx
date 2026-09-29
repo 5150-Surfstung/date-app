@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Missed } from './missed'
 import Link from 'next/link'
 import type { Venue } from '@/lib/venues'
 import { authClient, useSession } from '@/lib/auth'
@@ -153,6 +154,8 @@ export default function SpotClient({ venue }: { venue: Venue }) {
             )}
           </div>
         )}
+
+        <Missed slug={venue.slug} name={venue.name} refresh={stage === 'scan' ? 0 : 1} />
       </section>
     </main>
   )

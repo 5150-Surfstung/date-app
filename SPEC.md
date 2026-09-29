@@ -540,3 +540,10 @@ Every /spot is approved by a person. Nothing is public until it is.
 - **Couple card**: a story-sized "WE MET ON /DATE /sloane + /nico, first date at [spot]" card with a QR to /couples ("Your turn.").
 - The wall's big number counts every couple, including those who kept it private. We never make one up.
 - Privacy page: if /date is ever sold or merged, accounts move under the same policy, members are told first and can delete (lawyer to review).
+
+## 10y. /missed (v26)
+
+- **You were both there.** On a spot's page, after you check in there, you can leave one note a night (`post_missed`): "who did you see" and optionally "and you". Clothes, moments and vibes only; body words and contact info are blocked (`date_missed_ok`).
+- **Only people who were there see it.** `missed_feed` shows a spot's notes only to members who checked in there within ±3 hours of the poster. Everyone else just sees the prompt to scan in.
+- **"That was me"** (`claim_missed`) is private. The poster is pushed (`notify` kind `missed`) and sees the claims in their inbox with /names. Yes (`answer_missed_claim`) opens a /chat with a note from Val. No names show until the poster says yes.
+- Notes are gone after 72 hours, and the poster can take theirs down anytime (`hide_missed`).
