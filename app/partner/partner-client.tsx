@@ -27,7 +27,7 @@ const field = 'w-full border-2 border-[#141414]/15 focus:border-ob outline-none 
 export default function PartnerClient() {
   const [rep, setRep] = useState<{ code: string; name: string } | null>(null)
   const [f, setF] = useState({
-    name: '', kind: 'bar', area: '', address: '', website: '', contact_name: '', contact_role: '',
+    name: '', kind: 'bar', area: '', address: '', website: '', instagram: '', tiktok: '', hours: '', about: '', contact_name: '', contact_role: '',
     contact_email: '', contact_phone: '', perk: '', pitch: '', night_ok: false, standards_ok: false, company_site: '',
   })
   const [state, setState] = useState<'form' | 'sending' | 'done'>('form')
@@ -127,7 +127,15 @@ export default function PartnerClient() {
           <Label text="Neighborhood"><input className={field} value={f.area} onChange={set('area')} placeholder="e.g. Upper King" maxLength={80} /></Label>
         </div>
         <Label text="Address"><input className={field} value={f.address} onChange={set('address')} maxLength={160} autoComplete="street-address" /></Label>
-        <Label text="Website or Instagram"><input className={field} value={f.website} onChange={set('website')} maxLength={160} inputMode="url" /></Label>
+        <Label text="One line about you (goes on your /date card)"><input className={field} value={f.about} onChange={set('about')} placeholder="Oysters, natural wine, a patio made for first dates" maxLength={200} /></Label>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Label text="Website"><input className={field} value={f.website} onChange={set('website')} maxLength={160} inputMode="url" /></Label>
+          <Label text="Hours"><input className={field} value={f.hours} onChange={set('hours')} placeholder="Daily 4pm–2am" maxLength={120} /></Label>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Label text="Instagram"><input className={field} value={f.instagram} onChange={set('instagram')} placeholder="@yourspot" maxLength={80} /></Label>
+          <Label text="TikTok"><input className={field} value={f.tiktok} onChange={set('tiktok')} placeholder="@yourspot" maxLength={80} /></Label>
+        </div>
 
         <div className="grid sm:grid-cols-2 gap-4">
           <Label text="Your name" required><input className={field} value={f.contact_name} onChange={set('contact_name')} required maxLength={80} autoComplete="name" /></Label>

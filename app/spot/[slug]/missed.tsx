@@ -29,7 +29,7 @@ export function Missed({ slug, name, refresh }: { slug: string; name: string; re
     const { data } = await authClient()!.rpc('post_missed', { p_spot: slug, p_you: you, p_me: me || null })
     setBusy(false)
     if (data === 'ok') { setYou(''); setMe(''); setMsg('Posted. Only people who were here tonight can see it.'); load(); return }
-    setMsg(data === 'words' ? 'Clothes, moments and vibes only. No bodies, no contact info.' : data === 'one_a_night' ? 'One a night. Make it count.' : data === 'not_here' ? 'Scan in here first.' : 'Couldn’t post. Try again.')
+    setMsg(data === 'words' ? 'Clothes, moments and vibes only. No bodies, no contact info.' : data === 'one_a_night' ? 'One a night. Make it count.' : data === 'not_here' ? 'Check in here first.' : 'Couldn’t post. Try again.')
   }
   async function claim(id: string) {
     const { data } = await authClient()!.rpc('claim_missed', { p_id: id })
@@ -42,7 +42,7 @@ export function Missed({ slug, name, refresh }: { slug: string; name: string; re
   if (feed.state === 'not_here') return (
     <section className="rounded-3xl border-2 border-dashed border-[#141414]/20 p-5">
       <div className="font-display font-extrabold text-2xl tracking-tight">/missed</div>
-      <p className="mt-1 text-[#141414]/70">Saw someone here and didn&rsquo;t say anything? Scan in, and you can leave a note only people who were here tonight will see.</p>
+      <p className="mt-1 text-[#141414]/70">Saw someone here and didn&rsquo;t say anything? Check in, and you can leave a note only people who were here tonight will see.</p>
     </section>
   )
 

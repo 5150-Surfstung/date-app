@@ -183,15 +183,12 @@ const wingDemo = await A.c.rpc('send_wing', { p_subject: 'maya', p_to: hB, p_not
 check('demo profiles can\u2019t be /winged', wingDemo.data === 'demo', wingDemo.data)
 const wing = await B.c.rpc('send_wing', { p_subject: hA, p_to: `e2e-${runId}-friend@test.invalid`, p_note: 'e2e' })
 check('send /wing', wing.data === 'invited', wing.error?.message ?? wing.data)
-// Check-ins only work at approved /spots. Scan in at a live one if there is
-// one; a paused spot (the old placeholder) must refuse.
-const liveSpots = (await anon.rpc('public_spots')).data ?? []
-const pausedIn = await A.c.rpc('date_signal', { p_kind: 'checkin', p_venue: 'golden-hour', p_note: null })
+// Check-ins only work at live /spots, and only with proof you're there:
+// your location, or the key in the spot's window QR. The old blind check-in is gone.
+const pausedIn = await A.c.rpc('check_in', { p_spot: 'golden-hour', p_lat: 32.7765, p_lng: -79.9311, p_acc: 10 })
 check('paused /spots refuse check-ins', pausedIn.data === 'bad', pausedIn.data)
-if (liveSpots.length) {
-  const spotIn = await A.c.rpc('date_signal', { p_kind: 'checkin', p_venue: liveSpots[0].slug, p_note: null })
-  check('scan in at a live /spot', spotIn.data === 'ok', spotIn.error?.message ?? spotIn.data)
-}
+const blindIn = await A.c.rpc('date_signal', { p_kind: 'checkin', p_venue: 'golden-hour', p_note: null })
+check('no check-in without proof', blindIn.data === 'use_check_in', blindIn.data)
 
 // B's side: inbox, yes, /chat
 const inbox = await B.c.rpc('my_inbox')
@@ -238,16 +235,35 @@ const backB = await B.c.rpc('back_on_the_market')
 check('back on the market works', backA.data === 'ok' && backB.data === 'ok')
 
 // /missed: only people who were there, around the same time; anonymous until both say yes
-const mSpot = { name: `E2E Missed ${runId}`, kind: 'bar', contact_name: 'Tess', contact_email: `e2e-${runId}-missed@test.invalid`, standards_ok: true }
+const mSpot = { name: `E2E Missed ${runId}`, kind: 'bar', contact_name: 'Tess', contact_email: `e2e-${runId}-missed@test.invalid`, standards_ok: true, instagram: 'https://www.instagram.com/e2e.spot/?hl=en', hours: 'Daily 4pm–2am', about: 'Oysters and a patio' }
 await anon.rpc('date_spot_apply', { p: mSpot })
 const mSlug = `e2e-missed-${runId}`
 const mApproved = await anon.rpc('e2e_approve_spot', { p_slug: mSlug })
 check('test spot approved (test helper only)', mApproved.data === 'ok', mApproved.data)
+const card = await anon.rpc('public_spot', { p_slug: mSlug })
+check('spot card: socials cleaned, hours and about', card.data?.instagram === 'e2e.spot' && card.data?.hours === 'Daily 4pm–2am' && card.data?.about === 'Oysters and a patio', JSON.stringify(card.data))
+const door = (await anon.rpc('e2e_spot_door', { p_slug: mSlug })).data
+check('test spot pinned (test helper only)', !!door?.key, JSON.stringify(door))
+const kitNoKey = await anon.rpc('spot_door', { p_slug: mSlug, p_key: 'nope' })
+check('window QR page needs the key', kitNoKey.data === null, JSON.stringify(kitNoKey.data))
+const kitKey = await anon.rpc('spot_door', { p_slug: mSlug, p_key: door?.key })
+check('window QR page with the key', kitKey.data?.key === door?.key)
 const feedAway = await A.c.rpc('missed_feed', { p_spot: mSlug })
 check('no feed unless you checked in', feedAway.data?.state === 'not_here', JSON.stringify(feedAway.data))
 const postAway = await A.c.rpc('post_missed', { p_spot: mSlug, p_you: 'Green jacket', p_me: null })
 check('cannot post unless you were there', postAway.data === 'not_here', postAway.data)
-await A.c.rpc('date_signal', { p_kind: 'checkin', p_venue: mSlug, p_note: null })
+const noProof = await A.c.rpc('check_in', { p_spot: mSlug })
+check('check-in needs location or the window QR', noProof.data === 'where', noProof.data)
+const fuzzyIn = await A.c.rpc('check_in', { p_spot: mSlug, p_lat: door?.lat, p_lng: door?.lng, p_acc: 900 })
+check('fuzzy location refused', fuzzyIn.data === 'fuzzy', fuzzyIn.data)
+const farIn = await A.c.rpc('check_in', { p_spot: mSlug, p_lat: door?.lat + 0.01, p_lng: door?.lng, p_acc: 10 })
+check('a block away is too far', farIn.data === 'far', farIn.data)
+const badKey = await A.c.rpc('check_in', { p_spot: mSlug, p_key: 'guess' })
+check('a guessed QR key does nothing', badKey.data === 'where', badKey.data)
+const hereIn = await A.c.rpc('check_in', { p_spot: mSlug, p_lat: door?.lat + 0.0002, p_lng: door?.lng, p_acc: 15 })
+check('check in by location', hereIn.data === 'ok', hereIn.data)
+const nowA = await A.c.rpc('my_spot_now')
+check('the app knows where you are checked in', nowA.data?.slug === mSlug, JSON.stringify(nowA.data))
 const rude = await A.c.rpc('post_missed', { p_spot: mSlug, p_you: 'nice legs by the bar', p_me: null })
 check('no body talk', rude.data === 'words', rude.data)
 const posted = await A.c.rpc('post_missed', { p_spot: mSlug, p_you: 'Green jacket, laughed at the bartender joke', p_me: 'Blue hat' })
@@ -256,7 +272,8 @@ const againMissed = await A.c.rpc('post_missed', { p_spot: mSlug, p_you: 'Someon
 check('one a night', againMissed.data === 'one_a_night', againMissed.data)
 const feedBAway = await B.c.rpc('missed_feed', { p_spot: mSlug })
 check('others who were not there see nothing', feedBAway.data?.state === 'not_here')
-await B.c.rpc('date_signal', { p_kind: 'checkin', p_venue: mSlug, p_note: null })
+const doorIn = await B.c.rpc('check_in', { p_spot: mSlug, p_key: door?.key })
+check('check in by the window QR', doorIn.data === 'ok', doorIn.data)
 const feedB = await B.c.rpc('missed_feed', { p_spot: mSlug })
 const thePost = (feedB.data?.posts ?? [])[0]
 check('people who were there see it, with no name', !!thePost && !JSON.stringify(feedB.data).includes(hA) && !JSON.stringify(feedB.data).includes('@'), JSON.stringify(feedB.data))
@@ -269,6 +286,9 @@ const sneakAnswer = await B.c.rpc('answer_missed_claim', { p_claim: theClaim?.cl
 check('only the poster can answer', sneakAnswer.data === 'not_yours', sneakAnswer.data)
 const opened = await A.c.rpc('answer_missed_claim', { p_claim: theClaim?.claim, p_yes: true })
 check('both yes opens a /chat', typeof opened.data === 'string' && opened.data.length > 20, opened.data)
+await A.c.rpc('check_out', { p_spot: mSlug })
+const outA = await A.c.rpc('my_spot_now')
+check('"I\u2019m out" checks you out', outA.data === null, JSON.stringify(outA.data))
 
 // Home, edit, prefs, export
 const home = await A.c.rpc('my_home')

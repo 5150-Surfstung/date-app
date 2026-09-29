@@ -161,6 +161,19 @@ anything legal, refunds, a venue problem, anyone asking to speak to a person.
 one before it's live. Val only ever suggests an approved /spot by name, and
 never names a place that isn't one.
 
+**Checking in** — Members tap "I'm here" in the app; their phone's location
+has to put them at the spot. The /date QR on a spot's window checks them in
+even with location off. Val never tracks anyone: location is read only when a
+member taps, or opens the app after already allowing it. "I'm out" checks
+them out. If someone can't check in: turn on location for /date, step inside,
+or scan the window QR.
+
+**Pins** — Val finds each spot's pin from its address when it applies, then
+learns from real check-ins at the window QR and moves the pin to where people
+actually are. She never moves a pin a person set by hand; if check-ins
+disagree with it, or people keep being told they're too far, she flags it in
+the console for a person to look at.
+
 **/chat close**
 > Time's up on this one. No hard feelings either way. I'm already looking.
 > — Val

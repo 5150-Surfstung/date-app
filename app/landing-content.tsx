@@ -21,7 +21,7 @@ const PROMISES = [
   },
   {
     title: '/spots',
-    body: 'Scan in at a participating spot. Someone in the room might be on /date too. If it’s mutual, Val introduces you. Nobody has to walk over.',
+    body: 'Walk into a /date spot and tap “I’m here.” Someone in the room might be on /date too. If it’s mutual, Val introduces you. Nobody has to walk over.',
   },
   {
     title: '/nights',
@@ -129,7 +129,7 @@ export default function LandingContent() {
             <Link href={`/spot/${venue.slug}`} className="rise border-2 border-current rounded-2xl px-6 py-5 mb-12 max-w-lg block">
               <div className="text-xs tracking-[0.2em] uppercase font-medium mb-2">You&rsquo;re at a /date spot</div>
               <div className="font-display font-extrabold text-3xl tracking-tight">{venue.name}</div>
-              <div className="text-sm leading-relaxed mt-2 opacity-80">Scan in here. Someone in this room might be on /date. &rarr;</div>
+              <div className="text-sm leading-relaxed mt-2 opacity-80">Tap “I’m here.” Someone in this room might be on /date. &rarr;</div>
             </Link>
           )}
           <div className="rise text-xs tracking-[0.2em] uppercase font-semibold" style={{ color: vibe.muted }}>

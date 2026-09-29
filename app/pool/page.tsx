@@ -47,7 +47,7 @@ export default function PoolPage() {
   if (pool.state !== 'open') return <AppShell title="Your pool"><NotYet state={pool.state} /></AppShell>
 
   return (
-    <AppShell title="Your pool" alerts={false}>
+    <AppShell title="Your pool" alerts={false} here>
       <LockScreen />
       <VibeNow lead={myLead} handle={pool.me?.handle ?? null} onChange={reload} />
 

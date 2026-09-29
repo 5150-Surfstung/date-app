@@ -12,6 +12,9 @@ type Spot = {
   contact_name: string | null; contact_role: string | null; contact_email: string | null; contact_phone: string | null
   night_ok: boolean; rep_code: string | null; rep_name: string | null; review_note: string | null
   night_when: string | null; night_detail: string | null; created_at: string; reviewed_at: string | null; checkins: number
+  lat: number | null; lng: number | null; pin_source: 'address' | 'crowd' | 'val' | null; pin_flag: string | null
+  pin_suggest: { lat: number; lng: number } | null; door_key: string
+  about: string | null; hours: string | null; phone: string | null; instagram: string | null; tiktok: string | null; photo: string | null
 }
 type Rep = { code: string; name: string; email: string | null; active: boolean; sent: number; approved: number }
 
@@ -100,6 +103,7 @@ export function SpotsTab() {
                 </div>
               </div>
 
+              <PinTools spot={s} onSaved={load} />
               {s.status === 'approved' && <LiveTools spot={s} onSaved={load} />}
             </div>
           ))}
@@ -121,30 +125,111 @@ function Row({ k, children, wide }: { k: string; children: React.ReactNode; wide
   )
 }
 
-// A live spot: links for the venue, and the next /night.
+// Val finds each pin from the address, and window-QR check-ins correct it.
+// Val's people only step in when it's flagged.
+const PIN_FROM = { address: 'found from the address', crowd: 'learned from check-ins at the door', val: 'set by you' } as const
+
+/** "32.78, -79.93" or any Google Maps link with coordinates in it. */
+function parsePin(t: string): { lat: number; lng: number } | null {
+  const m = t.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) ?? t.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/) ?? t.match(/(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/)
+  return m ? { lat: Number(m[1]), lng: Number(m[2]) } : null
+}
+
+function PinTools({ spot, onSaved }: { spot: Spot; onSaved: () => void }) {
+  const [open, setOpen] = useState(false)
+  const [text, setText] = useState('')
+  const [msg, setMsg] = useState<string | null>(null)
+  async function pin(p: { lat: number; lng: number } | null) {
+    if (!p) { setMsg('Paste coordinates like 32.7765, -79.9311, or a Google Maps link.'); return }
+    await authClient()!.rpc('val_pin_spot', { p_slug: spot.slug, p_lat: p.lat, p_lng: p.lng })
+    setOpen(false); setText(''); setMsg(null); onSaved()
+  }
+  async function findAgain() {
+    await authClient()!.rpc('val_find_pin', { p_slug: spot.slug })
+    setMsg('Looking it up. Refresh in a few seconds.')
+    setTimeout(onSaved, 4000)
+  }
+  const map = spot.lat != null ? `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lng}` : null
+  return (
+    <div className={`mt-4 rounded-xl px-4 py-3 text-sm ${spot.pin_flag ? 'bg-ob/10 border-2 border-ob' : 'bg-[#141414]/[0.04]'}`}>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="font-extrabold">Pin</span>
+        {map ? <a className="underline" target="_blank" rel="noreferrer" href={map}>{spot.lat!.toFixed(5)}, {spot.lng!.toFixed(5)}</a> : <span>none yet</span>}
+        {spot.pin_source && <span className="text-[#141414]/55">{PIN_FROM[spot.pin_source]}</span>}
+        <span className="ml-auto flex gap-3 font-semibold">
+          <button className="underline" onClick={() => setOpen(!open)}>Set it</button>
+          <button className="underline" onClick={findAgain}>Find it again</button>
+        </span>
+      </div>
+      {spot.pin_flag && <p className="mt-1 font-semibold text-ob">{spot.pin_flag}</p>}
+      {spot.pin_suggest && (
+        <button className="mt-1 underline font-semibold" onClick={() => pin(spot.pin_suggest)}>Move it to where people actually check in</button>
+      )}
+      {open && (
+        <div className="mt-2 flex gap-2">
+          <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Paste from Google Maps (long-press the spot)"
+            className="flex-1 border-2 border-[#141414]/15 focus:border-ob outline-none rounded-full px-4 py-2 text-sm bg-white" />
+          <Pill onClick={() => pin(parsePin(text))}>Save</Pill>
+        </div>
+      )}
+      {msg && <p className="mt-1 text-[#141414]/60">{msg}</p>}
+    </div>
+  )
+}
+
+type Card = Pick<Spot, 'perk' | 'about' | 'hours' | 'phone' | 'website' | 'instagram' | 'tiktok' | 'address' | 'night_when' | 'night_detail'>
+const CARD_FIELDS: [keyof Card, string][] = [
+  ['about', 'One line about them (shows on their card)'], ['hours', 'Hours, e.g. Daily 4pm–2am'], ['address', 'Address'],
+  ['phone', 'Public phone'], ['website', 'Website'], ['instagram', 'Instagram @'], ['tiktok', 'TikTok @'],
+  ['perk', 'What introduced couples get'],
+]
+
+// A live spot: their card, the window QR, and the next /night.
 function LiveTools({ spot, onSaved }: { spot: Spot; onSaved: () => void }) {
-  const [when, setWhen] = useState(spot.night_when ?? '')
-  const [detail, setDetail] = useState(spot.night_detail ?? '')
-  const [perk, setPerk] = useState(spot.perk ?? '')
+  const [f, setF] = useState<Card>(() => Object.fromEntries(
+    ([...CARD_FIELDS.map(([k]) => k), 'night_when', 'night_detail'] as (keyof Card)[]).map((k) => [k, spot[k] ?? '']),
+  ) as Card)
   const [saved, setSaved] = useState(false)
+  const [upload, setUpload] = useState<string | null>(null)
+  const set = (k: keyof Card) => (e: React.ChangeEvent<HTMLInputElement>) => { setF({ ...f, [k]: e.target.value }); setSaved(false) }
   async function save() {
-    await authClient()!.rpc('val_update_spot', { p_slug: spot.slug, p: { night_when: when, night_detail: detail, perk } })
+    await authClient()!.rpc('val_update_spot', { p_slug: spot.slug, p: f })
     setSaved(true); onSaved()
   }
+  async function photo(file: File | undefined) {
+    if (!file) return
+    setUpload('Uploading…')
+    const key = `${spot.slug}/${Date.now()}.${(file.name.split('.').pop() || 'jpg').toLowerCase()}`
+    const { error } = await authClient()!.storage.from('date-spots').upload(key, file, { contentType: file.type, upsert: false })
+    if (error) { setUpload('Upload failed.'); return }
+    await authClient()!.rpc('val_update_spot', { p_slug: spot.slug, p: { photo: key } })
+    setUpload('Cover photo set.'); onSaved()
+  }
+  async function newKey() {
+    if (!confirm('Make a new window QR? The old one stops checking people in. Only do this if a QR leaked or got copied.')) return
+    await authClient()!.rpc('val_new_door_key', { p_slug: spot.slug }); onSaved()
+  }
+  const kit = `/spot/${spot.slug}/kit/?k=${spot.door_key}`
+  const field = 'border-2 border-[#141414]/15 focus:border-ob outline-none rounded-full px-4 py-2.5 text-sm'
   return (
     <div className="mt-5 border-t border-[#141414]/10 pt-4 grid gap-3">
       <div className="flex flex-wrap gap-3 text-sm font-semibold">
-        <a className="underline" target="_blank" href={`/spot/${spot.slug}/`}>Their page</a>
-        <a className="underline" target="_blank" href={`/spot/${spot.slug}/kit/`}>Their QR kit (print)</a>
-        <button className="underline" onClick={() => navigator.clipboard?.writeText(`${site()}/spot/${spot.slug}/kit/`)}>Copy kit link</button>
+        <a className="underline" target="_blank" href={`/spot/${spot.slug}/`}>Their card</a>
+        <a className="underline" target="_blank" href={kit}>Their window QR</a>
+        <button className="underline" onClick={() => navigator.clipboard?.writeText(`${site()}${kit}`)}>Copy QR link</button>
+        <button className="underline text-[#141414]/50" onClick={newKey}>New QR key</button>
       </div>
-      <input value={perk} onChange={(e) => { setPerk(e.target.value); setSaved(false) }} placeholder="What introduced couples get (shows on their page)"
-        className="border-2 border-[#141414]/15 focus:border-ob outline-none rounded-full px-4 py-2.5 text-sm" />
+      <div className="grid sm:grid-cols-2 gap-2">
+        {CARD_FIELDS.map(([k, ph]) => <input key={k} value={f[k] ?? ''} onChange={set(k)} placeholder={ph} className={field} />)}
+      </div>
+      <label className="text-sm font-semibold flex flex-wrap items-center gap-3">
+        <span className="underline cursor-pointer">{spot.photo ? 'Change cover photo' : 'Add a cover photo'}</span>
+        <input type="file" accept="image/*" className="hidden" onChange={(e) => photo(e.target.files?.[0])} />
+        {upload && <span className="text-[#141414]/60 font-normal">{upload}</span>}
+      </label>
       <div className="grid sm:grid-cols-[1fr_2fr_auto] gap-2">
-        <input value={when} onChange={(e) => { setWhen(e.target.value); setSaved(false) }} placeholder="Next /night, e.g. Thu, Nov 6 · 7pm"
-          className="border-2 border-[#141414]/15 focus:border-ob outline-none rounded-full px-4 py-2.5 text-sm" />
-        <input value={detail} onChange={(e) => { setDetail(e.target.value); setSaved(false) }} placeholder="One line about it"
-          className="border-2 border-[#141414]/15 focus:border-ob outline-none rounded-full px-4 py-2.5 text-sm" />
+        <input value={f.night_when ?? ''} onChange={set('night_when')} placeholder="Next /night, e.g. Thu, Nov 6 · 7pm" className={field} />
+        <input value={f.night_detail ?? ''} onChange={set('night_detail')} placeholder="One line about it" className={field} />
         <Pill onClick={save}>{saved ? 'Saved' : 'Save'}</Pill>
       </div>
     </div>

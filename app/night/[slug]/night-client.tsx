@@ -7,6 +7,7 @@ import { getSupabase } from '@/lib/supabase'
 import { authClient, useSession } from '@/lib/auth'
 import { VAL } from '@/lib/val'
 import { SignIn } from '../../gate'
+import { CHECKIN_SAYS, checkIn } from '@/lib/here'
 
 // /night mode: the room as a live pool. Nobody sees who's here — only how
 // many. Val makes the intros.
@@ -16,6 +17,7 @@ export default function NightClient({ venue }: { venue: Venue }) {
   const [stage, setStage] = useState<'door' | 'in' | 'noticed'>('door')
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<string | null>(null)
 
   async function refresh() {
     const s = getSupabase()
@@ -27,11 +29,13 @@ export default function NightClient({ venue }: { venue: Venue }) {
     refresh(); const t = setInterval(refresh, 15000); return () => clearInterval(t)
   }, [venue.slug])
 
-  // Scan-in records that you're here; your vibe is yours to set.
+  // Checking in (by location, or the /date QR at the door) records that you're here; your vibe is yours to set.
   async function scanIn() {
-    setBusy(true)
-    await authClient()?.rpc('date_signal', { p_kind: 'checkin', p_venue: venue.slug, p_note: 'night' })
-    setBusy(false); setStage('in'); refresh()
+    setBusy(true); setMsg(null)
+    const r = await checkIn(venue.slug, { note: 'night' })
+    setBusy(false)
+    if (r !== 'ok') { setMsg(CHECKIN_SAYS[r]); return }
+    setStage('in'); refresh()
   }
   async function noticed() {
     setBusy(true)
@@ -61,7 +65,7 @@ export default function NightClient({ venue }: { venue: Venue }) {
 
         {stage === 'door' && (
           <div className="flex flex-col gap-3 max-w-md">
-            <p className="text-xl font-medium leading-snug">Scan in at the door. Set your vibe for the night and see who else is feeling it.</p>
+            <p className="text-xl font-medium leading-snug">Tap in when you walk in. Set your vibe for the night and see who else is feeling it.</p>
             {!me && !sessionLoading ? (
               <SignIn night cta="I'm here" pitch="The email on your /name. Tap Val's link and you're in the room." />
             ) : (
@@ -69,6 +73,7 @@ export default function NightClient({ venue }: { venue: Venue }) {
               {busy ? 'One sec\u2026' : 'I\u2019m here'}
             </button>
             )}
+            {msg && <p className="text-sm font-semibold">{msg}</p>}
             <p className="text-sm text-[#F6EFFF]/60">No /name? <Link href={`/claim/`} className="underline text-[#F6EFFF]">Claim one</Link> &mdash; thirty seconds at the door.</p>
           </div>
         )}

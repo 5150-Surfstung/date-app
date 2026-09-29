@@ -11,6 +11,16 @@ export type Venue = {
   area: string | null
   kind: string | null
   perk: string | null
+  about?: string | null
+  address?: string | null
+  hours?: string | null
+  phone?: string | null
+  website?: string | null
+  instagram?: string | null
+  tiktok?: string | null
+  photo?: string | null
+  lat?: number | null
+  lng?: number | null
   // Next /night at this spot, if one is scheduled.
   night?: { when: string; detail: string } | null
 }
@@ -54,3 +64,11 @@ export function useSpot(slug: string | null | undefined): Venue | null | undefin
   }, [slug])
   return spot
 }
+
+/** Google Maps directions to a spot: its name and address finds the real listing. */
+export function directionsUrl(v: Venue): string | null {
+  const dest = v.address ? `${v.name}, ${v.address}` : v.lat != null && v.lng != null ? `${v.lat},${v.lng}` : null
+  return dest ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}` : null
+}
+
+export const siteUrl = (w: string) => (/^https?:\/\//i.test(w) ? w : `https://${w}`)

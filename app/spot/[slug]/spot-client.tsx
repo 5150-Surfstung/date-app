@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Missed } from './missed'
+import { SpotCard } from './card'
 import Link from 'next/link'
 import type { Venue } from '@/lib/venues'
 import { authClient, useSession } from '@/lib/auth'
 import { VAL } from '@/lib/val'
 import { SignIn } from '../../gate'
+import { CHECKIN_SAYS, checkIn, checkOut } from '@/lib/here'
 
 type Stage = 'scan' | 'in' | 'noticed'
 
@@ -20,7 +22,19 @@ export default function SpotClient({ venue }: { venue: Venue }) {
 
   const emailValid = Boolean(me)
 
-  async function signal(kind: 'checkin' | 'notice' | 'rsvp', text?: string) {
+  // Already checked in here tonight? Skip straight past the button.
+  useEffect(() => {
+    if (!me) return
+    authClient()?.rpc('my_spot_now').then(({ data }) => { if ((data as { slug?: string } | null)?.slug === venue.slug) setStage((s) => (s === 'scan' ? 'in' : s)) })
+  }, [me, venue.slug])
+
+  async function here() {
+    const r = await checkIn(venue.slug)
+    if (r !== 'ok') throw new Error(CHECKIN_SAYS[r])
+    setStage('in')
+  }
+
+  async function signal(kind: 'notice' | 'rsvp', text?: string) {
     const supabase = authClient()
     if (!supabase) throw new Error('Not configured yet.')
     const { data, error } = await supabase.rpc('date_signal', { p_kind: kind, p_venue: venue.slug, p_note: text ?? null })
@@ -41,7 +55,7 @@ export default function SpotClient({ venue }: { venue: Venue }) {
 
   return (
     <main className="page min-h-dvh flex flex-col bg-[#FFF3EA] text-[#141414] px-6 sm:px-12 pb-12">
-      <header className="flex items-center justify-between pt-8 pb-10">
+      <header className="flex items-center justify-between pt-8 pb-6 max-w-xl w-full mx-auto">
         <Link href="/" className="font-display font-extrabold text-3xl tracking-tight">
           /date
         </Link>
@@ -50,33 +64,25 @@ export default function SpotClient({ venue }: { venue: Venue }) {
         </span>
       </header>
 
-      <section className="max-w-xl flex flex-col gap-8">
-        <div>
-          <div className="text-xs tracking-[0.2em] uppercase font-extrabold text-ob mb-3">
-            This is a /date spot
-          </div>
-          <h1 className="font-display font-extrabold text-5xl sm:text-6xl leading-[0.95] tracking-[-0.03em]">
-            {venue.name}
-          </h1>
-          <p className="mt-3 text-base text-[#141414]/70">{venue.area}</p>
-        </div>
+      <section className="max-w-xl w-full mx-auto flex flex-col gap-8">
+        <SpotCard venue={venue} />
 
         {stage === 'scan' && (
           <>
             <p className="text-xl sm:text-2xl font-medium leading-snug">
-              Someone in this room might already be on /date. Scan in, and if
-              it&rsquo;s mutual, we introduce you. Nobody has to walk over.
+              Someone in this room might already be on /date. Tell Val you&rsquo;re
+              here, and if it&rsquo;s mutual, she introduces you. Nobody has to walk over.
             </p>
             <div className="flex flex-col gap-3 max-w-md">
               {!me && !sessionLoading ? (
-                <SignIn cta="Scan me in" pitch="The email on your /vibe. Val sends a link; tap it and you're scanned in." />
+                <SignIn cta="I'm here" pitch="The email on your /vibe. Val sends a link; tap it and you're checked in." />
               ) : (
               <button
                 disabled={!emailValid || busy}
-                onClick={() => run(async () => { await signal('checkin'); setStage('in') })}
+                onClick={() => run(here)}
                 className="bg-ob text-white text-base font-extrabold rounded-full px-10 py-4 hover:scale-[1.02] transition-transform disabled:opacity-30"
               >
-                {busy ? 'One sec…' : 'Scan in'}
+                {busy ? 'One sec…' : 'I’m here'}
               </button>
               )}
               <p className="text-sm text-[#141414]/50">
@@ -110,12 +116,14 @@ export default function SpotClient({ venue }: { venue: Venue }) {
               >
                 I noticed someone
               </button>
-              <button
-                onClick={() => setStage('noticed')}
-                className="text-sm text-[#141414]/70 underline self-start"
-              >
-                Nobody tonight — just here
-              </button>
+              <div className="flex gap-5">
+                <button onClick={() => setStage('noticed')} className="text-sm text-[#141414]/70 underline">
+                  Nobody tonight — just here
+                </button>
+                <button onClick={() => run(async () => { await checkOut(venue.slug); setStage('scan') })} className="text-sm text-[#141414]/70 underline">
+                  I&rsquo;m out
+                </button>
+              </div>
             </div>
           </>
         )}

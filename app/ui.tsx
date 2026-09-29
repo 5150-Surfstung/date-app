@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { useSession, signOut } from '@/lib/auth'
 import Install from './install'
 import Notes from './push'
+import { HereCard } from './here'
 
-export function AppShell({ title, children, alerts = true }: { title: string; children: React.ReactNode; alerts?: boolean }) {
+export function AppShell({ title, children, alerts = true, here = false }: { title: string; children: React.ReactNode; alerts?: boolean; here?: boolean }) {
   const { email } = useSession()
   return (
     <main className="page min-h-dvh bg-white text-[#141414]">
@@ -26,6 +27,7 @@ export function AppShell({ title, children, alerts = true }: { title: string; ch
         </nav>
       </header>
       <section className="px-5 sm:px-12 py-8 sm:py-10 max-w-5xl">
+        {email && <HereCard ask={here} />}
         <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob mb-2">{title}</div>
         {children}
         {email && alerts && <div className="mt-12 flex flex-col gap-4"><Install dark /><Notes dark /></div>}

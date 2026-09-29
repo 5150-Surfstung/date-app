@@ -547,3 +547,21 @@ Every /spot is approved by a person. Nothing is public until it is.
 - **Only people who were there see it.** `missed_feed` shows a spot's notes only to members who checked in there within ±3 hours of the poster. Everyone else just sees the prompt to scan in.
 - **"That was me"** (`claim_missed`) is private. The poster is pushed (`notify` kind `missed`) and sees the claims in their inbox with /names. Yes (`answer_missed_claim`) opens a /chat with a note from Val. No names show until the poster says yes.
 - Notes are gone after 72 hours, and the poster can take theirs down anytime (`hide_missed`).
+
+## 10z. "I'm here", window QRs, spot cards (v27)
+
+- **No more scanning to check in.** Members tap "I'm here" (on the spot's page, or on the card that appears in the app when they're at a spot). Their location has to put them there: 60m plus the phone's own accuracy, capped at 160m. Readings worse than 150m accuracy are refused. `check_in` returns ok / far / fuzzy / no_pin / where.
+- Location is read only on a tap, or when the member already allowed it; there's no background tracking. "Not now" hides the prompt for that spot until tomorrow. "I'm out" (`check_out`) takes you off the live map and the /night count.
+- **The window QR is the only thing a venue puts up.** It carries the spot's door key (`?k=`), so scanning it checks a member in even with location off. The kit page (`/spot/[slug]/kit/?k=`) shows one on-brand sticker and offers PNG and SVG downloads for the venue's designer. The link is in the approval email and Val's console. "New QR key" retires copied QRs. Table cards and posters are gone.
+- **Val finds and watches the pins.** When a spot applies, notify looks up its address on OpenStreetMap (free; the approval step and "Find it again" retry it). `date_pin_watch`:
+  - moves a pin that came from an address or the crowd to the average of accurate window-QR check-ins once there are 3 or more;
+  - never moves a pin Val set by hand, but flags it with a suggested fix;
+  - flags a spot where 3 or more people were told "too far" within a week.
+
+  The console shows each pin, where it came from, and any flag. Val can paste a pin or a Google Maps link.
+- **Spot cards.** Each /spot page is the venue's own link page:
+  - a cover photo (Val uploads it; public bucket `date-spots`), name, kind and area, and a one-line about;
+  - "N here now" once 3 or more people are checked in;
+  - Directions (Google Maps), Call, Website, Instagram and TikTok, then the address and hours.
+  
+  The venue application asks for these too, and socials are cleaned to handles (`date_social`).
