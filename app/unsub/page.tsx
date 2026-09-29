@@ -4,7 +4,7 @@
 import Link from 'next/link'
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { getSupabase } from '@/lib/supabase'
+import { rpc } from '@/lib/rest'
 
 const LABEL: Record<string, string> = { heys: '/hey and /wing emails', chats: 'new /chat emails', dates: 'morning-after emails', all: 'all of Val’s emails' }
 
@@ -17,7 +17,7 @@ function Unsub() {
 
   async function run(which: string) {
     setState('working'); setKind(which)
-    const { data } = await getSupabase()!.rpc('date_unsubscribe', { p_token: t, p_kind: which })
+    const { data } = await rpc('date_unsubscribe', { p_token: t, p_kind: which })
     setState(data === 'ok' ? 'ok' : 'bad')
   }
   useEffect(() => { if (/^[0-9a-f-]{36}$/i.test(t)) run(k); else setState('bad') }, [t, k])

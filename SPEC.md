@@ -474,3 +474,9 @@ One page, six full-screen scenes, and the color behind them blends from one to t
 6. **Close.** /receipts count up from zero, a giant outlined /date drifts behind "Val's ready when you are," then the /spots and footer.
 
 On phones: tap anywhere in the hero (or pick a /tag) and slashes burst from your finger; tilt the phone and the layers shift like looking through glass (iOS asks once, on the first tap); the hero drifts up and fades as you leave it. Everything goes still for people who turn motion off. Nothing new is installed.
+
+## 10q. The rest of the app moves, calmly, and loads fast (v18)
+
+- **Every page but the homepage** (`app/template.tsx` + `.enter` in globals.css): the header stays put and the page's blocks rise in one after another over half a second, on first load and on every navigation. Cards further down fade up as they scroll in (CSS scroll-driven, no script; older browsers just show them). Round buttons give slightly under your thumb. All of it is CSS and goes still with reduced motion.
+- **Photos:** the demo crew is 720px WebP, 0.47MB total instead of 8.6MB; off-screen photos load lazily. The service worker cache is bumped (date-v5) so phones drop the old files.
+- **Less JavaScript on public pages:** the homepage, /founding, /receipts and /unsub read the database with one plain request (`lib/rest.ts`) instead of the Supabase client. Homepage first load: 172KB → 109KB of JS.

@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getSupabase } from '@/lib/supabase'
+import { rpc } from '@/lib/rest'
 
 type R = { pool: number; founding: number; verified: number; intros: number; dates_set: number; dates_done: number; seconds: number; second_rate: number | null; passes: number; ghosts: number }
 
 export default function ReceiptsPage() {
   const [r, setR] = useState<R | null>(null)
-  useEffect(() => { getSupabase()?.rpc('date_receipts').then(({ data }) => setR(data as R)) }, [])
+  useEffect(() => { rpc('date_receipts').then(({ data }) => setR(data as R)) }, [])
 
   const rows: [string, string, string][] = r ? [
     ['People in the pool', String(r.pool), 'Real /names. Demo crew and tests excluded.'],

@@ -18,7 +18,7 @@ export default function DemoPage() {
           The demo crew.
         </h1>
         <p className="mt-5 text-xl text-chalk-2 font-medium leading-snug max-w-xl">
-          Twelve /names to try the whole thing with. Not real people. Open a /hey page,
+          {DEMO_CREW.length} /names to try the whole thing with. Not real people. Open a /hey page,
           print a badge, see what &ldquo;tonight only&rdquo; and &ldquo;private&rdquo; look like.
         </p>
       </section>
@@ -29,6 +29,8 @@ export default function DemoPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={demoPhoto(d.handle)}
+              loading="lazy"
+              decoding="async"
               alt={`${d.name}, ${d.age}`}
               className="w-full aspect-[4/5] object-cover bg-ob-1"
             />

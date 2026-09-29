@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getSupabase } from '@/lib/supabase'
+import { rpc } from '@/lib/rest'
 
 type F = { n: number; handle: string; tag: string | null; tags?: string[] | null }
 
 export default function FoundingPage() {
   const [list, setList] = useState<F[] | null>(null)
-  useEffect(() => { getSupabase()?.rpc('founding_wall').then(({ data }) => setList((data as F[]) ?? [])) }, [])
+  useEffect(() => { rpc('founding_wall').then(({ data }) => setList((data as F[]) ?? [])) }, [])
   const claimed = list?.length ?? 0
 
   return (

@@ -2,7 +2,7 @@
    Pages: network first, cache as you go, offline page when both fail.
    Static assets and demo photos: cache first, refresh in the background.
    Supabase and any other origin: never touched. */
-const VERSION = 'date-v4'
+const VERSION = 'date-v5'
 const BASE = new URL(self.registration.scope).pathname.replace(/\/$/, '')
 const OFFLINE = `${BASE}/offline/`
 const SHELL = [OFFLINE, `${BASE}/`, `${BASE}/icons/icon-192.png`]

@@ -2,7 +2,7 @@ import type { Tag, Visibility } from './handles'
 
 // The demo crew. Not real people — seeded in the database so the /hey flow,
 // the wall, and the badges can be shown end to end. Photos are generated;
-// they live in public/demo/<handle>.png.
+// they live in public/demo/<handle>.webp.
 export type DemoPerson = {
   handle: string
   name: string
@@ -92,9 +92,7 @@ export function getDemo(handle: string) {
   return DEMO_CREW.find((d) => d.handle === handle)
 }
 
-// Three were generated as PNG, the rest as JPEG.
-const PNG = new Set(['maya', 'theo', 'priya'])
-
+// 720px WebP, ~25KB each (the originals were 250KB-1.6MB).
 export function demoPhoto(handle: string) {
-  return `/demo/${handle}.${PNG.has(handle) ? 'png' : 'jpg'}`
+  return `/demo/${handle}.webp`
 }

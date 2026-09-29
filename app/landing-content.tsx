@@ -7,7 +7,7 @@ import { VENUES, getVenue } from '@/lib/venues'
 import { TAGS, HANDLE_KEY, type Tag } from '@/lib/handles'
 import { DEMO_CREW, demoPhoto } from '@/lib/demo'
 import { VIBES, pickVibe, vibeFor, type VibeTheme } from '@/lib/vibes'
-import { getSupabase } from '@/lib/supabase'
+import { rpc } from '@/lib/rest'
 
 
 const PROMISES = [
@@ -46,7 +46,7 @@ export default function LandingContent() {
   const [mine, setMine] = useState<string | null>(null)
   const [spin, setSpin] = useState(0)
   const [receipts, setReceipts] = useState<{ pool: number; founding: number; intros: number; second_rate: number | null } | null>(null)
-  useEffect(() => { getSupabase()?.rpc('date_receipts').then(({ data }) => setReceipts(data)) }, [])
+  useEffect(() => { rpc<typeof receipts>('date_receipts').then(({ data }) => setReceipts(data)) }, [])
 
   // First paint: your own /tag if you have a /name, otherwise the moment's.
   useEffect(() => {
@@ -54,7 +54,7 @@ export default function LandingContent() {
     try { handle = localStorage.getItem(HANDLE_KEY) } catch {}
     if (!handle) { setVibe(pickVibe()); return }
     setMine(handle)
-    getSupabase()?.rpc('handle_wall', { p_handle: handle }).then(({ data }) => {
+    rpc<{ tag?: Tag } | null>('handle_wall', { p_handle: handle }).then(({ data }) => {
       setVibe(data?.tag ? vibeFor(data.tag) : pickVibe())
     })
   }, [])
@@ -418,7 +418,7 @@ function ValIntro() {
         {[a, b].map((p, side) => (
           <Link key={p.handle + k} href={`/${p.handle}`} className={`intro-card ${side ? 'is-right' : 'is-left'}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={demoPhoto(p.handle)} alt={`${p.name}, ${p.age}`} className="absolute inset-0 w-full h-full object-cover" />
+            <img src={demoPhoto(p.handle)} alt={`${p.name}, ${p.age}`} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
             <div className="absolute left-3 bottom-3 text-white">
               <div className="font-display font-extrabold text-xl leading-none">/{p.handle}</div>
@@ -586,7 +586,7 @@ function Wall({ people, direction, accent }: { people: typeof DEMO_CREW; directi
       {row.map((d, i) => (
         <Link key={d.handle + i} href={`/${d.handle}`} className="wall-card group">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={demoPhoto(d.handle)} alt={`${d.name}, ${d.age}`} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+          <img src={demoPhoto(d.handle)} alt={`${d.name}, ${d.age}`} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 p-5">
             <div className="font-display font-extrabold text-3xl leading-none tracking-[-0.03em]">/{d.handle}</div>

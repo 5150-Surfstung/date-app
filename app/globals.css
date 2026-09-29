@@ -232,3 +232,32 @@ html.snap { scroll-snap-type: y proximity; }
   .intro-card, .intro-bubble, .intro-badge { opacity: 1 !important; transform: none !important; }
   .is-right { transform: none; }
 }
+
+/* The rest of the app: calm, quick, same family as the homepage.
+   1. A page's blocks rise in one after another (the header stays put). */
+.enter main > :not(header) { animation: enter .5s cubic-bezier(.2,.7,.2,1) both; }
+.enter main > :nth-child(2) { animation-delay: 40ms; }
+.enter main > :nth-child(3) { animation-delay: 90ms; }
+.enter main > :nth-child(4) { animation-delay: 140ms; }
+.enter main > :nth-child(5) { animation-delay: 190ms; }
+.enter main > :nth-child(n+6) { animation-delay: 230ms; }
+@keyframes enter { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* 2. Cards further down fade up as they scroll in (browsers that can do it
+   without script; the rest just show them). */
+@supports (animation-timeline: view()) {
+  .enter main > * :is(.rounded-2xl, .rounded-3xl, li) {
+    animation: card-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 35%;
+  }
+}
+@keyframes card-in { from { opacity: 0; transform: translateY(22px) scale(.985); } to { opacity: 1; transform: none; } }
+
+/* 3. Buttons give under your thumb. */
+:is(a, button).rounded-full:active:not(:disabled) { scale: .97; }
+
+@media (prefers-reduced-motion: reduce) {
+  .enter main > *, .enter main > * :is(.rounded-2xl, .rounded-3xl, li) { animation: none !important; }
+  :is(a, button).rounded-full:active { scale: 1; }
+}
