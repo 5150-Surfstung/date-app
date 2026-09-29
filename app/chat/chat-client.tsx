@@ -23,7 +23,7 @@ type Chat = {
   them: { handle: string; name: string; tag: string | null; tags?: string[] | null; email: string; age: number | null; hood: string | null; photo_key: string | null }
   my_count: number; their_count: number; debriefed: boolean
 }
-type Msg = { id: string; created_at: string; from_email: string; body: string }
+type Msg = { id: string; created_at: string; from_email: string; body: string; held_at?: string | null }
 
 
 export default function ChatClient() {
@@ -301,6 +301,7 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
             return (
               <div key={m.id} className={`max-w-lg rounded-2xl px-5 py-3 text-base ${own ? 'self-end bg-ob text-white' : 'self-start bg-[#141414]/5'}`}>
                 {m.body}
+                {own && m.held_at && <div className="mt-1 text-xs opacity-80">Val is holding this one while a person takes a look. They can&rsquo;t see it yet.</div>}
               </div>
             )
           })}

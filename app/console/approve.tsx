@@ -13,6 +13,7 @@ type App = {
   id: string; name: string; age: number; email: string; identity: string; seeking: string; neighborhood: string | null
   answers: Record<string, string> | null; photo_keys: string[] | null; voice_key: string | null
   status: string; verified: boolean; created_at: string
+  val_vet?: { flags: { level: string; note: string }[]; summary: string | null; ai: boolean } | null
 }
 
 export function ApproveTab({ apps, handles, onDone }: { apps: App[]; handles: { email: string; handle: string }[]; onDone: () => void }) {
@@ -61,6 +62,8 @@ function Card({ a, handle, onDone }: { a: App; handle?: string; onDone: () => vo
         {a.verified && <span className="text-xs font-extrabold uppercase tracking-[0.12em] bg-[#141414] text-white rounded-full px-3 py-1">Verified</span>}
       </div>
 
+      <ValVet v={a.val_vet} />
+
       <div className="flex gap-2 overflow-x-auto">
         {(a.photo_keys ?? []).map((k) => photos[k]
           ? /* eslint-disable-next-line @next/next/no-img-element */ <img key={k} src={photos[k]} alt="" className="h-48 aspect-[4/5] object-cover rounded-2xl shrink-0" />
@@ -88,6 +91,24 @@ function Card({ a, handle, onDone }: { a: App; handle?: string; onDone: () => vo
         {a.status !== 'waitlisted' && <Pill disabled={busy} onClick={() => act('waitlisted')}>Waitlist</Pill>}
         <Pill disabled={busy} onClick={() => act('rejected')}>Decline</Pill>
       </div>
+    </div>
+  )
+}
+
+// Val's pre-read: what a careful person should look at. She never decides.
+function ValVet({ v }: { v: App['val_vet'] }) {
+  if (!v) return <p className="text-xs text-[#141414]/45">Val is still looking at this one.</p>
+  const high = v.flags.filter((f) => f.level === 'high')
+  return (
+    <div className={`rounded-2xl px-4 py-3 text-sm ${high.length ? 'bg-ob/10 border-2 border-ob' : 'bg-[#141414]/[0.04]'}`}>
+      <div className="font-extrabold">{high.length ? 'Val says look closer' : v.flags.length ? 'Val noticed' : 'Val sees nothing off'}</div>
+      {v.summary && <p className="mt-1">{v.summary}</p>}
+      {v.flags.length > 0 && (
+        <ul className="mt-1.5 grid gap-0.5">
+          {v.flags.map((f, i) => <li key={i} className={f.level === 'high' ? 'font-semibold text-ob' : 'text-[#141414]/70'}>{f.level === 'high' ? '● ' : '○ '}{f.note}</li>)}
+        </ul>
+      )}
+      <div className="mt-1.5 text-xs text-[#141414]/45">{v.ai ? 'Val looked at the photos and answers. The call is yours.' : 'Basic checks only; Val’s eyes switch on with her key. The call is yours.'}</div>
     </div>
   )
 }

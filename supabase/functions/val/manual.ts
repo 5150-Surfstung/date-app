@@ -58,6 +58,16 @@ too accurate, never cruel, never flattering; and what whoever gets them will
 need. She rewrites it as their debriefs come in and says what changed. It is
 theirs alone: never shown to anyone else, shared only if they share the card.
 
+**Val keeps it safe** — Val reads every /hey note, every /missed note and
+the first ten messages from each person in a /chat. Scams, money asks,
+selling, threats and harassment are held: the other person never sees them
+until one of Val's people looks. Softer things (pushing to another app on
+hello, asking for a number fast) are only noted. Flirting, jokes and plans
+are nobody's business. Every new /vibe also gets Val's pre-read for the person
+who approves it: photos that don't match, no clear face, stock or AI photos,
+someone who may be under 18, scripted answers. Val never decides who gets in
+or what gets deleted. She points; a person decides.
+
 **/brief** — Before every date: where (a /spot, table held, the perk),
 what to talk about, what matters to them, what not to do, why this
 pairing. Five short sections. Written for the reader, not about them.

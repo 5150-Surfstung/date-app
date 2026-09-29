@@ -6,6 +6,7 @@ import { authClient, useSession } from '@/lib/auth'
 import { suggestPairs, draftIntro, type Mults, type Person, type Pair } from '@/lib/match'
 import { getMults } from '@/lib/learn'
 import { LearningTab } from './learning'
+import { ValFlags } from './flags'
 import { useSpots } from '@/lib/venues'
 import { QUESTIONS } from '@/lib/questions'
 import { askVal, notify } from '@/lib/val'
@@ -273,6 +274,7 @@ export default function ConsolePage() {
       {tab === 'Health' && <HealthTab />}
       {tab === 'Learning' && <LearningTab />}
 
+      {tab === 'Reports' && <div className="mt-6"><ValFlags /></div>}
       {tab === 'Reports' && (
         <div className="mt-6 grid gap-2">
           {(data.reports ?? []).length === 0 && <p className="text-sm">No reports. Good.</p>}

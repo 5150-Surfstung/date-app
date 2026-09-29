@@ -247,6 +247,15 @@ Deno.serve(async (req) => {
     return json({ sent });
   }
 
+  if (kind === "val_flag") {
+    // Val held something (a scam, a threat). Her people look first; nothing else happens until they do.
+    const { count } = await db.from("date_val_flags").select("id", { count: "exact", head: true }).is("resolved_at", null).eq("severity", "hold");
+    const { data: admins } = await db.from("date_admins").select("email");
+    await Promise.all((admins ?? []).map((a: { email: string }) =>
+      push(a.email, { title: "Val held something", body: `${count ?? 1} waiting for you to look.`, url: `${SITE}/console/?tab=Reports`, tag: "val-flag" })));
+    return json({ ok: true });
+  }
+
   if (kind === "vibe_new") {
     // Someone finished their /vibe. Nobody gets in until a person approves them.
     const { data: a } = await db.from("date_applications").select("id, name, age, status").eq("id", body.id).maybeSingle();
@@ -325,7 +334,7 @@ Deno.serve(async (req) => {
 
   if (kind === "hey") {
     const { data: h } = await db.from("date_heys").select("*").eq("to_handle", body.to_handle).eq("from_email", String(body.from_email).toLowerCase())
-      .is("notified_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      .is("notified_at", null).neq("status", "held").order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (!h) return json({ skipped: "none" });
     const { data: to } = await db.from("date_handles").select("*").eq("handle", h.to_handle).maybeSingle();
     const { data: from } = await db.from("date_handles").select("*").eq("email", h.from_email).maybeSingle();

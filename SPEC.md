@@ -602,3 +602,23 @@ Everything here is built from facts already in the database. No AI call, no cost
 - **Brain job `read_me`** (edge function `val`): loads the member's own handle, answers and debriefs; refuses without a /vibe; only writes when owed; guardrails as for every Val line (limit 85 words, no clinical or gendered words, signed once). Without her key it writes `templateRead` (answers-driven, also guarded, tested in `tests/val-guard.test.ts`) and marks `ai=false`.
 - **Cost.** One call at signup, one per debrief, manual cached. Never on a page view.
 - **Privacy.** `date_val_reads` is the member's alone (RPC only, `my_read`); exported in "download my data"; deleted with the account. Privacy page says so. `read` is a reserved /name.
+
+## 10ad. Val keeps it safe: screening and the approval pre-read (v31)
+
+- **Screening.** Triggers on `date_messages`, `date_heys` and `date_missed` screen new text.
+  - Free patterns (`date_screen_patterns`) always run.
+  - **Hold:** money or crypto asks, gift cards, selling or sex work, verification-code scams.
+  - **Watch:** moving to WhatsApp or Telegram, contact info.
+  - When Val's key is set, her brain also reads it on the small fast model (`claude-haiku-4-5`): every /hey note, every /missed note, and the first ten messages from each person in a /chat. A cost cap: scams happen early.
+- **Holding.** A held /chat message is hidden from the other person by RLS; the sender sees "Val is holding this one". A held /hey leaves the inbox (status `held`) and never notifies. A held /missed note is hidden. Admins get a lock-screen push (notify `val_flag`).
+- **Console → Reports → "What Val caught":** "Keep it held" or "It's fine, release it". Noted items: "Seen". Flags survive account deletion with the text removed, like reports.
+- **The approval pre-read.** When a /vibe lands for review, Val looks at the three photos and the answers (Opus, images via short-lived signed URLs) and returns flags plus one sentence. It shows on the Approve card:
+  - photos not the same person, or no clear face;
+  - stock, AI or celebrity photos;
+  - someone who may be under 18;
+  - nudity, or handles and ads in the photos;
+  - scripted answers.
+
+  She never comments on looks, race, body or style, and never decides. Without her key: basic checks only (fewer than 3 photos, no voice note, very short answers, age under 20). The voice note isn't checked; the model can't hear audio.
+- **Wake-up.** The database wakes Val's brain with a private token (`VAL_HOOK_TOKEN` in Vault, header `x-val-hook`), not a member login.
+- **Cost.** A fraction of a cent per screened message, about a cent per applicant.
