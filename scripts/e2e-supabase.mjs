@@ -119,8 +119,15 @@ const wingDemo = await A.c.rpc('send_wing', { p_subject: 'maya', p_to: hB, p_not
 check('demo profiles can\u2019t be /winged', wingDemo.data === 'demo', wingDemo.data)
 const wing = await B.c.rpc('send_wing', { p_subject: hA, p_to: `e2e-${runId}-friend@test.invalid`, p_note: 'e2e' })
 check('send /wing', wing.data === 'invited', wing.error?.message ?? wing.data)
-const spotIn = await A.c.rpc('date_signal', { p_kind: 'checkin', p_venue: 'golden-hour', p_note: null })
-check('scan in at a /spot', spotIn.data === 'ok', spotIn.error?.message ?? spotIn.data)
+// Check-ins only work at approved /spots. Scan in at a live one if there is
+// one; a paused spot (the old placeholder) must refuse.
+const liveSpots = (await anon.rpc('public_spots')).data ?? []
+const pausedIn = await A.c.rpc('date_signal', { p_kind: 'checkin', p_venue: 'golden-hour', p_note: null })
+check('paused /spots refuse check-ins', pausedIn.data === 'bad', pausedIn.data)
+if (liveSpots.length) {
+  const spotIn = await A.c.rpc('date_signal', { p_kind: 'checkin', p_venue: liveSpots[0].slug, p_note: null })
+  check('scan in at a live /spot', spotIn.data === 'ok', spotIn.error?.message ?? spotIn.data)
+}
 
 // B's side: inbox, yes, /chat
 const inbox = await B.c.rpc('my_inbox')
