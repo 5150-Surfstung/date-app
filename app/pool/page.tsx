@@ -11,6 +11,7 @@ import { TAGS, cleanVibe } from '@/lib/handles'
 import { rank, usePool, usePhotoUrls, type Ranked } from '@/lib/pool'
 import { TagLine, VibeInput } from '../tags'
 import { ShareButton } from '../share'
+import LockScreen from '../alerts'
 
 const SHOW = ['saturday', 'looking_for', 'life_stage'] as const
 const ASK: Record<string, string> = { saturday: 'Saturday', looking_for: 'Looking for', life_stage: 'Right now' }
@@ -41,7 +42,8 @@ export default function PoolPage() {
   if (pool.state !== 'open') return <AppShell title="Your pool"><NotYet state={pool.state} /></AppShell>
 
   return (
-    <AppShell title="Your pool">
+    <AppShell title="Your pool" alerts={false}>
+      <LockScreen />
       <VibeNow lead={myLead} handle={pool.me?.handle ?? null} onChange={reload} />
 
       {picks.length > 0 && (

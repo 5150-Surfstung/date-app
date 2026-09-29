@@ -6,7 +6,7 @@ import { useSession, signOut } from '@/lib/auth'
 import Install from './install'
 import Notes from './push'
 
-export function AppShell({ title, children }: { title: string; children: React.ReactNode }) {
+export function AppShell({ title, children, alerts = true }: { title: string; children: React.ReactNode; alerts?: boolean }) {
   const { email } = useSession()
   return (
     <main className="page min-h-dvh bg-white text-[#141414]">
@@ -27,7 +27,7 @@ export function AppShell({ title, children }: { title: string; children: React.R
       <section className="px-5 sm:px-12 py-8 sm:py-10 max-w-5xl">
         <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob mb-2">{title}</div>
         {children}
-        {email && <div className="mt-12 flex flex-col gap-4"><Install dark /><Notes dark /></div>}
+        {email && alerts && <div className="mt-12 flex flex-col gap-4"><Install dark /><Notes dark /></div>}
       </section>
     </main>
   )

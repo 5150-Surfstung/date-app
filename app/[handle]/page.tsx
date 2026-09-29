@@ -10,6 +10,15 @@ export function generateStaticParams() {
 
 export const dynamicParams = !process.env.STATIC_EXPORT
 
+export function generateMetadata({ params }: { params: { handle: string } }) {
+  const h = params.handle.toLowerCase()
+  return {
+    title: `/${h} on /date`,
+    description: `Send /${h} a /hey on /date. Matchmaking with Val, in Charleston.`,
+    openGraph: { title: `/${h} on /date`, description: 'Send me a /hey. Val shows me your /vibe first.' },
+  }
+}
+
 export default function HandlePage({ params }: { params: { handle: string } }) {
   return (
     <Suspense>
