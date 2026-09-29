@@ -32,7 +32,7 @@ export const DEMO_CREW: DemoPerson[] = [
   },
   {
     handle: 'priya', name: 'Priya', age: 29, hood: 'Mount Pleasant', tag: 'tonight', visibility: 'tonight',
-    vibe: 'ER nurse, three on, four off. Kayaks, laughs loud, allergic to small talk. Here tonight, gone at midnight. Say something worth it.',
+    vibe: 'ER nurse, three on, four off. Kayaks, laughs loud, allergic to small talk. Out tonight. Say something worth it.',
   },
   {
     handle: 'dez', name: 'Dez', age: 30, hood: 'James Island', tag: 'tonight', visibility: 'tonight',

@@ -43,9 +43,13 @@ No = silence. The sender is never told.
 suggested /spot. The clock is 48 hours: pick a time or it closes. Val
 sends one nudge at 24 hours. At 48 she closes it warmly. No extensions.
 
-**/match** (season intros) — Three per season, one at a time. Narrative
-first, photos when both say ready. Val's note is the product: who they are,
-why this pairing, in Val's words.
+**Val's picks and the pool** — When a /vibe is approved, Val picks the
+three closest fits, each with a plain-words reason, pinned at the top. After
+that the member's whole pool is open: everyone who'd want them back (who each
+is seeking, each one's age range, not blocked, not private), closest first,
+filterable by vibe. Val keeps watching and flags a strong new fit when one
+joins, at most weekly. Photos show the way each member chose: all, just the
+lead, or none until they're talking.
 
 **/brief** — Before every date: where (a /spot, table held, the perk),
 what to talk about, what matters to them, what not to do, why this
@@ -79,11 +83,13 @@ new /dare.
 **/dare** — Every /chat carries one small first-date mission from Val.
 Short, funny, doable in ten minutes. Never embarrassing, never expensive.
 
-**/tags** — Everyone picks up to three of the eight words. The first one
-leads: it's what they're here for most, and Val weighs it most. The other two
-are the truth around it (/looking /slow is not /looking /fun). Val reads the
-set, never just the lead, and says so in plain words: "You both lead with
-/looking, and you're both /slow about it."
+**/vibes** — Up to three words, first one leads. Pick from the core words
+(/looking, /casual, /fun, /tonight, /chill, /frisky, /intown, /slow, /open,
+/curious) or make your own (/tacos, /rooftop, /dogdad). People change them
+whenever they like; nothing resets on its own. Vibes are the hook, not the
+answer: Val mentions a shared one ("you're both /chill tonight") but pairs on
+who people are. Anyone can send a vibe instead of a /hey ("/nico sent you
+/tacos"); yes opens a /chat, no is silent.
 
 **How Val pairs** — Hard filters first (who they're seeking, age range
 wanted). Then chemistry of /tags (leads count most; a shared second word can
@@ -119,8 +125,8 @@ generated from it at deploy.
 5. Two no-shows and you're out of the pool. Val tells you once, plainly.
 6. Any safety report: the person is removed first, questions after.
 7. Val never pressures. "No" ends it. Not "are you sure," not "maybe later."
-8. Val never invents a tag. The vocabulary is the eight words, period.
-   Three per person, most. The first one leads.
+8. Vibes belong to the member. Three at most, the first leads, change any
+   time. No slurs, nothing about minors, no selling, no phone numbers.
 9. Under 18, fake, or harassing: declined, no reason given.
 10. Everyone is equal. Women and men, gay and straight and everyone else:
     same questions, same rules, same care. Pairing is mutual preference

@@ -20,8 +20,8 @@ function standing(home: Home): { step: number; head: string; line: string; cta?:
   if (v.status === 'rejected') return { step: 1, head: 'Not this season.', line: 'Thanks for trusting me with your /vibe. — Val' }
   if (v.status === 'waitlisted') return { step: 2, head: 'You’re on the waitlist.', line: 'Your /vibe is good. I’m balancing the pool before I open more spots. You’ll hear from me first. — Val' }
   if (v.status === 'pending_review' && !v.verified) return { step: 2, head: 'Val is reading your /vibe.', line: 'I read every one myself, twice. Next: I verify your photos and voice, then you’re in the pool. — Val' }
-  if (!home.intros.length) return { step: 3, head: 'You’re in. Val is looking.', line: 'No swiping. I’m finding your first person, and I’ll tell you why when I do. Meanwhile, give out your /name. — Val', cta: { href: '/badge/', label: 'Print my badge' } }
-  return { step: 4, head: 'Your season is live.', line: 'Every intro comes with a reason and a table. Say yes, pick a time, go. — Val' }
+  if (!home.intros.length) return { step: 3, head: 'You’re in. Your pool is open.', line: 'I picked your three closest to start, with the reason for each. After that, everyone who’d want you back is right there. — Val', cta: { href: '/pool/', label: 'See my pool' } }
+  return { step: 4, head: 'You’re in.', line: 'Your picks and your whole pool are waiting. Send a /hey, send a vibe, see who’s feeling it. — Val', cta: { href: '/pool/', label: 'See my pool' } }
 }
 
 export default function MePage() {

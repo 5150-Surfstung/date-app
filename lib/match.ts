@@ -42,9 +42,12 @@ const TAG: Record<string, number> = {
   'slow|slow': 1, 'slow|open': .8, 'slow|curious': .7,
   'open|open': .8, 'open|curious': .8,
   'curious|curious': .7,
+  'chill|chill': 1, 'chill|slow': .9, 'chill|casual': .8, 'chill|open': .8, 'chill|curious': .7, 'chill|intown': .7, 'chill|fun': .6, 'chill|looking': .6, 'chill|tonight': .5, 'chill|frisky': .4,
+  'frisky|frisky': 1, 'frisky|tonight': .9, 'frisky|casual': .8, 'frisky|fun': .8, 'frisky|open': .6, 'frisky|intown': .6, 'frisky|curious': .5, 'frisky|looking': .2, 'frisky|slow': .15,
 }
 function tagFit(a?: Tag | null, b?: Tag | null) {
   if (!a || !b) return .5
+  if (a === b) return 1 // the same word, even one they made up
   return TAG[`${a}|${b}`] ?? TAG[`${b}|${a}`] ?? .4
 }
 
@@ -141,27 +144,31 @@ export function scorePair(a: Person, b: Person, signals: Signal[], heys: Hey[], 
   const flags: string[] = []
   let score = 0
 
-  // 1. /tag chemistry — 35. Up to three words each, lead first.
-  const tc = tagChemistry(tagsOf(a), tagsOf(b))
-  score += 35 * tc.fit
-  reasons.push(...tc.reasons)
-  flags.push(...tc.flags)
+  // Vibes are the hook, not the answer. What makes two people work is how
+  // they fight, what they want and how they spend a Saturday, so the answers
+  // carry the most weight and the vibe words are a light nudge.
 
-  // 2. The eight answers — 30
+  // 1. The answers — 50
   const A = a.answers ?? {}, B = b.answers ?? {}
   let ans = 0, n = 0
   for (const key of ['conflict_impulse', 'pull_away', 'saturday', 'life_stage', 'looking_for']) {
     const x = A[key], y = B[key]
     if (!x || !y) continue
     n++
-    if (x === y) { ans += 1; if (key === 'looking_for') reasons.push('Want the same thing, in the same words.'); if (key === 'saturday') reasons.push('Same kind of Saturday.') }
+    if (x === y) { ans += 1; if (key === 'looking_for') reasons.push('Want the same thing, in the same words.'); if (key === 'saturday') reasons.push('Same kind of Saturday.'); if (key === 'life_stage') reasons.push('Same place in life.') }
     else if (pairIn(COMPLEMENT[key] ?? [], x, y)) { ans += .85; if (key === 'conflict_impulse') reasons.push('Their conflict styles fit — one talks, one thinks first.') }
     else if (pairIn(BAD[key] ?? [], x, y)) { ans += .1; flags.push('Both go quiet when it matters. Watch that.') }
     else if (key === 'looking_for') { ans += .3; flags.push('Not looking for quite the same thing.') }
     else ans += .5
   }
-  score += n ? 30 * (ans / n) : 15
+  score += n ? 50 * (ans / n) : 25
   if (!n) flags.push('One of them hasn’t finished a /vibe yet.')
+
+  // 2. Vibe words — 10. Up to three each, lead first.
+  const tc = tagChemistry(tagsOf(a), tagsOf(b))
+  score += 10 * tc.fit
+  reasons.push(...tc.reasons)
+  flags.push(...tc.flags)
 
   // 3. Age — 15
   if (a.age && b.age) {
@@ -172,23 +179,23 @@ export function scorePair(a: Person, b: Person, signals: Signal[], heys: Hey[], 
     if (gap > 9) flags.push(`${gap} years apart.`)
   } else score += 8
 
-  // 4. Geography — 10
+  // 4. Geography — 5
   const ca = cluster(a.hood), cb = cluster(b.hood)
   if (ca && cb) {
-    if (ca === cb) { score += 10; reasons.push(`Both ${ca === 'peninsula' ? 'on the peninsula' : ca === 'east' ? 'east of the Cooper' : ca === 'islands' ? 'on the islands' : 'up north'}.`) }
-    else if ((ca === 'peninsula' && cb !== 'north') || (cb === 'peninsula' && ca !== 'north')) score += 6
-    else score += 3
-  } else score += 5
+    if (ca === cb) { score += 5; reasons.push(`Both ${ca === 'peninsula' ? 'on the peninsula' : ca === 'east' ? 'east of the Cooper' : ca === 'islands' ? 'on the islands' : 'up north'}.`) }
+    else if ((ca === 'peninsula' && cb !== 'north') || (cb === 'peninsula' && ca !== 'north')) score += 3
+    else score += 1.5
+  } else score += 2.5
 
-  // 5. Signals — 10, plus a /hey between them jumps the queue
+  // 5. Real life — up to 20: same /spots, a /hey or a /wing between them
   const spotsA = new Set(signals.filter((s) => s.email === a.email && s.kind === 'checkin').map((s) => s.venue_slug))
   const spotsB = new Set(signals.filter((s) => s.email === b.email && s.kind === 'checkin').map((s) => s.venue_slug))
   const shared = Array.from(spotsA).filter((s) => spotsB.has(s))
   if (shared.length) { score += Math.min(10, 5 * shared.length); reasons.push(`Both scan in at the same /spot.`) }
   const hey = heys.find((h) => (h.from_email === a.email && h.to_handle === b.handle) || (h.from_email === b.email && h.to_handle === a.handle))
-  if (hey) { score += 15; reasons.push('One of them already sent a /hey.') }
+  if (hey) { score += 10; reasons.push('One of them already sent a /hey.') }
   const wing = wings.find((w) => (w.subject_handle === a.handle && w.to_handle === b.handle) || (w.subject_handle === b.handle && w.to_handle === a.handle))
-  if (wing) { score += 12; reasons.push('A friend /winged this pair.') }
+  if (wing) { score += 10; reasons.push('A friend /winged this pair.') }
 
   return { a, b, score: Math.round(Math.min(100, score)), reasons, flags }
 }

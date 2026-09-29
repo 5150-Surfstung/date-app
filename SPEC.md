@@ -499,3 +499,17 @@ Every /spot is approved by a person. Nothing is public until it is.
 - **Console → Spots:** pending first, with the address on a map, the website, a one-tap "vet it" search, who brought it in, and what they'd offer. Approve, decline or pause, with an optional note that goes in the email. Live spots get their page and kit links, their perk, and the next /night.
 - **On approval** the venue is emailed their page (`/spot/<slug>/`) and their kit (`/spot/<slug>/kit/`): a door poster and four table cards, each with the QR to their page, print-ready, plus a PNG download.
 - **Public** reads go only through `public_spots()` / `public_spot()`: approved rows, safe fields. Contact details, IPs and notes are never readable from the browser. Check-ins, date-setting and Val's chat suggestions only ever use approved spots; with none, Val says "somewhere public, somewhere you'd both go anyway". The Golden Hour placeholder is paused and gone from the site.
+
+## 10t. Vibes, Val's picks, the pool (v21)
+
+**Vibes are yours.** Up to three words, the first leads. Tap a core word (/looking, /casual, /fun, /tonight, /chill, /frisky, /intown, /slow, /open, /curious) or make your own (/tacos, /rooftop, /dogdad). Suggestions come from what people already use, so vibes converge like hashtags. Change them whenever; nothing resets at midnight and scanning in never rewrites anyone's vibe. A quiet filter (`date_vibe_blocked`, mirrored in `lib/handles.ts`) refuses slurs, anything about minors, selling (cashapp, onlyfans…), phone numbers and links.
+
+**Vibes are the hook, not the answer.** Matching (`lib/match.ts`): the answers 50, real-life signals up to 20 (same /spots, a /hey or /wing), age 15, part of town 5, vibe words 10. Same word = full vibe credit, even a made-up one. The fairness test still passes: every valid pairing, any genders, scores the same.
+
+**Val's first three, then the pool.** When a /vibe is approved, `/pool` opens. Val picks the three closest (skipping obvious intent clashes when she can), each with a plain reason, pinned on top (`date_picks`). Below: everyone who'd want you back (`date_in_pool`: who each seeks, each one's age range, approved, not private/paused/benched, not blocked either way), closest first, filterable by vibe ("Feeling /x too"). Val keeps watching: a newcomer who scores strongly becomes a new pick when you open the app, and on approval `date_new_fit_nudges` tells members who share 3+ of the 5 structured answers with them (at most weekly each).
+
+**Send a /hey or send a vibe.** `send_vibe` = a /hey with a word: "/nico sent you /tacos". Yes opens a /chat, no is silent. One per person per /name; 25 a day stops bots, people never hit it.
+
+**Photos are the member's choice** (`photo_share`: all / lead only / none until talking), set in Edit /vibe. Storage access goes through `date_can_see_media`: in a /chat, everything; in your pool or if they reached out, their voice plus the photos they chose to share. (This also fixes the old chat-photo and voice rules, which compared the wrong columns and never matched.) The /chat photo blur is gone.
+
+**Lock screen first.** Everyday member news (/heys, vibes, wings, /chats, swaps, nudges, closes, new fits) goes out as a push notification; email only if push didn't land. Login codes, safety, status and account mail always email. Keeps Resend inside its free tier far longer.

@@ -1,11 +1,68 @@
 'use client'
 
-// Up to three /tags, lead first. One picker for claim and /me, so the rule
-// ("three max, the first one leads") reads the same everywhere.
-import { useState } from 'react'
-import { TAGS, type Tag } from '@/lib/handles'
+// Vibes: tap a core word or make your own. Up to three, the first leads.
+// Change them whenever. One picker for claim and /me.
+import { useEffect, useState } from 'react'
+import { TAGS, cleanVibe, vibeProblem, type Tag } from '@/lib/handles'
+import { rpc } from '@/lib/rest'
 
 export const MAX_TAGS = 3
+
+let popularCache: string[] | null = null
+/** What people are using right now (for suggestions as you type). */
+export function usePopularVibes() {
+  const [list, setList] = useState<string[]>(popularCache ?? [])
+  useEffect(() => {
+    if (popularCache) return
+    rpc<{ vibe: string; n: number }[]>('date_popular_vibes').then(({ data }) => {
+      popularCache = (data ?? []).map((d) => d.vibe)
+      setList(popularCache)
+    })
+  }, [])
+  return list
+}
+
+/** Type a vibe; suggests ones people already use so we find each other. */
+export function VibeInput({ onAdd, placeholder = 'make your own', disabled }: { onAdd: (v: string) => void; placeholder?: string; disabled?: boolean }) {
+  const [text, setText] = useState('')
+  const [err, setErr] = useState<string | null>(null)
+  const popular = usePopularVibes()
+  const v = cleanVibe(text)
+  const core = TAGS.map((t) => t.value as string)
+  const suggest = v.length >= 1
+    ? Array.from(new Set([...popular, ...core])).filter((p) => p.startsWith(v) && p !== v).slice(0, 5)
+    : []
+  function add(word: string) {
+    const w = cleanVibe(word)
+    const problem = vibeProblem(w)
+    if (problem) { setErr(problem); return }
+    onAdd(w); setText(''); setErr(null)
+  }
+  return (
+    <div className="grid gap-2">
+      <div className="flex items-center gap-2">
+        <div className="flex-1 flex items-center border-2 border-[#141414]/15 focus-within:border-ob rounded-full bg-white pl-4">
+          <span className="font-display font-extrabold text-lg text-ob">/</span>
+          <input value={text} disabled={disabled} maxLength={24}
+            onChange={(e) => { setText(e.target.value); setErr(null) }}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (v) add(v) } }}
+            placeholder={placeholder} autoCapitalize="none" autoCorrect="off" spellCheck={false}
+            className="flex-1 min-w-0 bg-transparent outline-none px-1 py-2.5 text-base font-semibold" />
+        </div>
+        <button type="button" onClick={() => v && add(v)} disabled={!v || disabled}
+          className="rounded-full bg-[#141414] text-white px-5 py-3 text-sm font-extrabold disabled:opacity-30">Add</button>
+      </div>
+      {suggest.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {suggest.map((s) => (
+            <button key={s} type="button" onClick={() => add(s)} className="rounded-full bg-[#141414]/[0.06] px-3 py-1.5 text-sm font-bold">/{s}</button>
+          ))}
+        </div>
+      )}
+      {err && <p className="text-sm font-semibold text-ob">{err}</p>}
+    </div>
+  )
+}
 
 export function TagPicker({ value, onChange, disabled }: { value: Tag[]; onChange: (t: Tag[]) => void; disabled?: boolean }) {
   const [full, setFull] = useState(false)
@@ -15,11 +72,12 @@ export function TagPicker({ value, onChange, disabled }: { value: Tag[]; onChang
     onChange([...value, t]); setFull(false)
   }
   function lead(t: Tag) { onChange([t, ...value.filter((x) => x !== t)]) }
+  const custom = value.filter((v) => !TAGS.some((t) => t.value === v))
 
   return (
     <div className="grid gap-3">
       <div className="flex flex-wrap gap-2">
-        {TAGS.map((t) => {
+        {[...TAGS.map((t) => ({ value: t.value as string, line: t.line })), ...custom.map((c) => ({ value: c, line: 'Your own.' }))].map((t) => {
           const i = value.indexOf(t.value)
           const on = i >= 0
           return (
@@ -34,6 +92,8 @@ export function TagPicker({ value, onChange, disabled }: { value: Tag[]; onChang
         })}
       </div>
 
+      {value.length < MAX_TAGS && <VibeInput disabled={disabled} onAdd={(w) => { if (!value.includes(w)) onChange([...value, w]) }} />}
+
       {value.length > 0 ? (
         <div className="rounded-2xl bg-white border-2 border-[#141414]/10 px-4 py-3">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -45,12 +105,12 @@ export function TagPicker({ value, onChange, disabled }: { value: Tag[]; onChang
               </span>
             ))}
           </div>
-          <p className="mt-1 text-sm text-[#141414]/60">{TAGS.find((t) => t.value === value[0])?.line}</p>
+          <p className="mt-1 text-sm text-[#141414]/60">{TAGS.find((t) => t.value === value[0])?.line ?? 'Your own. Change it whenever.'}</p>
         </div>
       ) : null}
 
       <p className={`text-sm ${full ? 'font-semibold text-ob' : 'text-[#141414]/55'}`}>
-        {full ? 'Three max. Tap one to drop it first.' : value.length === 0 ? 'Up to three. The first one leads.' : value.length < MAX_TAGS ? `${MAX_TAGS - value.length} more if it’s true. The first one leads.` : 'That’s three. The first one leads.'}
+        {full ? 'Three max. Tap one to drop it first.' : 'Pick or make your own, up to three. The first one leads. Change them whenever.'}
       </p>
     </div>
   )

@@ -22,7 +22,6 @@ type Chat = {
 }
 type Msg = { id: string; created_at: string; from_email: string; body: string }
 
-const UNLOCK_AT = 3
 
 export default function ChatClient() {
   const { email, loading } = useSession()
@@ -135,11 +134,6 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
   const [briefBusy, setBriefBusy] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
 
-  const mine = msgs.filter((m) => m.from_email === me).length
-  const theirs = msgs.filter((m) => m.from_email === chat.them.email).length
-  const unlocked = mine >= UNLOCK_AT && theirs >= UNLOCK_AT
-  const progress = Math.min(mine, UNLOCK_AT) + Math.min(theirs, UNLOCK_AT)
-  const blur = unlocked ? 0 : 18 - progress * 2.5
   const dare = useMemo(() => dareFor(chat.id), [chat.id])
 
   async function loadMsgs() {
@@ -214,14 +208,8 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
         <div className="relative rounded-3xl overflow-hidden bg-[#141414] aspect-[4/5]">
           {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={photo} alt={chat.them.name} className="w-full h-full object-cover transition-[filter] duration-700" style={{ filter: `blur(${blur}px)`, transform: unlocked ? 'none' : 'scale(1.06)' }} />
+            <img src={photo} alt={chat.them.name} className="w-full h-full object-cover" />
           ) : <div className="w-full h-full" style={{ background: '#FF3B2F' }} />}
-          {!unlocked && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-6">
-              <div className="font-display font-extrabold text-2xl tracking-tight">Talk first.</div>
-              <div className="text-sm mt-1 opacity-80">Photos sharpen as you both write. {progress}/{UNLOCK_AT * 2}</div>
-            </div>
-          )}
         </div>
         <div>
           <div className="font-display font-extrabold text-3xl tracking-tight">/{chat.them.handle} <TagLine tags={chat.them.tags} tag={chat.them.tag} /></div>

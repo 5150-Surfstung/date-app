@@ -27,7 +27,7 @@ export default function NightClient({ venue }: { venue: Venue }) {
     refresh(); const t = setInterval(refresh, 15000); return () => clearInterval(t)
   }, [venue.slug])
 
-  // Scan-in also flips your /name to /tonight until midnight (server side).
+  // Scan-in records that you're here; your vibe is yours to set.
   async function scanIn() {
     setBusy(true)
     await authClient()?.rpc('date_signal', { p_kind: 'checkin', p_venue: venue.slug, p_note: 'night' })
@@ -61,7 +61,7 @@ export default function NightClient({ venue }: { venue: Venue }) {
 
         {stage === 'door' && (
           <div className="flex flex-col gap-3 max-w-md">
-            <p className="text-xl font-medium leading-snug">Scan in at the door. Your /name goes /tonight &mdash; give it out freely, it&rsquo;s gone at midnight.</p>
+            <p className="text-xl font-medium leading-snug">Scan in at the door. Set your vibe for the night and see who else is feeling it.</p>
             {!me && !sessionLoading ? (
               <SignIn night cta="I'm here" pitch="The email on your /name. Tap Val's link and you're in the room." />
             ) : (

@@ -12,8 +12,8 @@ import { INTAKE_BUCKET } from '@/lib/supabase'
 
 type Item = {
   kind: 'hey' | 'wing'; winger?: string
-  id: string; created_at: string; note: string | null; to_handle: string
-  from: { handle: string; name: string; tag: string | null; tags?: string[] | null; age: number | null; hood: string | null; answers: Record<string, string> | null; has_vibe: boolean; voice_key: string | null; verified: boolean }
+  id: string; created_at: string; note: string | null; vibe?: string | null; to_handle: string
+  from: { handle: string; name: string; tag: string | null; tags?: string[] | null; age: number | null; hood: string | null; answers: Record<string, string> | null; has_vibe: boolean; voice_key: string | null; verified: boolean; photos?: string[] }
 }
 
 export default function InboxPage() {
@@ -71,6 +71,9 @@ export default function InboxPage() {
           const open = opened === it.id
           return (
             <div key={it.id} className="border-2 border-[#141414]/10 rounded-2xl p-5">
+              {it.vibe && (
+                <div className="mb-2 font-display font-extrabold text-3xl tracking-tight text-ob">sent you /{it.vibe}</div>
+              )}
               {it.kind === 'wing' && (
                 <div className="text-xs tracking-[0.2em] uppercase font-semibold text-ob mb-2">/wing from /{it.winger} &middot; &ldquo;you two should meet&rdquo;</div>
               )}

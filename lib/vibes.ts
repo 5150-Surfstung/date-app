@@ -1,4 +1,4 @@
-import type { Tag } from './handles'
+import type { Tag, CoreTag } from './handles'
 
 // The homepage takes on a /vibe every visit. One theme per tag.
 export type VibeTheme = {
@@ -23,8 +23,8 @@ export const VIBES: VibeTheme[] = [
   {
     tag: 'tonight', bg: '#140A20', fg: '#F6EFFF', accent: '#FF5CA8', onAccent: '#140A20', muted: 'rgba(246,239,255,0.7)',
     headline: 'It’s tonight. Say something worth it.',
-    sub: 'Claim a /name that goes dark at midnight. Give it out freely. Whatever happens, happens tonight.',
-    cta: 'Claim a /tonight name',
+    sub: 'Set your vibe to /tonight and see who else is out. Change it back whenever you want.',
+    cta: 'Claim your /name',
   },
   {
     tag: 'fun', bg: '#FFD23F', fg: '#141414', accent: '#141414', onAccent: '#FFD23F', muted: 'rgba(20,20,20,0.7)',
@@ -47,7 +47,7 @@ export const VIBES: VibeTheme[] = [
   {
     tag: 'slow', bg: '#1F3D2B', fg: '#EEF5EA', accent: '#EEF5EA', onAccent: '#1F3D2B', muted: 'rgba(238,245,234,0.72)',
     headline: 'No rush. Get it right.',
-    sub: 'Three matches a season, one at a time. You hear a person before you see them. Nothing expires but the games.',
+    sub: 'Val sends your three closest matches first, with the reason for each. Then take your time with everyone else.',
     cta: 'Get your /vibe',
   },
   {
@@ -62,10 +62,26 @@ export const VIBES: VibeTheme[] = [
     sub: 'No swiping, no bios to agonize over. Eight questions, sixty seconds of your voice, and a matchmaker named Val.',
     cta: 'Get your /vibe',
   },
+  {
+    tag: 'chill', bg: '#CFE8E1', fg: '#10302A', accent: '#10302A', onAccent: '#CFE8E1', muted: 'rgba(16,48,42,0.7)',
+    headline: 'Low key. Good company.',
+    sub: 'No production, no pressure. Somebody who’s easy to sit next to. Val knows a few.',
+    cta: 'Claim your /name',
+  },
+  {
+    tag: 'frisky', bg: '#FF5CA8', fg: '#140A20', accent: '#140A20', onAccent: '#FF5CA8', muted: 'rgba(20,10,32,0.72)',
+    headline: 'Feeling it tonight?',
+    sub: 'Set your vibe, see who else is feeling it, and send a vibe back. Verified people only.',
+    cta: 'Claim your /name',
+  },
 ]
 
 export function vibeFor(tag: Tag) {
-  return VIBES.find((v) => v.tag === tag) ?? VIBES[0]
+  const core = VIBES.find((v) => v.tag === tag)
+  if (core) return core
+  // A vibe someone made up: their word, in the house colors.
+  const base = VIBES.find((v) => v.tag === 'open') ?? VIBES[0]
+  return { ...base, tag, headline: `Tonight you’re /${tag}.`, sub: 'Change it whenever you want. Val’s already looking for people on the same page.', cta: 'Claim your /name' }
 }
 
 // Time-aware pick: after dark leans /tonight, weekend mornings lean /fun.
@@ -73,16 +89,16 @@ export function pickVibe(exclude?: Tag): VibeTheme {
   const now = new Date()
   const hour = now.getHours()
   const weekend = now.getDay() === 0 || now.getDay() === 6
-  const weights: Record<Tag, number> = {
-    looking: 3, tonight: 1, fun: 2, casual: 2, intown: 2, slow: 1, open: 2, curious: 2,
+  const weights: Record<CoreTag, number> = {
+    looking: 3, tonight: 1, fun: 2, casual: 2, intown: 2, slow: 1, open: 2, curious: 2, chill: 2, frisky: 1,
   }
-  if (hour >= 18 || hour < 2) weights.tonight += 5
+  if (hour >= 18 || hour < 2) { weights.tonight += 4; weights.frisky += 2 }
   if (weekend && hour >= 9 && hour < 14) weights.fun += 3
-  if (exclude) weights[exclude] = 0
+  if (exclude && exclude in weights) weights[exclude as CoreTag] = 0
   const total = Object.values(weights).reduce((a, b) => a + b, 0)
   let r = Math.random() * total
   for (const v of VIBES) {
-    r -= weights[v.tag]
+    r -= weights[v.tag as CoreTag] ?? 0
     if (r <= 0) return v
   }
   return VIBES[0]

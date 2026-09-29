@@ -124,6 +124,8 @@ export default function EditVibe() {
         {!enough && <p className="mt-2 text-sm font-semibold text-ob">Three photos minimum.</p>}
       </Block>
 
+      <PhotoShare />
+
       <Block title="Sixty seconds of you" hint={v.voice_key ? 'Your voice note is in. Record a new one to replace it.' : 'No voice note yet. It’s the thing people remember.'}>
         <Recorder onDone={setVoice} pending={Boolean(voice)} />
       </Block>
@@ -240,5 +242,30 @@ function Recorder({ onDone, pending }: { onDone: (b: Blob) => void; pending: boo
       {pending && <span className="text-sm font-semibold text-ob">New note ready. Save to keep it.</span>}
       {state === 'denied' && <span className="text-sm text-ob">Mic blocked. Allow it in your browser settings.</span>}
     </div>
+  )
+}
+
+// Who sees your photos before you're talking. Your call, saved on tap.
+function PhotoShare() {
+  const [v, setV] = useState<string | null>(null)
+  useEffect(() => { authClient()?.rpc('my_photo_share').then(({ data }) => setV((data as string) ?? 'all')) }, [])
+  async function pick(x: string) { setV(x); await authClient()!.rpc('set_photo_share', { p: x }) }
+  const opts: [string, string, string][] = [
+    ['all', 'All my photos', 'Everyone in your pool sees them all.'],
+    ['main', 'Just my lead photo', 'The rest once you\u2019re talking.'],
+    ['none', 'None until we\u2019re talking', 'Your words and voice first.'],
+  ]
+  return (
+    <Block title="Who sees your photos" hint="Your call. Change it whenever.">
+      <div className="grid sm:grid-cols-3 gap-2">
+        {opts.map(([k, t, d]) => (
+          <button key={k} type="button" onClick={() => pick(k)} disabled={v === null}
+            className={`text-left rounded-2xl border-2 p-4 ${v === k ? 'border-ob bg-ob/5' : 'border-[#141414]/15'}`}>
+            <div className="font-extrabold">{t}</div>
+            <div className="text-sm text-[#141414]/60 mt-0.5">{d}</div>
+          </button>
+        ))}
+      </div>
+    </Block>
   )
 }

@@ -68,7 +68,7 @@ export default function LandingContent() {
   const faces = facesFor(vibe.tag)
   const accent = ['#141414', '#FFF3EA', '#140A20', '#1F3D2B', '#0E7C7B'].includes(vibe.bg) ? '#FF3B2F' : vibe.bg
   const ctaHref =
-    vibe.tag === 'fun' || vibe.tag === 'tonight' || vibe.tag === 'open' || vibe.tag === 'casual' ? '/claim' : applyHref
+    ['fun', 'tonight', 'open', 'casual', 'chill', 'frisky'].includes(vibe.tag) ? '/claim' : applyHref
 
   // Auto-cycle /vibes in the hero until you scroll or it's yours.
   const [auto, setAuto] = useState(true)
@@ -319,7 +319,7 @@ function TagScene() {
   const href = picked.length ? `/claim?tags=${picked.join(',')}` : '/claim'
   return (
     <>
-      <div className="rise text-xs tracking-[0.2em] uppercase font-semibold text-white/85 mb-5">Pick up to three. First one leads.</div>
+      <div className="rise text-xs tracking-[0.2em] uppercase font-semibold text-white/85 mb-5">Pick a word or make your own. Change it whenever.</div>
       <div className="flex flex-wrap gap-x-5 gap-y-1">
         {TAGS.map((t, i) => {
           const at = picked.indexOf(t.value)

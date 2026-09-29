@@ -100,11 +100,42 @@ check('set_tag changes only mine', wA.data?.tag === 'slow' && wB.data?.tag === '
 // Up to three /tags, lead first
 const three = await A.c.rpc('set_tags', { p_tags: ['slow', 'looking', 'fun'], p_private: false })
 const four = await A.c.rpc('set_tags', { p_tags: ['slow', 'looking', 'fun', 'open'], p_private: false })
-const junk = await A.c.rpc('set_tags', { p_tags: ['wild'], p_private: false })
+const junk = await A.c.rpc('set_tags', { p_tags: ['cashapp'], p_private: false })
 const w3 = await anon.rpc('handle_wall', { p_handle: hA })
-check('three /tags, lead first', three.data === 'ok' && w3.data?.tag === 'slow' && w3.data?.tags?.join() === 'slow,looking,fun', JSON.stringify(w3.data?.tags))
-check('four /tags refused', four.data === 'bad', four.data)
-check('made-up /tag refused', junk.data === 'bad', junk.data)
+check('three vibes, lead first', three.data === 'ok' && w3.data?.tag === 'slow' && w3.data?.tags?.join() === 'slow,looking,fun', JSON.stringify(w3.data?.tags))
+check('four vibes refused', four.data === 'bad', four.data)
+check('blocked vibe refused (selling, slurs, minors, numbers)', junk.data === 'bad', junk.data)
+
+// Vibes are yours: make one up, switch the lead in one tap, nothing expires
+const ownVibe = await A.c.rpc('set_vibe_now', { p_vibe: '/Tacos' })
+const wOwn = await anon.rpc('handle_wall', { p_handle: hA })
+check('make your own vibe, it leads', ownVibe.data === 'ok' && wOwn.data?.tags?.join() === 'tacos,slow,looking', JSON.stringify(wOwn.data?.tags))
+const tonight = await A.c.rpc('set_vibe_now', { p_vibe: 'tonight' })
+const wT = await anon.rpc('handle_wall', { p_handle: hA })
+check('/tonight is just a vibe (no midnight clock)', tonight.data === 'ok' && wT.data?.tag === 'tonight' && wT.data?.visibility !== 'tonight', JSON.stringify(wT.data))
+
+// Send a vibe instead of a /hey
+const vibeSend = await B.c.rpc('send_vibe', { p_to: hA, p_vibe: 'tacos', p_note: null })
+check('send a vibe', vibeSend.data === 'ok', vibeSend.error?.message ?? vibeSend.data)
+const badSend = await B.c.rpc('send_vibe', { p_to: hA, p_vibe: 'venmome', p_note: null })
+check('blocked vibe cannot be sent', badSend.data === 'bad_vibe', badSend.data)
+const inboxA = await A.c.rpc('my_inbox')
+check('inbox shows the vibe', (inboxA.data ?? []).some((i) => i.vibe === 'tacos' && i.from?.handle === hB))
+
+// The pool: only for approved /vibes, only people who'd want you back
+const poolAnon = await anon.rpc('my_pool')
+const poolA = await A.c.rpc('my_pool')
+const poolB = await B.c.rpc('my_pool')
+check('pool needs a login', poolAnon.data?.state === 'login' || !!poolAnon.error, JSON.stringify(poolAnon.data))
+check('pool waits for your /vibe', poolA.data?.state === 'pending' && poolB.data?.state === 'no_vibe', `${poolA.data?.state}/${poolB.data?.state}`)
+const sneakPick = await A.c.rpc('save_my_picks', { p: [{ handle: hB, reason: 'x' }] })
+const afterPick = await A.c.rpc('my_pool')
+check('picks only from your own pool', sneakPick.data === 'ok' && (afterPick.data?.picks ?? []).length === 0, JSON.stringify(afterPick.data?.picks))
+const peekPhoto = await B.c.storage.from('date-intake').createSignedUrl(`${A.uid}/photo-0.txt`, 60)
+check('photos stay private outside your pool', !!peekPhoto.error || !peekPhoto.data?.signedUrl)
+const share = await A.c.rpc('set_photo_share', { p: 'main' })
+const shareBad = await A.c.rpc('set_photo_share', { p: 'everyone' })
+check('photo sharing is your choice', share.data === 'ok' && shareBad.data === 'bad', `${share.data}/${shareBad.data}`)
 
 // /hey and /wing as yourself
 const hey = await A.c.rpc('send_hey', { p_to: hB, p_note: 'e2e' })
