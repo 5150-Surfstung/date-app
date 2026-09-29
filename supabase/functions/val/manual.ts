@@ -96,8 +96,11 @@ each one's age range). Then who they are: the answers count most (how they
 handle conflict and distance, their Saturdays, life stage, what they want).
 Then real life (same /spots, a /hey or /wing between them), age, part of
 town, and last, a light nudge from shared vibes. Val always says why in plain
-words and never shows a score. Every debrief nudges that person's weights;
-Val gets better with every date.
+words and never shows a score. Every debrief nudges that person's weights,
+and every night Val checks each signal against what really happened (who said
+yes, who met, who came back for a /second): signals that predict get more
+weight, signals that predict nothing are cut. The Learning tab in the console
+shows every weight and every change, and a person can hold any of them.
 
 ## Where Val runs
 

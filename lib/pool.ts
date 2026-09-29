@@ -5,7 +5,8 @@
 // out for strong new fits after that.
 import { useCallback, useEffect, useState } from 'react'
 import { authClient } from './auth'
-import { scorePair, tagsOf, type Person } from './match'
+import { scorePair, tagsOf, type Mults, type Person } from './match'
+import { getMults, logSeen } from './learn'
 
 export type PoolPerson = {
   handle: string; name: string; tags: string[] | null; age: number | null; hood: string | null
@@ -19,25 +20,26 @@ export type Pool = {
   picks?: Pick[]
   people?: PoolPerson[]
 }
-export type Ranked = PoolPerson & { score: number; why: string | null; clash: boolean }
+export type Ranked = PoolPerson & { score: number; why: string | null; clash: boolean; features: Record<string, number> }
 
 const asPerson = (p: { handle: string; tags: string[] | null; age: number | null; hood: string | null; answers: Record<string, string> | null }, name = ''): Person => ({
   handle: p.handle, name, email: p.handle, tag: tagsOf({ tags: p.tags })[0] ?? null, tags: p.tags,
   visibility: 'public', age: p.age, hood: p.hood, answers: p.answers,
 })
 
-/** Closest first, each with Val's reason in plain words. */
-export function rank(pool: Pool): Ranked[] {
+/** Closest first, each with Val's reason in plain words, using what Val has learned. */
+export function rank(pool: Pool, mults: Mults = {}): Ranked[] {
   if (!pool.me || !pool.people) return []
   const me = asPerson(pool.me)
   return pool.people
     .map((p) => {
-      const pair = scorePair(me, asPerson(p, p.name), [], [])
+      const pair = scorePair(me, asPerson(p, p.name), [], [], [], mults)
       return {
         ...p,
         score: pair?.score ?? 0,
         why: pair?.reasons.slice(0, 2).join(' ') || null,
         clash: Boolean(pair?.flags.some((f) => /want different things|Not looking for quite/.test(f))),
+        features: (pair?.features ?? {}) as Record<string, number>,
       }
     })
     .sort((a, b) => b.score - a.score)
@@ -62,14 +64,18 @@ function choosePicks(ranked: Ranked[], picks: Pick[]) {
 
 export function usePool() {
   const [pool, setPool] = useState<Pool | null>(null)
+  const [mults, setMults] = useState<Mults>({})
   const load = useCallback(async () => {
     const c = authClient()
     if (!c) { setPool({ state: 'login' }); return }
-    const { data } = await c.rpc('my_pool')
+    const [{ data }, mults] = await Promise.all([c.rpc('my_pool'), getMults()])
     const p = (data as Pool) ?? { state: 'login' }
+    setMults(mults)
     // Val picks (first three, or a strong newcomer) and remembers them.
     if (p.state === 'open') {
-      const add = choosePicks(rank(p), p.picks ?? [])
+      const ranked = rank(p, mults)
+      logSeen(ranked)
+      const add = choosePicks(ranked, p.picks ?? [])
       if (add.length) {
         await c.rpc('save_my_picks', { p: add.map((a) => ({ handle: a.handle, reason: a.why })) })
         const { data: again } = await c.rpc('my_pool')
@@ -80,7 +86,7 @@ export function usePool() {
     setPool(p)
   }, [])
   useEffect(() => { load() }, [load])
-  return { pool, reload: load }
+  return { pool, mults, reload: load }
 }
 
 /** Signed links for the photos this viewer is allowed to see. */

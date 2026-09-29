@@ -19,10 +19,10 @@ const ASK: Record<string, string> = { saturday: 'Saturday', looking_for: 'Lookin
 
 export default function PoolPage() {
   const { email, loading } = useSession()
-  const { pool, reload } = usePool()
+  const { pool, mults, reload } = usePool()
   const [filter, setFilter] = useState<string | null>(null)
 
-  const ranked = useMemo(() => (pool ? rank(pool) : []), [pool])
+  const ranked = useMemo(() => (pool ? rank(pool, mults) : []), [pool, mults])
   const picks = useMemo(() => (pool?.picks ?? []).map((p) => ({ ...p, person: ranked.find((r) => r.handle === p.handle) })).filter((p) => p.person), [pool, ranked])
   const pickSet = new Set(picks.map((p) => p.handle))
   // This week's Friday drop vs. the rest of Val's picks.

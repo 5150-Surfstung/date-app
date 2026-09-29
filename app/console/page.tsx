@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AppShell, NeedLogin, Pill } from '../ui'
 import { authClient, useSession } from '@/lib/auth'
-import { suggestPairs, draftIntro, type Person, type Pair } from '@/lib/match'
+import { suggestPairs, draftIntro, type Mults, type Person, type Pair } from '@/lib/match'
+import { getMults } from '@/lib/learn'
+import { LearningTab } from './learning'
 import { useSpots } from '@/lib/venues'
 import { QUESTIONS } from '@/lib/questions'
 import { askVal, notify } from '@/lib/val'
@@ -18,7 +20,7 @@ type Console = {
   applications: any[]; heys: any[]; wings: any[]; chats: any[]; signals: any[]; debriefs: any[]; weights: any[]; reports: any[]
 }
 
-const TABS = ['Approve', 'Pairs', 'Spots', 'Tonight', 'Inbox', 'People', 'Chats', 'Signals', 'Debriefs', 'Reports', 'Funnel', 'Health', 'System'] as const
+const TABS = ['Approve', 'Pairs', 'Spots', 'Tonight', 'Inbox', 'People', 'Chats', 'Signals', 'Debriefs', 'Learning', 'Reports', 'Funnel', 'Health', 'System'] as const
 
 export default function ConsolePage() {
   const { email, loading } = useSession()
@@ -40,13 +42,15 @@ export default function ConsolePage() {
     setData(data as Console | null)
   }
   useEffect(() => { if (email) load() }, [email])
+  const [mults, setMults] = useState<Mults>({})
+  useEffect(() => { getMults().then(setMults) }, [])
 
   const pairs = useMemo<Pair[]>(() => {
     if (!data) return []
     const people = data.handles.filter((h) => h.visibility !== 'private' || true)
     const existing = new Set<string>(data.chats.map((c: any) => [c.a_handle, c.b_handle].sort().join('|')))
-    return suggestPairs(people, data.signals, data.heys, existing, 24, data.wings ?? [])
-  }, [data])
+    return suggestPairs(people, data.signals, data.heys, existing, 24, data.wings ?? [], mults)
+  }, [data, mults])
 
   async function pair(p: Pair) {
     const key = p.a.handle + '|' + p.b.handle
@@ -89,7 +93,7 @@ export default function ConsolePage() {
   for (const s of tonight) { (rooms[s.venue_slug] ??= new Set()).add(s.email) }
   const existingPairs = new Set<string>(data.chats.map((c: any) => [c.a_handle, c.b_handle].sort().join('|')))
   const roomPairs = Object.fromEntries(Object.entries(rooms).map(([slug, emails]) => [
-    slug, suggestPairs(data.handles.filter((h) => emails.has(h.email)), data.signals, data.heys, existingPairs, 10, data.wings ?? []),
+    slug, suggestPairs(data.handles.filter((h) => emails.has(h.email)), data.signals, data.heys, existingPairs, 10, data.wings ?? [], mults),
   ]))
   const byHandle = Object.fromEntries(data.handles.map((h) => [h.handle, h]))
   const counts = { people: data.handles.length, vibes: data.applications.length, heys: pending.length, chats: data.chats.filter((c: any) => c.status === 'open').length }
@@ -267,6 +271,7 @@ export default function ConsolePage() {
       {tab === 'Spots' && <SpotsTab />}
       {tab === 'Approve' && <ApproveTab apps={data.applications} handles={data.handles} onDone={load} />}
       {tab === 'Health' && <HealthTab />}
+      {tab === 'Learning' && <LearningTab />}
 
       {tab === 'Reports' && (
         <div className="mt-6 grid gap-2">

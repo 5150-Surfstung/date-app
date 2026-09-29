@@ -145,6 +145,19 @@ check('approved members see their pool, both ways', poolA.data?.state === 'open'
 const picks = await A.c.rpc('save_my_picks', { p: [{ handle: 'maya', reason: 'x' }, { handle: hB, reason: 'Same kind of Saturday.' }] })
 const afterPick = await A.c.rpc('my_pool')
 check('Val only picks from your own pool', picks.data === 'ok' && (afterPick.data?.picks ?? []).map((p) => p.handle).join() === hB, JSON.stringify(afterPick.data?.picks))
+
+// Val learns: weights are public numbers; members log what they were shown, only
+// for people really in their pool; nobody but Val's people can touch a weight.
+const vw = await anon.rpc('val_weights')
+check('Val\u2019s learned weights are readable', typeof vw.data?.saturday === 'number' && typeof vw.data?.geo === 'number', JSON.stringify(vw.data))
+const seen = await A.c.rpc('log_seen', { p: [{ handle: hB, score: 70, f: { saturday: 1, geo: 0.6, junk: 5, age: 9 } }, { handle: 'maya', score: 90, f: { saturday: 1 } }] })
+check('log what was shown, only for your own pool', seen.data === 1, seen.error?.message ?? seen.data)
+const seenAgain = await A.c.rpc('log_seen', { p: [{ handle: hB, score: 10, f: { saturday: 0 } }] })
+check('each pair is logged once', seenAgain.data === 0, seenAgain.data)
+const holdTry = await A.c.rpc('val_hold_weight', { p_signal: 'geo', p_hold: true, p_mult: 2 })
+check('members cannot change Val\u2019s weights', holdTry.data === 'admin', holdTry.data)
+const learnPeek = await A.c.rpc('val_learning')
+check('what Val learned is for Val\u2019s people', learnPeek.data === null)
 const peekAnon = await anon.storage.from('date-intake').createSignedUrl(`${A.uid}/photo-0.txt`, 60)
 check('photos stay private outside the pool', !!peekAnon.error || !peekAnon.data?.signedUrl)
 const peekPool = await B.c.storage.from('date-intake').createSignedUrl(`${A.uid}/photo-0.txt`, 60)

@@ -1,6 +1,7 @@
 // Val's matching engine. Deterministic, explainable, and every score comes
-// with reasons in Val's voice. Weights are the starting point; the debrief
-// loop adjusts them later.
+// with reasons in Val's voice. The weights below are the starting point; Val
+// learns a multiplier for each signal every night from what actually
+// happened (date_val_learn), and cuts signals that predict nothing.
 import type { Tag } from './handles'
 
 export type Person = {
@@ -29,7 +30,16 @@ export type Pair = {
   score: number
   reasons: string[]
   flags: string[]
+  /** Each signal's value for this pair, 0–1. Logged so Val can learn which ones matter. */
+  features: Features
 }
+
+/** The signals Val weighs. Hard filters (who each wants, age ranges) are not signals and never learn. */
+export const SIGNALS = ['conflict_impulse', 'pull_away', 'saturday', 'life_stage', 'looking_for', 'vibes', 'age', 'geo', 'spot'] as const
+export type SignalKey = (typeof SIGNALS)[number]
+export type Features = Partial<Record<SignalKey, number>>
+/** Learned multipliers, 1 = the starting weight, 0 = cut. Missing = 1. */
+export type Mults = Partial<Record<SignalKey, number>>
 
 // /tag chemistry, 0–1. Symmetric.
 const TAG: Record<string, number> = {
@@ -134,7 +144,7 @@ function ageOk(a: Person, b: Person) {
   return inRange(b.age, ra.age_min, ra.age_max) && inRange(a.age, rb.age_min, rb.age_max)
 }
 
-export function scorePair(a: Person, b: Person, signals: Signal[], heys: Hey[], wings: Wing[] = []): Pair | null {
+export function scorePair(a: Person, b: Person, signals: Signal[], heys: Hey[], wings: Wing[] = [], mults?: Mults | unknown[]): Pair | null {
   if (a.email === b.email) return null
   if (!seekingOk(a, b)) return null
   if (!ageOk(a, b)) return null
@@ -142,71 +152,86 @@ export function scorePair(a: Person, b: Person, signals: Signal[], heys: Hey[], 
 
   const reasons: string[] = []
   const flags: string[] = []
-  let score = 0
+  const features: Features = {}
+  // Weighted parts of the base score. With every multiplier at 1 they add to 80
+  // and the score is exactly the hand-set one; learned multipliers reshape it
+  // without changing the scale. A cut signal (0) drops out, reasons and all.
+  const parts: { key: SignalKey | null; w: number; f: number }[] = []
+  const m = (k: SignalKey) => (mults && !Array.isArray(mults) ? Math.max(0, mults[k] ?? 1) : 1)
+  const says = (k: SignalKey, ...r: string[]) => { if (m(k) >= 0.25) reasons.push(...r) }
 
   // Vibes are the hook, not the answer. What makes two people work is how
   // they fight, what they want and how they spend a Saturday, so the answers
   // carry the most weight and the vibe words are a light nudge.
 
-  // 1. The answers — 50
+  // 1. The answers — 50 between them
   const A = a.answers ?? {}, B = b.answers ?? {}
-  let ans = 0, n = 0
-  for (const key of ['conflict_impulse', 'pull_away', 'saturday', 'life_stage', 'looking_for']) {
+  const keys = (['conflict_impulse', 'pull_away', 'saturday', 'life_stage', 'looking_for'] as const).filter((k) => A[k] && B[k])
+  for (const key of keys) {
     const x = A[key], y = B[key]
-    if (!x || !y) continue
-    n++
-    if (x === y) { ans += 1; if (key === 'looking_for') reasons.push('Want the same thing, in the same words.'); if (key === 'saturday') reasons.push('Same kind of Saturday.'); if (key === 'life_stage') reasons.push('Same place in life.') }
-    else if (pairIn(COMPLEMENT[key] ?? [], x, y)) { ans += .85; if (key === 'conflict_impulse') reasons.push('Their conflict styles fit — one talks, one thinks first.') }
-    else if (pairIn(BAD[key] ?? [], x, y)) { ans += .1; flags.push('Both go quiet when it matters. Watch that.') }
-    else if (key === 'looking_for') { ans += .3; flags.push('Not looking for quite the same thing.') }
-    else ans += .5
+    let v: number
+    if (x === y) { v = 1; if (key === 'looking_for') says(key, 'Want the same thing, in the same words.'); if (key === 'saturday') says(key, 'Same kind of Saturday.'); if (key === 'life_stage') says(key, 'Same place in life.') }
+    else if (pairIn(COMPLEMENT[key] ?? [], x, y)) { v = .85; if (key === 'conflict_impulse') says(key, 'Their conflict styles fit — one talks, one thinks first.') }
+    else if (pairIn(BAD[key] ?? [], x, y)) { v = .1; flags.push('Both go quiet when it matters. Watch that.') }
+    else if (key === 'looking_for') { v = .3; flags.push('Not looking for quite the same thing.') }
+    else v = .5
+    features[key] = v
+    parts.push({ key, w: 50 / keys.length, f: v })
   }
-  score += n ? 50 * (ans / n) : 25
-  if (!n) flags.push('One of them hasn’t finished a /vibe yet.')
+  if (!keys.length) { parts.push({ key: null, w: 50, f: .5 }); flags.push('One of them hasn’t finished a /vibe yet.') }
 
   // 2. Vibe words — 10. Up to three each, lead first.
   const tc = tagChemistry(tagsOf(a), tagsOf(b))
-  score += 10 * tc.fit
-  reasons.push(...tc.reasons)
+  parts.push({ key: 'vibes', w: 10, f: tc.fit })
+  features.vibes = tc.fit
+  says('vibes', ...tc.reasons)
   flags.push(...tc.flags)
 
   // 3. Age — 15
   if (a.age && b.age) {
     const gap = Math.abs(a.age - b.age)
     const fit = gap <= 3 ? 1 : gap <= 6 ? .8 : gap <= 9 ? .5 : gap <= 12 ? .25 : 0
-    score += 15 * fit
-    if (gap <= 3) reasons.push(`${gap === 0 ? 'Same age' : `${gap} year${gap > 1 ? 's' : ''} apart`}.`)
+    parts.push({ key: 'age', w: 15, f: fit })
+    features.age = fit
+    if (gap <= 3) says('age', `${gap === 0 ? 'Same age' : `${gap} year${gap > 1 ? 's' : ''} apart`}.`)
     if (gap > 9) flags.push(`${gap} years apart.`)
-  } else score += 8
+  } else parts.push({ key: 'age', w: 15, f: 8 / 15 })
 
   // 4. Geography — 5
   const ca = cluster(a.hood), cb = cluster(b.hood)
   if (ca && cb) {
-    if (ca === cb) { score += 5; reasons.push(`Both ${ca === 'peninsula' ? 'on the peninsula' : ca === 'east' ? 'east of the Cooper' : ca === 'islands' ? 'on the islands' : 'up north'}.`) }
-    else if ((ca === 'peninsula' && cb !== 'north') || (cb === 'peninsula' && ca !== 'north')) score += 3
-    else score += 1.5
-  } else score += 2.5
+    const fit = ca === cb ? 1 : (ca === 'peninsula' && cb !== 'north') || (cb === 'peninsula' && ca !== 'north') ? .6 : .3
+    parts.push({ key: 'geo', w: 5, f: fit })
+    features.geo = fit
+    if (ca === cb) says('geo', `Both ${ca === 'peninsula' ? 'on the peninsula' : ca === 'east' ? 'east of the Cooper' : ca === 'islands' ? 'on the islands' : 'up north'}.`)
+  } else parts.push({ key: 'geo', w: 5, f: .5 })
+
+  const W = parts.reduce((t, p) => t + p.w * (p.key ? m(p.key) : 1), 0)
+  let score = W ? 80 * parts.reduce((t, p) => t + p.w * (p.key ? m(p.key) : 1) * p.f, 0) / W : 40
 
   // 5. Real life — up to 20: same /spots, a /hey or a /wing between them
-  const spotsA = new Set(signals.filter((s) => s.email === a.email && s.kind === 'checkin').map((s) => s.venue_slug))
-  const spotsB = new Set(signals.filter((s) => s.email === b.email && s.kind === 'checkin').map((s) => s.venue_slug))
-  const shared = Array.from(spotsA).filter((s) => spotsB.has(s))
-  if (shared.length) { score += Math.min(10, 5 * shared.length); reasons.push(`Both scan in at the same /spot.`) }
+  if (signals.length) {
+    const spotsA = new Set(signals.filter((s) => s.email === a.email && s.kind === 'checkin').map((s) => s.venue_slug))
+    const spotsB = new Set(signals.filter((s) => s.email === b.email && s.kind === 'checkin').map((s) => s.venue_slug))
+    const shared = Array.from(spotsA).filter((s) => spotsB.has(s))
+    features.spot = Math.min(1, shared.length / 2)
+    if (shared.length) { score += Math.min(10, 5 * shared.length) * m('spot'); says('spot', `Both check in at the same /spot.`) }
+  }
   const hey = heys.find((h) => (h.from_email === a.email && h.to_handle === b.handle) || (h.from_email === b.email && h.to_handle === a.handle))
   if (hey) { score += 10; reasons.push('One of them already sent a /hey.') }
   const wing = wings.find((w) => (w.subject_handle === a.handle && w.to_handle === b.handle) || (w.subject_handle === b.handle && w.to_handle === a.handle))
   if (wing) { score += 10; reasons.push('A friend /winged this pair.') }
 
-  return { a, b, score: Math.round(Math.min(100, score)), reasons, flags }
+  return { a, b, score: Math.round(Math.min(100, score)), reasons, flags, features }
 }
 
-export function suggestPairs(people: Person[], signals: Signal[], heys: Hey[], existing: Set<string>, limit = 20, wings: Wing[] = []): Pair[] {
+export function suggestPairs(people: Person[], signals: Signal[], heys: Hey[], existing: Set<string>, limit = 20, wings: Wing[] = [], mults?: Mults): Pair[] {
   const out: Pair[] = []
   for (let i = 0; i < people.length; i++) {
     for (let j = i + 1; j < people.length; j++) {
       const key = [people[i].handle, people[j].handle].sort().join('|')
       if (existing.has(key)) continue
-      const p = scorePair(people[i], people[j], signals, heys, wings)
+      const p = scorePair(people[i], people[j], signals, heys, wings, mults)
       if (p) out.push(p)
     }
   }

@@ -565,3 +565,23 @@ Every /spot is approved by a person. Nothing is public until it is.
   - Directions (Google Maps), Call, Website, Instagram and TikTok, then the address and hours.
   
   The venue application asks for these too, and socials are cleaned to handles (`date_social`).
+
+## 10aa. Val learns: cut dead signals, grow the ones that work (v28)
+
+- **Signals.** The nine things Val weighs:
+  - the five answers (conflict, pulling away, Saturdays, life stage, what they want);
+  - vibe words, age gap, part of town, and shared /spots.
+
+  Hard filters (who each wants, age ranges) are not signals and never learn.
+- **What she was shown.** When a member's pool is ranked, the app logs each pair's signal values once (`log_seen`). It logs at most once a day per device. The database keeps one row per pair and only accepts pairs really in that member's pool, with known signals clamped to 0–1.
+- **What happened.** `date_val_learn` labels each pair by how far it got: 0 seen, 1 a /hey or vibe, 2 both said yes, 3 met, 4 /second, 5 together.
+- **Nightly (pg_cron `date-val-learn`, 08:10 UTC).** Only pairs a week or older count, and nothing moves before 400 pairs and 30 mutual yeses. For each signal Val measures its correlation with "both said yes"; once there are 30 dates, it's blended half and half with "came back for a /second". The band is ±2/√n.
+  - Confidently predictive: the weight grows toward 1 + 3r, capped between 0.5 and 2.
+  - Confidently near zero (|r| + band < 0.08): cut to 0.
+  - Confidently negative: cut, and flagged for a person.
+  - Unclear: left alone.
+
+  A weight moves at most 0.1 a night, and every change is logged with its reason (`date_val_changes`). A cut signal keeps being measured and comes back if the evidence turns.
+- **Scoring.** `scorePair` takes the multipliers. At 1 the score is exactly the hand-set one (the fairness test still passes), and the base stays on the same 80-point scale. A cut signal drops out of the score and out of Val's reasons.
+- **Console → Learning.** Shows every weight, its state (Learning, Counts more, Earning its keep, Trimmed, Cut, Held), its evidence and every change. A person can hold any weight, reset it to 1, or hand it back to Val.
+- **Privacy.** The privacy page explains it; rows go on account delete. Tested on synthetic data: a noise signal was cut to 0 in 10 nights, and a predictive one rose to ×1.64.
