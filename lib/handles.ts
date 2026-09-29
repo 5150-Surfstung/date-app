@@ -5,7 +5,7 @@ export const RESERVED = new Set([
   'admin', 'help', 'support', 'about', 'team', 'nights', 'spots', 'me', 'demo',
   'looking', 'casual', 'fun', 'tonight', 'intown', 'slow', 'open', 'curious', 'chill', 'frisky',
   'pool', 'partner', 'kit', 'login', 'inbox', 'console', 'val', 'status', 'offline', 'receipts',
-  'founding', 'privacy', 'terms', 'unsub', 'settings', 'edit', 'home',
+  'founding', 'privacy', 'terms', 'unsub', 'settings', 'edit', 'home', 'guide', 'trending', 'couples', 'share',
 ])
 
 export function normalizeHandle(raw: string) {

@@ -8,6 +8,7 @@ import { AppShell, NeedLogin, Pill } from '../ui'
 import { TagLine } from '../tags'
 import { authClient, useSession } from '@/lib/auth'
 import { useSpots } from '@/lib/venues'
+import { SpotIdeas } from './spot-ideas'
 import { getDemo, demoPhoto } from '@/lib/demo'
 import { dareFor } from '@/lib/dares'
 import { INTAKE_BUCKET } from '@/lib/supabase'
@@ -311,7 +312,8 @@ function Thread({ chat, me, onBack, onChange }: { chat: Chat; me: string; onBack
                 placeholder="Say something worth it." className="flex-1 border-2 border-[#141414]/15 focus:border-ob outline-none rounded-full px-5 py-3 text-base" />
               <Pill primary onClick={send} disabled={!text.trim()}>Send</Pill>
             </div>
-            <div className="flex flex-wrap items-center gap-2 border-t border-[#141414]/10 pt-4">
+            <div className="border-t border-[#141414]/10 pt-4"><SpotIdeas chatId={chat.id} picked={spot} onPick={setSpot} /></div>
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs tracking-[0.15em] uppercase font-semibold text-[#141414]/50 mr-1">Make it a /date</span>
               <select value={spot} onChange={(e) => setSpot(e.target.value)} className="border-2 border-[#141414]/15 rounded-full px-4 py-2 text-sm font-semibold bg-white">
                 <option value="">Somewhere of our own</option>

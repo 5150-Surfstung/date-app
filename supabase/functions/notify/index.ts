@@ -235,6 +235,18 @@ Deno.serve(async (req) => {
     return json({ told });
   }
 
+  if (kind === "val_notes") {
+    // Val's weekly note: the database wrote it from facts; this just delivers it. Lock screen only.
+    const { data: rows } = await db.from("date_val_notes").select("*").is("sent_at", null).gte("created_at", new Date(Date.now() - 3600 * 1000).toISOString()).limit(500);
+    let sent = 0;
+    for (const r of rows ?? []) {
+      const { data: took } = await db.from("date_val_notes").update({ sent_at: new Date().toISOString() }).eq("id", r.id).is("sent_at", null).select("id");
+      if (!took?.length) continue;
+      sent += await push(r.email, { title: r.title, body: `${r.body} — Val`, url: `${SITE}${r.url}`, tag: "val-note" });
+    }
+    return json({ sent });
+  }
+
   if (kind === "vibe_new") {
     // Someone finished their /vibe. Nobody gets in until a person approves them.
     const { data: a } = await db.from("date_applications").select("id, name, age, status").eq("id", body.id).maybeSingle();

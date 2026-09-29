@@ -8,21 +8,22 @@ import { AppShell, NeedLogin } from '../../ui'
 import { authClient, signOut } from '@/lib/auth'
 import { useHome } from '@/lib/home'
 
-type Prefs = { heys: boolean; chats: boolean; dates: boolean }
+type Prefs = { heys: boolean; chats: boolean; dates: boolean; val: boolean }
 const PREFS: { k: keyof Prefs; label: string; line: string }[] = [
   { k: 'heys', label: '/heys and /wings', line: 'When someone sends you a /hey, or a friend passes you a /name.' },
   { k: 'chats', label: 'New /chats', line: 'When Val introduces you, or you both say yes.' },
   { k: 'dates', label: 'The morning after', line: '“Worth a /second?” after a date.' },
+  { k: 'val', label: 'Val’s notes', line: 'At most one a week, only when something’s actually happening, like your pool being out tonight. Lock screen only.' },
 ]
 
 export default function Settings() {
   const { email, loading, home, reload } = useHome()
-  const [prefs, setPrefs] = useState<Prefs>({ heys: true, chats: true, dates: true })
+  const [prefs, setPrefs] = useState<Prefs>({ heys: true, chats: true, dates: true, val: true })
   const [blocks, setBlocks] = useState<{ handle: string; at: string }[] | null>(null)
   const [confirm, setConfirm] = useState('')
   const [bye, setBye] = useState<'idle' | 'busy' | 'done' | string>('idle')
 
-  useEffect(() => { if (home?.handle?.email_prefs) setPrefs(home.handle.email_prefs) }, [home?.handle?.email_prefs])
+  useEffect(() => { if (home?.handle?.email_prefs) setPrefs({ val: true, ...home.handle.email_prefs }) }, [home?.handle?.email_prefs])
   useEffect(() => { if (email) authClient()!.rpc('my_blocks').then(({ data }) => setBlocks(data ?? [])) }, [email])
 
   if (loading) return <AppShell title="Settings"><p>One sec…</p></AppShell>
@@ -77,7 +78,7 @@ export default function Settings() {
       </div>
       <p className="mt-2 text-[#141414]/60">Signed in as {email}.</p>
 
-      <Section title="What Val emails you about">
+      <Section title="What Val tells you about">
         <ul className="grid gap-2 max-w-xl">
           {PREFS.map((p) => (
             <li key={p.k}>

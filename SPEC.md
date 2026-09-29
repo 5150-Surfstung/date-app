@@ -585,3 +585,12 @@ Every /spot is approved by a person. Nothing is public until it is.
 - **Scoring.** `scorePair` takes the multipliers. At 1 the score is exactly the hand-set one (the fairness test still passes), and the base stays on the same 80-point scale. A cut signal drops out of the score and out of Val's reasons.
 - **Console → Learning.** Shows every weight, its state (Learning, Counts more, Earning its keep, Trimmed, Cut, Held), its evidence and every change. A person can hold any weight, reset it to 1, or hand it back to Val.
 - **Privacy.** The privacy page explains it; rows go on account delete. Tested on synthetic data: a noise signal was cut to 0 in 10 nights, and a predictive one rose to ×1.64.
+
+## 10ab. Val, more involved, never pushy (v29)
+
+Everything here is built from facts already in the database. No AI call, no cost per member, counts only, never names.
+
+- **Val's ideas in /chat** (`val_spot_ideas`): up to three spots with a one-line reason, above the "Make it a /date" picker. Tap one to pick it. Reasons, in order: "3 of 4 first dates here turned into a /second", "the /chill crowd's favorite lately" (3+ check-ins from their lead vibe in 30 days), "brand new on /date" (approved in the last 14 days), or the perk. Never either person's own check-ins. Only the two people in the chat can ask.
+- **Val's line on /tonight** (`lib/valsays.ts`): one sentence from the live map ("The Commodore is the /frisky spot tonight. 9 in and counting."), a different one each minute, nothing when there's nothing true to say.
+- **Val's Charleston** (`/guide`, `val_guide()`): the public guide ranked by outcomes. "Where first dates turn into seconds" (spots with 3+ first dates, by /second rate), "Busy this week" (3+ check-ins), what Charleston is slashing, "New on /date", every spot, and the couples count. Linked from home and /tonight. `guide`, `trending`, `couples` and `share` are now reserved /names (they were routes without reservations).
+- **Val's note** (`date_val_notes_now`, cron `date-val-notes` Thu/Fri/Sat 9:30pm Charleston; notify kind `val_notes`): at most one a week per member, lock screen only, and only when a fact is true: 3+ people from their own pool are checked in right now ("4 from your pool are out right now. Not saying who. Saying where the crowd is."), or their lead vibe is top three in Charleston this week. Playful lines rotate. Settings → "Val's notes" switches it off (`email_prefs.val`).

@@ -255,6 +255,7 @@ export default function LandingContent() {
           <div className="rise mt-12 flex flex-wrap gap-3" style={{ ['--d' as string]: 5 }}>
             <Link href="/tonight/" className="rounded-full border-2 border-current px-5 py-2.5 text-sm font-extrabold">Who&rsquo;s out tonight</Link>
             <Link href="/trending/" className="rounded-full border-2 border-current px-5 py-2.5 text-sm font-extrabold">What Charleston is slashing</Link>
+            <Link href="/guide/" className="rounded-full border-2 border-current px-5 py-2.5 text-sm font-extrabold">Val&rsquo;s Charleston</Link>
             <Link href="/share/" className="rounded-full border-2 border-current px-5 py-2.5 text-sm font-extrabold">Make a vibe card</Link>
             <Link href="/couples/" className="rounded-full border-2 border-current px-5 py-2.5 text-sm font-extrabold">Val&rsquo;s couples</Link>
           </div>

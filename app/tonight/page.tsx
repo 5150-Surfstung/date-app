@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { rpc } from '@/lib/rest'
+import { tonightLine } from '@/lib/valsays'
 
 type Map = {
   spots: { slug: string; name: string; area: string | null; total: number; vibes: { vibe: string; n: number }[] }[]
@@ -37,6 +38,11 @@ export default function TonightPage() {
 
       {!map ? <p className="mt-10 text-lg">Looking around&hellip;</p> : (
         <>
+          {tonightLine(map.spots, map.town) && (
+            <p className="mt-10 max-w-2xl rounded-3xl border-2 border-[#FF5CA8] px-6 py-5 text-xl sm:text-2xl font-semibold leading-snug rise">
+              {tonightLine(map.spots, map.town)} <span className="text-[#FF5CA8]">&mdash; Val</span>
+            </p>
+          )}
           {map.town.length > 0 && (
             <section className="mt-12">
               <div className="text-xs tracking-[0.2em] uppercase font-semibold text-[#FF5CA8]">Charleston is feeling</div>
@@ -82,7 +88,7 @@ export default function TonightPage() {
               ) : (
                 <>
                   <div className="font-display font-extrabold text-3xl tracking-tight">Quiet so far.</div>
-                  <p className="mt-2 text-[#F6EFFF]/70">Be the reason it isn&rsquo;t. Scan in at a /spot and set your vibe for the night.</p>
+                  <p className="mt-2 text-[#F6EFFF]/70">Be the reason it isn&rsquo;t. Walk into a /spot, tap &ldquo;I&rsquo;m here&rdquo;, and set your vibe for the night.</p>
                 </>
               )}
               <div className="mt-5 flex flex-wrap gap-3">
@@ -93,6 +99,7 @@ export default function TonightPage() {
           )}
         </>
       )}
+      <Link href="/guide/" className="mt-12 inline-block font-semibold underline underline-offset-4 text-[#F6EFFF]/80">Val&rsquo;s Charleston: where first dates turn into seconds &rarr;</Link>
     </main>
   )
 }
