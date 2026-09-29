@@ -69,7 +69,11 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Val's ear (voice parser) test
-        run: npx --yes tsx tests/voice.test.ts
+        run: npx tsx tests/voice.test.ts
+      - name: Val's guardrails test
+        run: npx tsx tests/val-guard.test.ts
+      - name: Everyone is equal (matching fairness) test
+        run: npx tsx tests/match.test.ts
       - name: End-to-end Supabase intake test
         run: node scripts/e2e-supabase.mjs
 

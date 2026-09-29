@@ -210,6 +210,7 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
 function ReportLink({ handle, me }: { handle: string; me: string | null }) {
   const [email, setEmail] = useState('')
   const [open, setOpen] = useState(false)
+  const [blocked, setBlocked] = useState(false)
   const [reason, setReason] = useState('')
   const [done, setDone] = useState(false)
   async function send() {
@@ -217,8 +218,12 @@ function ReportLink({ handle, me }: { handle: string; me: string | null }) {
     setDone(true)
   }
   if (done) return <p className="text-sm text-[#141414]/50 mt-4">Got it. Val sees it, they don&rsquo;t. {me ? 'They can\u2019t reach you any more. ' : ''}&mdash; Val</p>
+  if (blocked) return <p className="text-sm text-[#141414]/50 mt-4">Blocked. /{handle} can&rsquo;t reach you.</p>
   return !open ? (
-    <button onClick={() => setOpen(true)} className="text-xs text-[#141414]/50 underline underline-offset-4 self-start mt-4">Report this /name</button>
+    <div className="flex gap-4 mt-4 self-start">
+      <button onClick={() => setOpen(true)} className="tap text-xs text-[#141414]/50 underline underline-offset-4">Report this /name</button>
+      {me && <button onClick={async () => { await authClient()!.rpc('block_handle', { p_handle: handle }); setBlocked(true) }} className="tap text-xs text-[#141414]/50 underline underline-offset-4">Block</button>}
+    </div>
   ) : (
     <div className="flex flex-col gap-2 max-w-md mt-4">
       <select value={reason} onChange={(e) => setReason(e.target.value)} className="bg-white border-2 border-[#141414]/12 rounded-xl px-4 py-3 text-base">

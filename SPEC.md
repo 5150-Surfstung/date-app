@@ -410,3 +410,33 @@ path into the questions (the form is one tap away, always).
   screen lists all eight, each tappable to fix. Progress survives leaving.
 - **Tested:** `tests/voice.test.ts` (30 cases, runs in CI) and a full
   eight-question browser run with a scripted mic.
+
+## 10m. Fair, safe, and a Val who can't embarrass us (v14)
+
+**Everyone is equal.** Pairing is mutual preference only, symmetric, and
+scored identically for every combination of identity and seeking
+(`tests/match.test.ts`, all 81 combinations, in CI). Val's manual rule 10;
+her voice never assumes gender ("they", names). The wall never shows who
+anyone is into.
+
+**Safety v2 (rule 6 without weaponizing it).** One report per person per
+/name. A report removes someone at once when the reporter had real contact
+(a /hey, /wing or /chat) and the reason is serious (harassment, fake, under
+18, "get me out"), or when two different members report them. Removed =
+private, unreachable, open chats closed with a neutral note from Val. Every
+report alerts Val's people by email and lock screen the moment it lands (a
+database trigger, not the app). Console: remove, lift, ban (banned emails
+can't claim again), dismiss. Members can block without reporting (inbox,
+/hey page, chat), see and undo blocks in settings, and see a plain "paused"
+state on /me.
+
+**Val's quality system.** `supabase/functions/val/prompts.ts` holds every
+prompt and her guardrails, shared by the live function and the exam. Each
+line she writes is polished (no markdown, emoji, "!", "amazing", one
+sign-off) and checked (no clinical words or percentages, no assumed gender,
+names present, length caps); one targeted rewrite, else the template.
+`tests/val-guard.test.ts` (CI) proves the guardrails; `scripts/val-exam.mts`
+puts her through real scenarios (straight, gay, nonbinary intros, a /wing,
+a brief, clear and vague voice answers) whenever her key is set.
+
+**Login codes** size to the project's setting (6 or 8 digits).

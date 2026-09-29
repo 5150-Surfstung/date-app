@@ -33,7 +33,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
+  "exclude": ["tests", "scripts", 
     "node_modules",
     "supabase/functions"
   ]

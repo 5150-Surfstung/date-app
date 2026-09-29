@@ -24,7 +24,7 @@ async function secret(name: string): Promise<string> {
 
 function html(code: string, link: string) {
   const digits = code.split("").map((d) =>
-    `<td style="width:44px;height:56px;background:#FFF3EA;border-radius:12px;text-align:center;font:800 30px/56px -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#141414">${d}</td><td style="width:6px"></td>`).join("");
+    `<td style="width:36px;height:52px;background:#FFF3EA;border-radius:12px;text-align:center;font:800 26px/52px -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#141414">${d}</td><td style="width:5px"></td>`).join("");
   return `<!doctype html><html><body style="margin:0;background:#FFF3EA;padding:24px 12px">
 <div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#141414">
   <div style="background:#FF3B2F;padding:22px 28px;font:800 28px/1 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#fff;letter-spacing:-0.03em">/date</div>
@@ -73,5 +73,6 @@ Deno.serve(async (req) => {
       html: html(code, link),
     }),
   });
-  return json({ sent: r.ok, why: r.ok ? undefined : "mail" });
+  // The code's length is the project's setting (6 or 8); the app sizes its boxes to match.
+  return json({ sent: r.ok, digits: code.length, why: r.ok ? undefined : "mail" });
 });

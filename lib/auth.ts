@@ -29,15 +29,17 @@ export function useSession() {
 
 // Val mails the link herself (the `login` function), pointing straight at
 // /login/?th=…; Supabase's own mailer is only the fallback.
-export async function sendLoginLink(email: string, next = '/inbox/') {
+/** Sends Val's email. Returns how many digits the code has (6 or 8). */
+export async function sendLoginLink(email: string, next = '/inbox/'): Promise<number> {
   const c = authClient()
   if (!c) throw new Error('Not configured')
   const { data, error: fnError } = await c.functions.invoke('login', { body: { email, next } })
-  if (!fnError && data?.sent) return
+  if (!fnError && data?.sent) return Number(data.digits) || 6
   if ((data as { error?: string } | null)?.error === 'slow') throw new Error('Three links in ten minutes. Check your email, or try again shortly.')
   const redirect = typeof window !== 'undefined' ? `${window.location.origin}${next}` : undefined
   const { error } = await c.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect, shouldCreateUser: true } })
   if (error) throw new Error(error.message)
+  return 8
 }
 
 // The 6-digit code from Val's email. Works in the installed app, where the

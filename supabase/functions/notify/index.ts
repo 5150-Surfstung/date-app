@@ -138,6 +138,22 @@ Deno.serve(async (req) => {
     return json({ sent: ok });
   }
 
+  if (kind === "report") {
+    // Fired by the database the moment a report lands. Val's people, first.
+    const { data: r } = await db.from("date_reports").select("*").eq("id", body.id).maybeSingle();
+    if (!r) return json({ skipped: "none" });
+    const { data: who } = await db.from("date_handles").select("handle").eq("email", r.reporter_email).maybeSingle();
+    const { data: admins } = await db.from("date_admins").select("email");
+    const auto = r.auto_suspended ? "They were removed from the pool automatically. Review, then lift or ban." : "Not removed yet. Review it.";
+    const subj = `${r.auto_suspended ? "REMOVED" : "REPORT"}: /${r.about_handle} — ${r.reason}`;
+    const text = `${who?.handle ? `/${who.handle}` : r.reporter_email} reported /${r.about_handle}.\nReason: ${r.reason}${r.details ? `\nDetails: ${r.details}` : ""}\n\n${auto}\n${SITE}/console/\n\nRule 6. Move first.`;
+    await Promise.all((admins ?? []).map(async (a: { email: string }) => {
+      await send(a.email, subj, text);
+      await push(a.email, { title: subj, body: auto, url: `${SITE}/console/`, tag: `report-${r.id}` });
+    }));
+    return json({ ok: true });
+  }
+
   if (kind === "hey") {
     const { data: h } = await db.from("date_heys").select("*").eq("to_handle", body.to_handle).eq("from_email", String(body.from_email).toLowerCase())
       .is("notified_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle();

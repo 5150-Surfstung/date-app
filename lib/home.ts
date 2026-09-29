@@ -8,7 +8,7 @@ import type { Tag } from './handles'
 
 export type Home = {
   handle: { handle: string; name: string; tag: Tag | null; tags?: Tag[]; visibility: string; founding: number | null;
-            email_prefs: { heys: boolean; chats: boolean; dates: boolean }; terms_at: string | null; created_at: string; benched?: boolean; strikes?: number } | null
+            email_prefs: { heys: boolean; chats: boolean; dates: boolean }; terms_at: string | null; created_at: string; benched?: boolean; strikes?: number; suspended?: boolean } | null
   vibe: { id: string; status: string; verified: boolean; age: number; neighborhood: string | null; identity: string; seeking: string;
           answers: Record<string, string>; photo_keys: string[]; voice_key: string | null; created_at: string; updated_at: string | null } | null
   waiting: number

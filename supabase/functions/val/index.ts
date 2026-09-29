@@ -1,9 +1,12 @@
 // Val's brain. Runs server-side so the Anthropic key never reaches the
-// browser. Three jobs: an intro note for a pair, a two-line read of a
-// person, and the five-section /brief for a set date.
+// browser. Jobs: intro, read, preview, brief, parse. Every word she writes is
+// checked against her own rules (prompts.ts) before anyone sees it: broken
+// once → she rewrites with the exact fix; broken twice → the app falls back
+// to her hand-written template. A bad line never reaches a member.
 import Anthropic from "npm:@anthropic-ai/sdk@^0.90";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { MANUAL } from "./manual.ts";
+import { RULES, prompts, polish, violations } from "./prompts.ts";
 
 const MODEL = "claude-opus-5-5";
 
@@ -14,9 +17,7 @@ const cors = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
-const SYSTEM = `${MANUAL}
-
-You are Val. Write only what is asked, in Val's voice, plain text, no markdown, no headings unless the format below asks for them. Never invent facts about a person; use only what you're given. Sign with "— Val" exactly once at the end.`;
+const SYSTEM = `${MANUAL}\n\n${RULES}`;
 
 const url = Deno.env.get("SUPABASE_URL")!;
 const service = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -50,25 +51,20 @@ async function ask(prompt: string, maxTokens = 1200): Promise<string> {
   return res.content.filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("").trim();
 }
 
-function person(p: Record<string, unknown>) {
-  const a = (p.answers ?? {}) as Record<string, string>;
-  return [
-    `/${p.handle} — ${p.name}${p.age ? `, ${p.age}` : ""}${p.hood ? `, ${p.hood}` : ""}`,
-    Array.isArray(p.tags) && (p.tags as string[]).length
-      ? `/tags (lead first): ${(p.tags as string[]).map((t) => `/${t}`).join(" ")}`
-      : p.tag ? `/tags: /${p.tag}` : "",
-    p.identity ? `${p.identity}, seeking ${p.seeking ?? "everyone"}` : "",
-    a.conflict_impulse ? `Conflict: ${a.conflict_impulse}` : "",
-    a.pull_away ? `When someone pulls away: ${a.pull_away}` : "",
-    a.saturday ? `Saturday: ${a.saturday}` : "",
-    a.life_stage ? `Life stage: ${a.life_stage}` : "",
-    a.looking_for ? `Looking for: ${a.looking_for}` : "",
-    a.commitment ? `Commitment, in their words: ${a.commitment}` : "",
-    a.misread ? `People misread: ${a.misread}` : "",
-    a.non_negotiables ? `Non-negotiables: ${a.non_negotiables}` : "",
-    p.vibe ? `Bio: ${p.vibe}` : "",
-  ].filter(Boolean).join("\n");
+// Write, check, fix once, or hand back nothing (the app uses the template).
+async function say(job: string, prompt: string, maxTokens: number, names: string[] = []): Promise<string> {
+  let out = polish(await ask(prompt, maxTokens));
+  if (!out) return "";
+  let v = violations(out, job, names);
+  if (v.length) {
+    out = polish(await ask(`${prompt}\n\nYour last draft broke Val's rules (${v.join(", ")}). Rewrite it and fix exactly that.`, maxTokens));
+    v = violations(out, job, names);
+  }
+  if (v.length) console.warn(`val:${job} fell back to template`, v);
+  return v.length ? "" : out;
 }
+
+const first = (p: Record<string, unknown>) => String(p?.name ?? p?.handle ?? "");
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -87,37 +83,19 @@ Deno.serve(async (req) => {
   if (kind === "intro") {
     if (!isAdmin) return json({ error: "admin" }, 403);
     const { a, b, reasons = [], flags = [], spot = "the /spot" } = body;
-    const text = await ask(
-      `Write Val's intro note that opens a /chat between these two. 2–4 short sentences: name them both, give the real reason in plain words (from the reasons below, not the numbers), mention the /spot and that the table's held, and that they have forty-eight hours to pick a time.
-
-Person A:
-${person(a)}
-
-Person B:
-${person(b)}
-
-Why Val paired them: ${reasons.join(" ") || "gut call"}
-Watch-outs (don't mention unless useful): ${flags.join(" ") || "none"}
-Suggested /spot: ${spot}`,
-      600,
-    );
-    return json({ text });
+    return json({ text: await say("intro", prompts.intro(a, b, reasons, flags, spot), 600, [first(a), first(b)]) });
   }
 
   if (kind === "read") {
     if (!isAdmin) return json({ error: "admin" }, 403);
-    const text = await ask(`Write Val's two-line read of this person for the console: who they actually are and what they need in a match. No flattery, no clinical words.\n\n${person(body.person)}`, 300);
-    return json({ text });
+    return json({ text: await say("read", prompts.read(body.person), 300) });
   }
 
   if (kind === "parse") {
     // The voice interview: which option did they mean? JSON only, never a guess.
     const { question, options = [], said = "" } = body;
     if (!Array.isArray(options) || !options.length || typeof said !== "string" || !said.trim()) return json({ index: null, confidence: 0 });
-    const raw = await ask(
-      `You're matching a spoken answer to one multiple-choice option in a dating app interview. Reply with JSON only, no prose, no signature: {"index": <0-based option index or null>, "confidence": <0 to 1>}. Use null if they didn't clearly mean one option. Never pick just to pick.\n\nQuestion: ${question}\nOptions:\n${options.map((o: string, i: number) => `${i}. ${o}`).join("\n")}\n\nThey said: "${said.slice(0, 600)}"`,
-      60,
-    );
+    const raw = await ask(prompts.parse(String(question ?? ""), options, said), 60);
     const m = raw.match(/\{[^}]*\}/);
     try {
       const j = m ? JSON.parse(m[0]) : null;
@@ -127,13 +105,8 @@ Suggested /spot: ${spot}`,
   }
 
   if (kind === "preview") {
-    // One line of Val's context for a /hey or /wing in the recipient's inbox.
     const { from, winger, note } = body;
-    const text = await ask(
-      `Write one or two sentences of Val's context for the person reading their inbox: why this /hey (or /wing) is worth a look. Plain, specific, no hype. ${winger ? `A friend, /${winger}, passed this /name along.` : "They sent a /hey."}${note ? ` Their note: "${note}".` : ""}\n\nThe sender:\n${person(from)}`,
-      200,
-    );
-    return json({ text });
+    return json({ text: await say("preview", prompts.preview(from, winger ?? null, note ?? null), 200) });
   }
 
   if (kind === "brief") {
@@ -152,33 +125,17 @@ Suggested /spot: ${spot}`,
     const { data: venue } = chat.spot_slug
       ? await service.from("date_venues").select("*").eq("slug", chat.spot_slug).maybeSingle()
       : { data: null };
-    const text = await ask(
-      `Write the /brief for the reader before their date. Five sections, each a heading on its own line exactly as written, then 1–3 short sentences:
-WHERE TO GO
-WHAT TO TALK ABOUT
-WHAT MATTERS TO THEM
-WHAT NOT TO DO
-WHY THIS PAIRING
-
-Reader (writing FOR this person, address them as "you"):
-${person(reader)}
-
-Their date:
-${person(other)}
-
-/spot: ${venue ? `${venue.name}, ${venue.area}. Perk: ${venue.perk}` : "not set yet"}
-When: ${chat.date_at ?? "not set yet"}
-Val's note when the chat opened: ${chat.val_note ?? ""}`,
-      900,
-    );
+    const text = await say("brief", prompts.brief(reader, other,
+      venue ? `${venue.name}, ${venue.area}. Perk: ${venue.perk}` : "not set yet", chat.date_at ?? "not set yet", chat.val_note ?? ""), 900);
     if (!text) return json({ brief: null });
     const sections: Record<string, string> = {};
     let current = "";
     for (const line of text.split("\n")) {
       const t = line.trim();
       if (/^(WHERE TO GO|WHAT TO TALK ABOUT|WHAT MATTERS TO THEM|WHAT NOT TO DO|WHY THIS PAIRING)$/.test(t)) { current = t; sections[current] = ""; continue; }
-      if (current && t && !t.startsWith("— Val")) sections[current] = (sections[current] + " " + t).trim();
+      if (current && t) sections[current] = (sections[current] + " " + t.replace(/\s*— Val$/, "")).trim();
     }
+    if (Object.keys(sections).length < 5) return json({ brief: null });
     const brief = { for: forHandle, sections, text };
     await service.from("date_chats").update({ brief }).eq("id", chat.id);
     return json({ brief });

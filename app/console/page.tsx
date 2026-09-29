@@ -258,18 +258,32 @@ export default function ConsolePage() {
       {tab === 'Reports' && (
         <div className="mt-6 grid gap-2">
           {(data.reports ?? []).length === 0 && <p className="text-sm">No reports. Good.</p>}
-          {(data.reports ?? []).map((r: any) => (
-            <div key={r.id} className="border-2 border-ob rounded-2xl p-4 text-sm grid gap-1">
-              <div className="flex flex-wrap gap-3 items-baseline">
-                <span className="font-display font-extrabold text-xl">/{r.about_handle}</span>
-                <span className="uppercase text-xs tracking-[0.15em] font-extrabold text-ob">{r.reason}</span>
-                <span className="ml-auto text-xs text-[#141414]/50">{new Date(r.created_at).toLocaleString()}</span>
+          {(data.reports ?? []).map((r: any) => {
+            const who = data.handles.find((h: any) => h.handle === r.about_handle) as any
+            const act = async (a: string) => { await authClient()!.rpc('review_report', { p_report: r.id, p_action: a }); load() }
+            return (
+              <div key={r.id} className={`border-2 rounded-2xl p-4 text-sm grid gap-1 ${r.status === 'open' ? 'border-ob' : 'border-[#141414]/10 opacity-70'}`}>
+                <div className="flex flex-wrap gap-3 items-baseline">
+                  <span className="font-display font-extrabold text-xl">/{r.about_handle ?? 'deleted'}</span>
+                  <span className="uppercase text-xs tracking-[0.15em] font-extrabold text-ob">{r.reason}</span>
+                  {who?.suspended && <span className="text-xs font-extrabold uppercase tracking-[0.12em] bg-ob text-white rounded-full px-2.5 py-0.5">Removed</span>}
+                  {r.auto_suspended && <span className="text-xs font-extrabold uppercase tracking-[0.12em] bg-[#141414] text-white rounded-full px-2.5 py-0.5">Auto</span>}
+                  <span className="text-xs uppercase tracking-[0.12em] text-[#141414]/50">{r.status}</span>
+                  <span className="ml-auto text-xs text-[#141414]/50">{new Date(r.created_at).toLocaleString()}</span>
+                </div>
+                <div className="text-[#141414]/60">from {r.reporter_email}{r.chat_id ? ' \u00b7 from a /chat' : ''}</div>
+                {r.details && <div>{r.details}</div>}
+                {r.status === 'open' && r.about_handle && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {!who?.suspended && <Pill primary onClick={() => act('suspend')}>Remove from pool</Pill>}
+                    {who?.suspended && <Pill onClick={() => act('lift')}>Lift, they&rsquo;re fine</Pill>}
+                    <Pill onClick={() => act('ban')}>Ban for good</Pill>
+                    <Pill onClick={() => act('dismiss')}>Dismiss</Pill>
+                  </div>
+                )}
               </div>
-              <div className="text-[#141414]/60">from {r.reporter_email}{r.chat_id ? ' \u00b7 from a /chat' : ''}</div>
-              {r.details && <div>{r.details}</div>}
-              <div className="text-xs text-[#141414]/50 mt-1">Rule 6: remove first, ask after. Decline their /vibe under People to pull them from the pool.</div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

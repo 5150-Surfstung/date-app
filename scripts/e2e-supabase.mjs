@@ -151,6 +151,17 @@ check('report blocks them', (blocks.data ?? []).some((b) => b.handle === hA))
 const ub = await B.c.rpc('unblock', { p_handle: hA })
 check('unblock', ub.data === true)
 
+// Safety v2: a serious report from someone with contact removes them at once.
+const serious = await B.c.rpc('report_handle', { p_handle: hA, p_reason: 'Harassing or pressuring', p_details: 'e2e', p_reporter_email: null, p_chat: null })
+const gone1 = await anon.rpc('handle_wall', { p_handle: hA })
+check('serious report after contact removes them', serious.data === true && gone1.data?.open === false, JSON.stringify(gone1.data))
+const homeA = await A.c.rpc('my_home')
+check('they see they are paused', homeA.data?.handle?.suspended === true)
+const stuck = await A.c.rpc('send_hey', { p_to: 'maya', p_note: null })
+check('removed members can\u2019t send /heys', stuck.data === 'closed' || stuck.data === 'dupe', stuck.data)
+const blk = await B.c.rpc('block_handle', { p_handle: hA })
+check('block without reporting', blk.data === true)
+
 // Leave
 const files = await A.c.storage.from('date-intake').list(A.uid)
 if (files.data?.length) await A.c.storage.from('date-intake').remove(files.data.map((f) => `${A.uid}/${f.name}`))

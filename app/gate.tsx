@@ -17,9 +17,10 @@ export function SignIn({ pitch, cta = 'Send my link', red, night, onSent }: {
   const [code, setCode] = useState('')
   const [checking, setChecking] = useState(false)
   const [wait, setWait] = useState(0)
+  const [digits, setDigits] = useState(6)
   useEffect(() => { try { setEmail(localStorage.getItem(EMAIL_KEY) ?? '') } catch {} }, [])
   useEffect(() => { if (wait <= 0) return; const t = setTimeout(() => setWait(wait - 1), 1000); return () => clearTimeout(t) }, [wait])
-  useEffect(() => { if (code.length === 6 && !checking) check(code) }, [code]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (code.length === digits && !checking) check(code) }, [code, digits]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function check(c: string) {
     setChecking(true); setError(null)
@@ -34,7 +35,8 @@ export function SignIn({ pitch, cta = 'Send my link', red, night, onSent }: {
     const e = email.trim().toLowerCase()
     try {
       try { localStorage.setItem(EMAIL_KEY, e) } catch {}
-      await sendLoginLink(e, location.pathname + location.search)
+      const n = await sendLoginLink(e, location.pathname + location.search)
+      setDigits(n >= 6 && n <= 10 ? n : 6)
       setSent(true); setWait(30); setCode(''); onSent?.()
     } catch (err) { setError(err instanceof Error ? err.message : 'Something went wrong.') }
     finally { setBusy(false) }
@@ -52,14 +54,14 @@ export function SignIn({ pitch, cta = 'Send my link', red, night, onSent }: {
   if (sent) return (
     <div className="max-w-md">
       <div className="font-display font-extrabold text-3xl tracking-tight">Enter the code.</div>
-      <p className={`mt-2 text-base ${muted}`}>Val sent a 6-digit code to <b className={strong}>{email.trim()}</b>. Not there in a minute? Check Spam and Promotions.</p>
+      <p className={`mt-2 text-base ${muted}`}>Val sent a {digits}-digit code to <b className={strong}>{email.trim()}</b>. Not there in a minute? Check Spam and Promotions.</p>
       <label className="relative block mt-4">
-        <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-          inputMode="numeric" autoComplete="one-time-code" autoFocus aria-label="6-digit code" disabled={checking}
+        <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, digits))}
+          inputMode="numeric" autoComplete="one-time-code" autoFocus aria-label={`${digits}-digit code`} disabled={checking}
           className="absolute inset-0 w-full h-full opacity-0 text-[16px]" />
-        <div className="grid grid-cols-6 gap-2 pointer-events-none" aria-hidden>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className={`h-16 rounded-2xl grid place-items-center font-display font-extrabold text-3xl tabular-nums border-2 ${field} ${i === code.length && !checking ? (night ? '!border-[#FF5CA8]' : light ? '!border-ob' : '!border-white') : ''}`}>
+        <div className="grid gap-1.5 sm:gap-2 pointer-events-none" style={{ gridTemplateColumns: `repeat(${digits}, minmax(0, 1fr))` }} aria-hidden>
+          {Array.from({ length: digits }).map((_, i) => (
+            <div key={i} className={`${digits > 6 ? 'h-14 text-2xl rounded-xl' : 'h-16 text-3xl rounded-2xl'} grid place-items-center font-display font-extrabold tabular-nums border-2 ${field} ${i === code.length && !checking ? (night ? '!border-[#FF5CA8]' : light ? '!border-ob' : '!border-white') : ''}`}>
               {code[i] ?? ''}
             </div>
           ))}
@@ -88,7 +90,7 @@ export function SignIn({ pitch, cta = 'Send my link', red, night, onSent }: {
         </button>
       </form>
       {error && <p className="mt-2 text-sm font-semibold">{error}</p>}
-      <p className={`mt-2 text-xs ${muted}`}>No password. Val emails you a 6-digit code.</p>
+      <p className={`mt-2 text-xs ${muted}`}>No password. Val emails you a code.</p>
     </div>
   )
 }

@@ -107,6 +107,7 @@ export default function InboxPage() {
                 {!open && <Pill onClick={() => setOpened(it.id)}>/preview</Pill>}
                 <Pill primary onClick={() => answer(it, true)}>{it.kind === 'wing' ? `Send /${f.handle} a /hey` : 'Yes \u2014 open a /chat'}</Pill>
                 <Pill onClick={() => answer(it, false)}>{it.kind === 'wing' ? 'Pass' : 'No'}</Pill>
+                <SafetyLinks handle={it.from.handle} onDone={() => answer(it, false)} />
               </div>
             </div>
           )
@@ -117,5 +118,23 @@ export default function InboxPage() {
         <p className="mt-6 text-sm text-[#141414]/60">Give your /name out. <Link href="/badge/" className="underline">Print the badge</Link>.</p>
       )}
     </AppShell>
+  )
+}
+
+// Quiet, one tap: block, or report (which blocks too). Neither tells them.
+function SafetyLinks({ handle, onDone }: { handle: string; onDone: () => void }) {
+  const [open, setOpen] = useState(false)
+  const [done, setDone] = useState<string | null>(null)
+  if (done) return <span className="text-xs text-[#141414]/50 self-center">{done}</span>
+  if (!open) return <button onClick={() => setOpen(true)} className="tap text-xs font-bold text-[#141414]/45 underline underline-offset-4 self-center px-1">Block or report</button>
+  const block = async () => { await authClient()!.rpc('block_handle', { p_handle: handle }); setDone('Blocked. They can’t reach you.'); onDone() }
+  const report = async (reason: string) => { await authClient()!.rpc('report_handle', { p_handle: handle, p_reason: reason, p_details: null, p_reporter_email: null, p_chat: null }); setDone('Reported and blocked. Val’s people see it now.'); onDone() }
+  return (
+    <div className="w-full flex flex-wrap gap-2 mt-1">
+      <button onClick={block} className="text-xs font-extrabold border-2 border-[#141414]/15 rounded-full px-3 py-2">Just block</button>
+      {['Harassing or pressuring', 'Not who they say they are', 'Under 18', 'Something else felt off'].map((r) => (
+        <button key={r} onClick={() => report(r)} className="text-xs font-extrabold border-2 border-ob text-ob rounded-full px-3 py-2">{r}</button>
+      ))}
+    </div>
   )
 }
