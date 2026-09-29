@@ -15,50 +15,6 @@ env:
   NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqbmZ4Z2R1bGhtcWt0cXFlenJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2Njk0MjcsImV4cCI6MjEwNjI0NTQyN30._rFzgf4phGkwDQF70JQil5BqPmfGuyDz9yBD6p3mN5g
 
 jobs:
-  photos:
-    # Pulls full-size demo photos from Canva's media host, which the dev
-    # sandbox can't reach. Skips files that are already full size.
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref_name }}
-      - name: Fetch
-        run: |
-          python3 - <<'PY'
-          import json, os, subprocess
-          m = json.load(open('public/demo-manifest.json'))
-          base = "https://media.canva.com/v2/image-resize/format:JPG/height:{h}/quality:{q}/uri:ifs%3A%2F%2FM%2F{uri}/watermark:F/width:{w}?{sig}"
-          for handle, v in m.items():
-              out = f"public/demo/{handle}.jpg"
-              if os.path.exists(out) and os.path.getsize(out) > 60000:
-                  print(handle, "already full size"); continue
-              variants = ([v["url"]] if v.get("url") else []) + [
-                  base.format(h=1408, q=92, w=1136, uri=v["uri"], sig=v["sig"]) + "&signer=media-rpc",
-                  base.format(h=1408, q=92, w=1136, uri=v["uri"], sig=v["sig"]) + "&signer=media-rpc&x-canva-quality=thumbnail",
-                  base.format(h=200, q=75, w=161, uri=v["uri"], sig=v["sig"]) + "&signer=media-rpc&x-canva-quality=thumbnail",
-              ]
-              for url in variants:
-                  r = subprocess.run(["curl", "-fsSL", "-o", out + ".tmp", url])
-                  # Only keep a download that is actually full size; never
-                  # churn thumbnails.
-                  if r.returncode == 0 and os.path.getsize(out + ".tmp") > 60000:
-                      os.replace(out + ".tmp", out)
-                      print(handle, subprocess.run(["file", out], capture_output=True, text=True).stdout.strip()[:120])
-                      break
-              else:
-                  if os.path.exists(out + ".tmp"): os.remove(out + ".tmp")
-                  print(handle, "no full-size source yet")
-          PY
-      - name: Commit
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/demo
-          git diff --cached --quiet && echo "no changes" || (git commit -m "Demo photos at full resolution [skip ci]" && git push)
-
   e2e:
     runs-on: ubuntu-latest
     steps:
