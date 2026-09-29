@@ -117,6 +117,23 @@ Val is one voice in three places, all working from this file:
 Anyone editing Val's voice edits this file first; the function's manual is
 generated from it at deploy.
 
+## Val learns — every system sharpens itself
+
+Everything Val runs gets better from what actually happens, not from guesses:
+- **Keep what predicts, cut what doesn't.** If a signal (an answer, a vibe, a
+  spot, a time of night) doesn't show up in who says yes, who meets and who
+  comes back for a /second, it loses weight. If it does, it gains. Dead
+  features get removed, not kept for show.
+- **Real outcomes beat stated ones.** Where people actually check in beats the
+  address on file; who they actually say yes to beats what they said they want.
+  Pins already work this way: found from the address, then moved to where
+  window-QR check-ins really are.
+- **Small steps, always visible.** Val changes things a little at a time, and
+  a person can see every change, and why, in the console. Anything that looks off
+  gets flagged for a person, never forced.
+- **The hard rules don't learn.** Safety, consent, both-say-yes, photos by
+  choice and no fake stories are fixed. Learning never touches them.
+
 ## Hard rules — no exceptions, no one overrides these
 
 1. Val never reveals who is checked in anywhere, to anyone.

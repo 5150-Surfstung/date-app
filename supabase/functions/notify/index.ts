@@ -70,43 +70,6 @@ const json = (body: unknown, status = 200) =>
 const SITE = Deno.env.get("SITE_URL") ?? "https://date-surfstung-systems.vercel.app";
 const from = async () => (await secret("NOTIFY_FROM")) || "Val <onboarding@resend.dev>";
 
-// Val finds a spot's pin from its address (OpenStreetMap, free; one lookup per spot).
-// Window-QR check-ins then correct it in the database (date_pin_watch).
-type Pin = { lat: number; lng: number };
-declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
-// Lookups take a few seconds; never make the database trigger wait on them.
-const later = (p: Promise<unknown>) => (typeof EdgeRuntime !== "undefined" ? EdgeRuntime.waitUntil(p) : p);
-async function lookup(q: string, bounded: boolean): Promise<Pin | null> {
-  const u = new URL("https://nominatim.openstreetmap.org/search");
-  u.searchParams.set("format", "jsonv2"); u.searchParams.set("limit", "1"); u.searchParams.set("countrycodes", "us"); u.searchParams.set("q", q);
-  if (bounded) { u.searchParams.set("viewbox", "-80.45,33.25,-79.55,32.55"); u.searchParams.set("bounded", "1"); }
-  try {
-    const r = await fetch(u, { headers: { "User-Agent": `slashdate/1.0 (+${SITE})` } });
-    const [hit] = r.ok ? await r.json() : [];
-    return hit ? { lat: Number(hit.lat), lng: Number(hit.lon) } : null;
-  } catch { return null; }
-}
-async function findPin(v: { name: string; address: string | null; area: string | null }): Promise<Pin | null> {
-  const qs = [v.address, v.address && `${v.address}, Charleston, SC`, `${v.name}, ${v.area ? v.area + ", " : ""}Charleston, SC`].filter(Boolean) as string[];
-  for (const bounded of [true, false]) for (const q of qs) {
-    const pin = await lookup(q, bounded);
-    if (pin) return pin;
-    await new Promise((r) => setTimeout(r, 1100)); // their fair-use limit: one a second
-  }
-  return null;
-}
-async function pinSpot(slug: string, force = false) {
-  const { data: v } = await db.from("date_venues").select("slug,name,address,area,lat,pin_source").eq("slug", slug).maybeSingle();
-  if (!v || (!force && v.lat !== null)) return null;
-  const pin = await findPin(v);
-  if (!pin) {
-    await db.from("date_venues").update({ pin_flag: "Val couldn’t find this address. Paste a pin from Google Maps." }).eq("slug", slug);
-    return null;
-  }
-  await db.from("date_venues").update({ lat: pin.lat, lng: pin.lng, pin_source: "address", pin_flag: null, pin_suggest: null }).eq("slug", slug);
-  return pin;
-}
-
 type Kind = "heys" | "chats" | "dates" | null;
 
 // One email. `kind` is the member's switchable category; null = safety or
@@ -285,16 +248,10 @@ Deno.serve(async (req) => {
     return json({ ok: true });
   }
 
-  if (kind === "geocode") {
-    later(pinSpot(body.slug, Boolean(body.force)));
-    return json({ ok: true });
-  }
-
   if (kind === "spot_apply") {
     // A venue applied. Val's people hear first; the venue hears "a person reviews every spot".
     const { data: v } = await db.from("date_venues").select("*").eq("slug", body.slug).maybeSingle();
     if (!v || v.status !== "pending") return json({ skipped: "none" });
-    later(pinSpot(v.slug));
     const { data: rep } = v.rep_code ? await db.from("date_reps").select("name").eq("code", v.rep_code).maybeSingle() : { data: null };
     const { data: admins } = await db.from("date_admins").select("email");
     const subj = `New /spot: ${v.name}${v.area ? ` · ${v.area}` : ""}`;
@@ -327,7 +284,6 @@ Deno.serve(async (req) => {
     const { data: took } = await db.from("date_venues").update({ status_notified: v.status }).eq("slug", v.slug)
       .or(`status_notified.is.null,status_notified.neq.${v.status}`).select("slug");
     if (!took?.length) return json({ skipped: "claimed" });
-    if (v.status === "approved" && v.lat === null) later(pinSpot(v.slug));
     const note = v.review_note ? `\n\n${v.review_note}` : "";
     const msg: Record<string, [string, string]> = {
       approved: [`${v.name} is a /date spot`,
