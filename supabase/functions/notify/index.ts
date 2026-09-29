@@ -154,6 +154,33 @@ Deno.serve(async (req) => {
     return json({ ok: true });
   }
 
+  if (kind === "vibe_status") {
+    // Fired by the database when a /vibe is approved, verified, waitlisted or declined. Once each.
+    const { data: a } = await db.from("date_applications").select("*").eq("id", body.id).maybeSingle();
+    if (!a) return json({ skipped: "none" });
+    const { data: h } = await db.from("date_handles").select("handle, name").eq("email", a.email).maybeSingle();
+    const name = h?.name ?? a.name ?? "";
+    const sent: string[] = [];
+    if (["approved", "waitlisted", "rejected"].includes(a.status) && a.status_notified !== a.status) {
+      const { data: took } = await db.from("date_applications").update({ status_notified: a.status }).eq("id", a.id).or(`status_notified.is.null,status_notified.neq.${a.status}`).select("id");
+      if (took?.length) {
+        const msg: Record<string, [string, string]> = {
+          approved: ["You're in", `${name} —\n\nI read your /vibe twice. You're in the pool.\n\nNo swiping from here. I'm finding your first person, and when I do, I'll tell you why. Meanwhile, give out your /name.\n\n${SITE}/me/\n\n— Val`],
+          waitlisted: ["You're on the list", `${name} —\n\nYour /vibe is good. I'm balancing the pool before I open more spots, and you're on the list. You'll hear from me first, and not before.\n\n— Val`],
+          rejected: ["Not this season", `${name} —\n\nThanks for trusting me with your /vibe. It's not this season. I wish you well.\n\n— Val`],
+        };
+        const [subject, text] = msg[a.status];
+        if (await send(a.email, subject, text)) sent.push(a.status);
+        if (a.status === "approved") await push(a.email, { title: "You're in", body: "Your /vibe is in the pool. Val is looking.", url: `${SITE}/me/`, tag: "status" });
+      }
+    }
+    if (a.verified && !a.verified_notified_at) {
+      const { data: took } = await db.from("date_applications").update({ verified_notified_at: new Date().toISOString() }).eq("id", a.id).is("verified_notified_at", null).select("id");
+      if (took?.length && await send(a.email, "Verified", `${name} —\n\nI checked your photos and your voice against each other. You're verified, and your /name${h?.handle ? ` /${h.handle}` : ""} now says so.\n\n— Val`)) sent.push("verified");
+    }
+    return json({ sent });
+  }
+
   if (kind === "swap") {
     // Both tapped "swap numbers". Once, to both. The numbers stay in the app, not the email.
     const { data: c } = await db.from("date_chats").select("*").eq("id", body.id).not("swapped_at", "is", null).is("swap_notified_at", null).maybeSingle();

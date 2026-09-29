@@ -18,6 +18,7 @@ export function SignIn({ pitch, cta = 'Send my link', red, night, onSent }: {
   const [checking, setChecking] = useState(false)
   const [wait, setWait] = useState(0)
   const [digits, setDigits] = useState(6)
+  const [website, setWebsite] = useState('')     // bots fill this; people never see it
   useEffect(() => { try { setEmail(localStorage.getItem(EMAIL_KEY) ?? '') } catch {} }, [])
   useEffect(() => { if (wait <= 0) return; const t = setTimeout(() => setWait(wait - 1), 1000); return () => clearTimeout(t) }, [wait])
   useEffect(() => { if (code.length === digits && !checking) check(code) }, [code, digits]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -35,7 +36,7 @@ export function SignIn({ pitch, cta = 'Send my link', red, night, onSent }: {
     const e = email.trim().toLowerCase()
     try {
       try { localStorage.setItem(EMAIL_KEY, e) } catch {}
-      const n = await sendLoginLink(e, location.pathname + location.search)
+      const n = await sendLoginLink(e, location.pathname + location.search, website)
       setDigits(n >= 6 && n <= 10 ? n : 6)
       setSent(true); setWait(30); setCode(''); onSent?.()
     } catch (err) { setError(err instanceof Error ? err.message : 'Something went wrong.') }
@@ -82,6 +83,8 @@ export function SignIn({ pitch, cta = 'Send my link', red, night, onSent }: {
     <div className="max-w-md">
       {pitch && <p className={`text-base mb-3 ${muted}`}>{pitch}</p>}
       <form onSubmit={(e) => { e.preventDefault(); if (ok && !busy) go() }} className="flex flex-col sm:flex-row gap-2">
+        <input type="text" name="website" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)}
+          aria-hidden className="absolute -left-[9999px] w-px h-px opacity-0" />
         <input type="email" inputMode="email" autoComplete="email" autoCapitalize="none" value={email}
           onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com"
           className={`flex-1 min-w-0 rounded-full px-5 py-3.5 outline-none ${field}`} />

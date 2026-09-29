@@ -8,6 +8,7 @@ import { VENUES } from '@/lib/venues'
 import { QUESTIONS } from '@/lib/questions'
 import { askVal, notify } from '@/lib/val'
 import System from './system'
+import { FunnelTab, HealthTab } from './insights'
 import { TagLine } from '../tags'
 
 type Console = {
@@ -15,7 +16,7 @@ type Console = {
   applications: any[]; heys: any[]; wings: any[]; chats: any[]; signals: any[]; debriefs: any[]; weights: any[]; reports: any[]
 }
 
-const TABS = ['Pairs', 'Tonight', 'Inbox', 'People', 'Chats', 'Signals', 'Debriefs', 'Reports', 'System'] as const
+const TABS = ['Pairs', 'Tonight', 'Inbox', 'People', 'Chats', 'Signals', 'Debriefs', 'Reports', 'Funnel', 'Health', 'System'] as const
 
 export default function ConsolePage() {
   const { email, loading } = useSession()
@@ -254,6 +255,8 @@ export default function ConsolePage() {
       )}
 
       {tab === 'System' && <System email={email} />}
+      {tab === 'Funnel' && <FunnelTab />}
+      {tab === 'Health' && <HealthTab />}
 
       {tab === 'Reports' && (
         <div className="mt-6 grid gap-2">

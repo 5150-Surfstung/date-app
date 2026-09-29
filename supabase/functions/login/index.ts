@@ -1,7 +1,7 @@
-// Val's own sign-in email: a 6-digit code (works inside the installed app,
-// where links open the browser instead) plus a one-tap link as backup.
-// Minted with the admin API, so there's no dependence on Supabase's redirect
-// allowlist or its built-in mailer.
+// Val's own sign-in email: a code (6 or 8 digits, per the project setting;
+// works inside the installed app, where links open the browser instead) plus
+// a one-tap link as backup. Minted with the admin API, so there's no
+// dependence on Supabase's redirect allowlist or its built-in mailer.
 // (Deployed copy lives in Supabase; keep this file in sync.)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -47,11 +47,22 @@ Deno.serve(async (req) => {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "email" }, 400);
   const next = typeof body.next === "string" && body.next.startsWith("/") && !body.next.startsWith("//") ? body.next : "/me/";
 
-  // Four per email per ten minutes.
-  const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-  const { count } = await db.from("date_login_log").select("id", { count: "exact", head: true }).eq("email", email).gte("created_at", since);
-  if ((count ?? 0) >= 4) return json({ error: "slow" }, 429);
-  await db.from("date_login_log").insert({ email });
+  // Bots fill the hidden field; people never see it. Pretend it worked, send nothing.
+  if (typeof body.website === "string" && body.website.trim()) return json({ sent: true, digits: 6 });
+
+  // Limits: 4 per email / 10 min, 8 per network / 10 min, 30 per network / day,
+  // 250 site-wide / hour (keeps a flood from burning the email quota).
+  const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || "unknown";
+  const ago = (ms: number) => new Date(Date.now() - ms).toISOString();
+  const n = async (col: string | null, val: string | null, since: string) => {
+    let q = db.from("date_login_log").select("id", { count: "exact", head: true }).gte("created_at", since);
+    if (col && val) q = q.eq(col, val);
+    return (await q).count ?? 0;
+  };
+  if (await n("email", email, ago(10 * 60e3)) >= 4) return json({ error: "slow" }, 429);
+  if (ip !== "unknown" && (await n("ip", ip, ago(10 * 60e3)) >= 8 || await n("ip", ip, ago(24 * 3600e3)) >= 30)) return json({ error: "slow" }, 429);
+  if (await n(null, null, ago(3600e3)) >= 250) return json({ error: "busy" }, 503);
+  await db.from("date_login_log").insert({ email, ip });
 
   await db.auth.admin.createUser({ email, email_confirm: true }).catch(() => {});
   const { data, error } = await db.auth.admin.generateLink({ type: "magiclink", email });

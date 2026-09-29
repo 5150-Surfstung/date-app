@@ -10,7 +10,7 @@ import { VAL, notify } from '@/lib/val'
 import { SignIn } from '../gate'
 import { TagLine } from '../tags'
 
-type Wall = { taken: boolean; open?: boolean; name?: string; tag?: string | null; tags?: string[] | null; verified?: boolean }
+type Wall = { taken: boolean; open?: boolean; name?: string; tag?: string | null; tags?: string[] | null; verified?: boolean; demo?: boolean }
 
 export default function AtClient({ handle: handleProp }: { handle?: string } = {}) {
   const params = useSearchParams()
@@ -56,6 +56,7 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
         no_vibe: 'You need a /name to send a /hey.',
         login: 'Sign in first.',
         limit: 'Ten /heys a day. Val likes you choosy.',
+        demo: `/${handle} is a demo profile, not a real person.`,
         closed: `/${handle} isn’t taking /heys right now.`,
         self: 'That’s you.',
         dupe: `You already sent /${handle} a /hey. One is the rule.`,
@@ -144,7 +145,13 @@ export default function AtClient({ handle: handleProp }: { handle?: string } = {
               <p className="mt-3 text-lg text-[#141414]/70 font-medium">{wall.name}{wall.tag ? ` · ${tagLine(wall.tag)}` : ''}</p>
             </div>
 
-            {result === 'sent' ? (
+            {wall.demo ? (
+              <div className="rounded-2xl bg-white border-2 border-[#141414]/10 p-5 max-w-md">
+                <div className="text-xs tracking-[0.2em] uppercase font-extrabold text-ob">Demo profile</div>
+                <p className="mt-2 text-lg font-medium leading-snug">{wall.name} isn&rsquo;t a real person, so there&rsquo;s nobody to send a /hey to. The real ones are joining now.</p>
+                <Link href="/claim/" className="inline-block mt-4 bg-ob text-white rounded-full px-7 py-3.5 font-extrabold">Claim your /name</Link>
+              </div>
+            ) : result === 'sent' ? (
               <p className="text-xl sm:text-2xl font-medium leading-snug">
                 {VAL.heySent(wall.name ?? handle)} <span className="text-[#141414]/70">{VAL.sign}</span>
               </p>

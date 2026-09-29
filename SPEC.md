@@ -453,3 +453,11 @@ both a one-line note (the numbers stay in the app, never in email).
 Enforced in the database (`offer_swap`, `withdraw_swap`, `my_swap`;
 `date_swaps` has no policies). Included in the data export, removed on
 delete. Covered end to end in CI.
+
+## 10o. Launch hardening (v16)
+
+- **Demo profiles are look-only.** /heys, wings and handle-wall calls to a demo /name are refused in the database (`demo`). The /at page shows a "Demo profile — claim your /name" banner instead of the hey form.
+- **Status emails.** A trigger on `date_applications` fires `notify` kind `vibe_status`: one email when a /vibe is approved, waitlisted or declined (`status_notified`), one when verified (`verified_notified_at`). Each is claimed once, never repeated.
+- **Login abuse limits.** The `login` function caps 4 codes per email and 8 per IP per 10 minutes, 30 per IP per day, 250 site-wide per hour (`busy`). A hidden honeypot field gets a fake success. Cloudflare Turnstile can drop in later with a site key.
+- **Error logging.** Every uncaught error or rejection on a member's phone goes to `date_errors` via `date_log_error` (deduped, 5 per session, 300/min global cap, 30-day retention).
+- **Console: Funnel and Health tabs.** `val_funnel()` counts claimed → /vibe → approved → verified → intro → date set → date done → /second (demo and test accounts excluded), flags any step keeping under half the one before. `val_health()` shows errors in the last 24h, login codes in the last hour, and the top errors with stacks. Both are Val-only.
