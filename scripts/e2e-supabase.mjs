@@ -35,7 +35,7 @@ for (const t of ['date_applications', 'date_signals', 'date_handles', 'date_heys
   const r = await anon.from(t).select('*').limit(1)
   check(`${t} unreadable (anon)`, Boolean(r.error) || r.data.length === 0)
 }
-const wall = await anon.rpc('handle_wall', { p_handle: 'maya' })
+const wall = await retry(() => anon.rpc('handle_wall', { p_handle: 'maya' }), (r) => !r.error)
 check('wall lookup (demo /maya)', wall.data?.open === true && wall.data?.tag === 'looking', wall.error?.message)
 const wallPriv = await anon.rpc('handle_wall', { p_handle: 'marcus' })
 check('wall hides private (/marcus)', wallPriv.data?.taken === true && wallPriv.data?.open === false && !wallPriv.data?.name)
@@ -43,12 +43,22 @@ const rec = await anon.rpc('date_receipts')
 check('receipts are public', !rec.error && typeof rec.data?.pool === 'number')
 
 // ── Two members ────────────────────────────────────────────────────────
+// Supabase's edge can hiccup (502) for a second; don't let that fail a run.
+async function retry(fn, ok) {
+  let r
+  for (let i = 0; i < 4; i++) {
+    r = await fn()
+    if (ok(r)) return r
+    await new Promise((res) => setTimeout(res, 1500 * (i + 1)))
+  }
+  return r
+}
 async function member(tag) {
   const email = `e2e-${runId}-${tag}@test.invalid`
-  const made = await anon.rpc('e2e_user', { p_email: email, p_password: pw })
+  const made = await retry(() => anon.rpc('e2e_user', { p_email: email, p_password: pw }), (r) => r.data === 'ok' || r.data === 'exists')
   const c = client()
-  const s = await c.auth.signInWithPassword({ email, password: pw })
-  check(`sign in ${tag}`, made.data === 'ok' && !s.error, s.error?.message ?? made.data)
+  const s = await retry(() => c.auth.signInWithPassword({ email, password: pw }), (r) => !r.error)
+  check(`sign in ${tag}`, (made.data === 'ok' || made.data === 'exists') && !s.error, s.error?.message ?? made.data)
   return { c, email, uid: s.data?.user?.id }
 }
 const A = await member('a')
