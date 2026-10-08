@@ -7,7 +7,7 @@ import { QUESTIONS } from '@/lib/questions'
 import { APPLICATIONS_TABLE, INTAKE_BUCKET } from '@/lib/supabase'
 import { authClient, useSession } from '@/lib/auth'
 import { SignIn } from '../gate'
-import ValInterview from './val-interview'
+import ValChat from './val-chat'
 import { VAL } from '@/lib/val'
 import { ValReadCard } from './val-read-card'
 
@@ -251,7 +251,7 @@ export default function IntakeFlow() {
       )}
 
       {step >= 1 && step <= QUESTIONS.length && mode !== 'type' && (
-        <ValInterview
+        <ValChat
           initial={answers}
           onDone={(a) => { setAnswers(a); setMode('voice'); setStep(PHOTO_STEP) }}
           onType={(a, at) => { setAnswers(a); setMode('type'); setStep(at + 1) }}

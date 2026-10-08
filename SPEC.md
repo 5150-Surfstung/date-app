@@ -622,3 +622,13 @@ Everything here is built from facts already in the database. No AI call, no cost
   She never comments on looks, race, body or style, and never decides. Without her key: basic checks only (fewer than 3 photos, no voice note, very short answers, age under 20). The voice note isn't checked; the model can't hear audio.
 - **Wake-up.** The database wakes Val's brain with a private token (`VAL_HOOK_TOKEN` in Vault, header `x-val-hook`), not a member login.
 - **Cost.** A fraction of a cent per screened message, about a cent per applicant.
+
+## 10ae. The /vibe is a real conversation with Val (v32)
+
+- **What changed.** `app/apply/val-chat.tsx` replaces the scripted voice interview as the default. Val opens and the member talks (mic, auto-stop on a pause) or types. Each turn goes to Val's brain (`interview`, Sonnet 5.5 at low effort for speed, Val's manual cached).
+- **What she sends back:** her next line (under 40 words, reacts in one specific beat, then asks the next thing or a short follow-up), whatever the latest reply settled (a real option number for a choice question, their own words for a text one; the server rejects anything else), and `done` once all eight are in.
+- **On screen.** Lines are spoken with the phone's voice, and captions always show. "Mute Val" turns the voice off. The progress bar fills as answers land. "See what Val has so far" and "Quick version instead" are always there.
+- **Saving.** Nothing is saved until "Look right?" (the existing review). The conversation resumes if they leave.
+- **Fallback.** No key, a refusal, a slow turn (15s), or a reply that breaks her rules twice: the scripted interview picks up at the first unanswered question, with no second start screen.
+- **Guardrails.** `interviewIssues` (no exclamation marks, emoji, clinical or gendered words; length cap) runs on every line before it's used. What the member says is passed to her as data, never instructions. Tests are in `tests/val-guard.test.ts`; e2e checks a clean handoff and that it needs a login.
+- **Cost.** About 10–16 short turns per signup on Sonnet with a cached manual; cents per member.

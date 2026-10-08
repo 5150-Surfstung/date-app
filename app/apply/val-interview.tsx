@@ -82,7 +82,7 @@ function useValVoice() {
 
 /* ── The phone's ear. Stops itself after a pause. ── */
 type EarState = 'idle' | 'listening' | 'denied' | 'unsupported' | 'error'
-function useEar(onFinal: (text: string, forId: string) => void) {
+export function useEar(onFinal: (text: string, forId: string) => void) {
   const rec = useRef<any>(null)
   const cb = useRef(onFinal); cb.current = onFinal      // always the latest handler
   const forId = useRef('')                               // which question this session belongs to
@@ -143,13 +143,17 @@ function useEar(onFinal: (text: string, forId: string) => void) {
 
 type Saved = { i: number; answers: Record<string, string>; heard: Record<string, string> }
 
-export default function ValInterview({ initial, onDone, onType }: {
+export default function ValInterview({ initial, onDone, onType, startReview, startAt }: {
   initial: Record<string, string>
   onDone: (answers: Record<string, string>) => void
   onType: (answers: Record<string, string>, at: number) => void
+  /** Coming from the live conversation: go straight to "Look right?" */
+  startReview?: boolean
+  /** Coming from a conversation that dropped: pick up at this question, asking right away. */
+  startAt?: number
 }) {
-  const [stage, setStage] = useState<'start' | 'ask' | 'review'>('start')
-  const [i, setI] = useState(0)
+  const [stage, setStage] = useState<'start' | 'ask' | 'review'>(startReview ? 'review' : 'start')
+  const [i, setI] = useState(startAt ?? 0)
   const [answers, setAnswers] = useState<Record<string, string>>(initial)
   const [heard, setHeard] = useState<Record<string, string>>({})
   const [guess, setGuess] = useState<Heard | null>(null)
@@ -163,7 +167,7 @@ export default function ValInterview({ initial, onDone, onType }: {
   useEffect(() => {
     try {
       const s: Saved | null = JSON.parse(localStorage.getItem(KEY) ?? 'null')
-      if (s) { setAnswers((a) => ({ ...s.answers, ...a })); setHeard(s.heard ?? {}); setI(Math.min(s.i, QUESTIONS.length - 1)) }
+      if (s) { setAnswers((a) => ({ ...s.answers, ...a })); setHeard(s.heard ?? {}); if (startAt === undefined && !startReview) setI(Math.min(s.i, QUESTIONS.length - 1)) }
     } catch {}
   }, [])
   useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify({ i, answers, heard })) } catch {} }, [i, answers, heard])
@@ -204,6 +208,8 @@ export default function ValInterview({ initial, onDone, onType }: {
     val.say(id, () => { if (earRef.current.supported && earRef.current.state !== 'denied') earRef.current.start(id) })
   }
   function begin() { val.say('intro', () => ask(i)) }
+  // Handed over from the live conversation: no second start screen, just the next question.
+  useEffect(() => { if (startAt !== undefined && !startReview) ask(startAt) }, []) // eslint-disable-line react-hooks/exhaustive-deps
   function next() {
     ear.stop(); val.stop()
     if (editing) { setEditing(false); setStage('review'); return }

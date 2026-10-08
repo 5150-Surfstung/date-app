@@ -8,9 +8,11 @@
 import Anthropic from "npm:@anthropic-ai/sdk@^0.90";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { MANUAL } from "./manual.ts";
-import { RULES, prompts, polish, violations, templateRead } from "./prompts.ts";
+import { RULES, prompts, polish, violations, templateRead, INTERVIEW_RULES, interviewPrompt, interviewIssues, type IQ, type Turn } from "./prompts.ts";
 
 const MODEL = "claude-opus-5-5";
+// The /vibe conversation is spoken, turn by turn: fast enough to talk to, still Val.
+const TALK_MODEL = "claude-sonnet-5-5";
 // Screening runs on every early message, so it uses the small fast model.
 const SCREEN_MODEL = "claude-haiku-4-5";
 
@@ -140,6 +142,51 @@ async function vet(id: string) {
   return { flags: flags.length, ai };
 }
 
+// One turn of the /vibe conversation. Returns null when her brain is off or
+// misbehaves twice; the app then runs the scripted interview instead.
+async function interviewTurn(qs: IQ[], have: Record<string, string>, turns: Turn[]) {
+  const key = await apiKey();
+  if (!key) return null;
+  const client = new Anthropic({ apiKey: key });
+  const prompt = interviewPrompt(qs, have, turns);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await client.messages.create({
+        model: TALK_MODEL,
+        max_tokens: 400,
+        output_config: { effort: "low" },
+        system: [
+          { type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } },
+          { type: "text", text: INTERVIEW_RULES },
+        ],
+        messages: [{ role: "user", content: attempt ? `${prompt}\n\nYour last reply broke the rules (plain spoken English, under 40 words, no exclamation marks, no gendered words, JSON only). Try again.` : prompt }],
+      } as Anthropic.MessageCreateParamsNonStreaming);
+      if (res.stop_reason === "refusal") return null;
+      const text = res.content.filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("");
+      const m = text.match(/\{[\s\S]*\}/);
+      const j = m ? JSON.parse(m[0]) : null;
+      const say = typeof j?.say === "string" ? j.say.replace(/\*\*|__/g, "").replace(/\s*[—–-]\s*Val\.?\s*$/i, "").trim() : "";
+      if (!say || interviewIssues(say).length) continue;
+      // Only accept answers that fit the question: a real option number, or a short text.
+      const answers: Record<string, string> = {};
+      for (const [id, v] of Object.entries((j.answers ?? {}) as Record<string, unknown>)) {
+        const q = qs.find((x) => x.id === id);
+        if (!q) continue;
+        if (q.kind === "choice") {
+          const n = typeof v === "number" ? v : Number.parseInt(String(v), 10);
+          if (Number.isInteger(n) && q.options && n >= 0 && n < q.options.length) answers[id] = q.options[n];
+        } else if (typeof v === "string" && v.trim()) answers[id] = v.trim().slice(0, 300);
+      }
+      const all = { ...have, ...answers };
+      const done = Boolean(j.done) && qs.every((q) => (all[q.id] ?? "").trim());
+      return { say, answers, done };
+    } catch (e) {
+      console.warn("val:interview failed", String(e));
+    }
+  }
+  return null;
+}
+
 // Write, check, fix once, or hand back nothing (the app uses the template).
 async function say(job: string, prompt: string, maxTokens: number, names: string[] = []): Promise<string> {
   let out = polish(await ask(prompt, maxTokens));
@@ -203,6 +250,23 @@ Deno.serve(async (req) => {
       const idx = typeof j?.index === "number" && j.index >= 0 && j.index < options.length ? j.index : null;
       return json({ index: idx, confidence: typeof j?.confidence === "number" ? j.confidence : 0 });
     } catch { return json({ index: null, confidence: 0 }); }
+  }
+
+  if (kind === "interview") {
+    // The /vibe, as a conversation. The member's own answers; capped so a turn stays cheap.
+    const qs: IQ[] = (Array.isArray(body.questions) ? body.questions : []).slice(0, 12).map((q: Record<string, unknown>) => ({
+      id: String(q.id ?? "").slice(0, 40), prompt: String(q.prompt ?? "").slice(0, 200),
+      kind: q.kind === "choice" ? "choice" : "text",
+      options: Array.isArray(q.options) ? (q.options as unknown[]).slice(0, 6).map((o) => String(o).slice(0, 160)) : undefined,
+    })).filter((q: IQ) => q.id && q.prompt);
+    const have: Record<string, string> = {};
+    for (const q of qs) { const v = (body.answers ?? {})[q.id]; if (typeof v === "string" && v.trim()) have[q.id] = v.slice(0, 300); }
+    const turns: Turn[] = (Array.isArray(body.turns) ? body.turns : []).slice(-24).map((t: Record<string, unknown>) => ({
+      who: t.who === "val" ? "val" : "you", text: String(t.text ?? "").slice(0, 800),
+    }));
+    if (!qs.length || turns.length > 60) return json({ unavailable: true });
+    const out = await interviewTurn(qs, have, turns);
+    return json(out ?? { unavailable: true });
   }
 
   if (kind === "read_me") {

@@ -30,7 +30,11 @@ Remembers what you said. Doesn't waste your night.
 
 ## What Val does, stage by stage
 
-**/vibe** — Reads the eight answers, the photos and the sixty seconds.
+**/vibe** — A real conversation, out loud or typed. Val opens, reacts to what
+the person actually said in one short beat, and asks the next thing; she asks a
+short follow-up when an answer is vague and never forces a choice. The eight
+answers fill in as they talk, and nothing is saved until they confirm it on
+"Look right?". Then she reads the answers, the photos and the sixty seconds.
 Writes a two-line read of the person for the console. Approves, waitlists
 (ratio, pool size) or declines (safety, fake, under 18).
 
